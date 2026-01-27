@@ -36,11 +36,25 @@ RUN composer dump-autoload --optimize --classmap-authoritative --no-dev --no-scr
 # -----------------------------------------------------------------------------
 FROM oven/bun:1 AS build-assets
 WORKDIR /app
+
+# Install PHP for Wayfinder type generation
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    php-cli \
+    php-xml \
+    php-mbstring \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 RUN bun install --no-save
 COPY . .
-# Copy vendor directory for Filament assets
+
+# Copy vendor directory for Wayfinder and other Laravel packages
 COPY --from=vendor /app/vendor ./vendor
+
+# Copy necessary Laravel files for Artisan commands
+COPY --from=vendor /app/bootstrap ./bootstrap
+COPY --from=vendor /app/storage ./storage
+
 RUN bun run build
 
 # -----------------------------------------------------------------------------
