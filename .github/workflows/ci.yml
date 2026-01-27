@@ -14,9 +14,12 @@ on:
       - master
       - workos
 
+permissions:
+  contents: write
+
 jobs:
   pint:
-    name: Code Style (Pint)
+    name: Code Style (Pint) - Auto-fix
     runs-on: ubuntu-latest
     
     steps:
@@ -42,7 +45,13 @@ jobs:
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
 
       - name: Run Pint
-        run: composer test:lint
+        run: vendor/bin/pint --parallel
+
+      - name: Commit Pint Changes
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: 'style: apply Pint code style fixes'
+          commit_options: '--no-verify'
 
   phpstan:
     name: Static Analysis (PHPStan)
@@ -74,7 +83,7 @@ jobs:
         run: composer phpstan
 
   rector:
-    name: Code Quality (Rector)
+    name: Code Quality (Rector) - Auto-fix
     runs-on: ubuntu-latest
     
     steps:
@@ -100,7 +109,13 @@ jobs:
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
 
       - name: Run Rector
-        run: composer rector
+        run: vendor/bin/rector process
+
+      - name: Commit Rector Changes
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: 'refactor: apply Rector fixes'
+          commit_options: '--no-verify'
 
   tests:
     name: Tests (PHP ${{ matrix.php-version }})
