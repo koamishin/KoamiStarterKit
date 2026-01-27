@@ -49,8 +49,8 @@ class SetupStarterKit extends Command
             label: 'GitHub Username/Organization',
             placeholder: 'e.g., yourusername',
             required: true,
-            validate: fn ($value) => match (true) {
-                ! preg_match('/^[a-zA-Z0-9-]+$/', $value) => 'GitHub username can only contain alphanumeric characters and hyphens.',
+            validate: fn ($value): ?string => match (true) {
+                ! preg_match('/^[a-zA-Z0-9-]+$/', (string) $value) => 'GitHub username can only contain alphanumeric characters and hyphens.',
                 default => null
             }
         );
@@ -60,8 +60,8 @@ class SetupStarterKit extends Command
             placeholder: 'e.g., my-awesome-app',
             default: 'laravel-app',
             required: true,
-            validate: fn ($value) => match (true) {
-                ! preg_match('/^[a-z0-9-]+$/', $value) => 'Package name must be lowercase with hyphens only.',
+            validate: fn ($value): ?string => match (true) {
+                ! preg_match('/^[a-z0-9-]+$/', (string) $value) => 'Package name must be lowercase with hyphens only.',
                 default => null
             }
         );
@@ -76,7 +76,7 @@ class SetupStarterKit extends Command
             label: 'Author Email',
             placeholder: 'e.g., john@example.com',
             required: true,
-            validate: fn ($value) => match (true) {
+            validate: fn ($value): ?string => match (true) {
                 ! filter_var($value, FILTER_VALIDATE_EMAIL) => 'Please enter a valid email address.',
                 default => null
             }
@@ -204,8 +204,8 @@ class SetupStarterKit extends Command
         $workflowDir = base_path('.github/workflows');
         $workflowFiles = ['auto-release.yml', 'docker-latest.yml', 'manual-official-release.yml'];
 
-        foreach ($workflowFiles as $file) {
-            $filePath = $workflowDir.'/'.$file;
+        foreach ($workflowFiles as $workflowFile) {
+            $filePath = $workflowDir.'/'.$workflowFile;
 
             if (! File::exists($filePath)) {
                 continue;
@@ -223,18 +223,18 @@ class SetupStarterKit extends Command
             $content = preg_replace(
                 '/IMAGE_NAME: .+/',
                 "IMAGE_NAME: {$imageName}",
-                $content
+                (string) $content
             );
 
             // Add conditional check for Docker jobs if Docker is not enabled
             if (! $dockerEnabled) {
                 // Add a check at the top of the file to skip Docker jobs
-                $content = $this->addDockerEnabledCheck($content, $file);
+                $content = $this->addDockerEnabledCheck($content, $workflowFile);
             }
 
             File::put($filePath, $content);
 
-            info("✓ Updated .github/workflows/{$file}");
+            info("✓ Updated .github/workflows/{$workflowFile}");
         }
     }
 
