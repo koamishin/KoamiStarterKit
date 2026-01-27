@@ -1,0 +1,289 @@
+parameters:
+	ignoreErrors:
+		-
+			rawMessage: 'Call to an undefined static method App\Models\User::create().'
+			identifier: staticMethod.notFound
+			count: 1
+			path: app/Actions/Fortify/CreateNewUser.php
+
+		-
+			rawMessage: Access to an undefined property App\Http\Requests\Settings\PasswordUpdateRequest::$password.
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Settings/PasswordController.php
+
+		-
+			rawMessage: Access to an undefined property Illuminate\Http\Request::$email.
+			identifier: property.notFound
+			count: 1
+			path: app/Providers/FortifyServiceProvider.php
+
+		-
+			rawMessage: 'Undefined variable: $this'
+			identifier: variable.undefined
+			count: 1
+			path: routes/console.php
+
+		-
+			rawMessage: 'Access to an undefined property App\Models\User|Illuminate\Database\Eloquent\Collection<int, App\Models\User>::$email.'
+			identifier: property.notFound
+			count: 5
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			rawMessage: 'Access to an undefined property App\Models\User|Illuminate\Database\Eloquent\Collection<int, App\Models\User>::$id.'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::actingAs().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::assertAuthenticated().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::assertGuest().'
+			identifier: method.notFound
+			count: 3
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::get().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::post().'
+			identifier: method.notFound
+			count: 4
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			rawMessage: 'Access to an undefined property App\Models\User|Illuminate\Database\Eloquent\Collection<int, App\Models\User>::$email.'
+			identifier: property.notFound
+			count: 3
+			path: tests/Feature/Auth/EmailVerificationTest.php
+
+		-
+			rawMessage: 'Access to an undefined property App\Models\User|Illuminate\Database\Eloquent\Collection<int, App\Models\User>::$id.'
+			identifier: property.notFound
+			count: 3
+			path: tests/Feature/Auth/EmailVerificationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::actingAs().'
+			identifier: method.notFound
+			count: 6
+			path: tests/Feature/Auth/EmailVerificationTest.php
+
+		-
+			rawMessage: 'Call to method toBeFalse() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 2
+			path: tests/Feature/Auth/EmailVerificationTest.php
+
+		-
+			rawMessage: 'Call to method toBeTrue() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 2
+			path: tests/Feature/Auth/EmailVerificationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::actingAs().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/PasswordConfirmationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::get().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/PasswordConfirmationTest.php
+
+		-
+			rawMessage: 'Access to an undefined property App\Models\User|Illuminate\Database\Eloquent\Collection<int, App\Models\User>::$email.'
+			identifier: property.notFound
+			count: 5
+			path: tests/Feature/Auth/PasswordResetTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::get().'
+			identifier: method.notFound
+			count: 2
+			path: tests/Feature/Auth/PasswordResetTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::post().'
+			identifier: method.notFound
+			count: 5
+			path: tests/Feature/Auth/PasswordResetTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::assertAuthenticated().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/RegistrationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::get().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/RegistrationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::post().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/RegistrationTest.php
+
+		-
+			rawMessage: 'Access to an undefined property App\Models\User|Illuminate\Database\Eloquent\Collection<int, App\Models\User>::$email.'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/Auth/TwoFactorChallengeTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::get().'
+			identifier: method.notFound
+			count: 2
+			path: tests/Feature/Auth/TwoFactorChallengeTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::post().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/TwoFactorChallengeTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::actingAs().'
+			identifier: method.notFound
+			count: 2
+			path: tests/Feature/Auth/VerificationNotificationTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::actingAs().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/DashboardTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::get().'
+			identifier: method.notFound
+			count: 2
+			path: tests/Feature/DashboardTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::get().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExampleTest.php
+
+		-
+			rawMessage: Access to an undefined property App\Models\User::$password.
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/Settings/PasswordUpdateTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::actingAs().'
+			identifier: method.notFound
+			count: 3
+			path: tests/Feature/Settings/PasswordUpdateTest.php
+
+		-
+			rawMessage: 'Call to method toBeTrue() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Feature/Settings/PasswordUpdateTest.php
+
+		-
+			rawMessage: Access to an undefined property App\Models\User::$email_verified_at.
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/Settings/ProfileUpdateTest.php
+
+		-
+			rawMessage: 'Access to an undefined property App\Models\User|Illuminate\Database\Eloquent\Collection<int, App\Models\User>::$email.'
+			identifier: property.notFound
+			count: 2
+			path: tests/Feature/Settings/ProfileUpdateTest.php
+
+		-
+			rawMessage: 'Access to an undefined property App\Models\User|Illuminate\Database\Eloquent\Collection<int, App\Models\User>::$email_verified_at.'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/Settings/ProfileUpdateTest.php
+
+		-
+			rawMessage: 'Access to an undefined property App\Models\User|Illuminate\Database\Eloquent\Collection<int, App\Models\User>::$name.'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/Settings/ProfileUpdateTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::actingAs().'
+			identifier: method.notFound
+			count: 5
+			path: tests/Feature/Settings/ProfileUpdateTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::assertGuest().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Settings/ProfileUpdateTest.php
+
+		-
+			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 2
+			path: tests/Feature/Settings/ProfileUpdateTest.php
+
+		-
+			rawMessage: 'Call to method toBeNull() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 4
+			path: tests/Feature/Settings/ProfileUpdateTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\TestCase::actingAs().'
+			identifier: method.notFound
+			count: 4
+			path: tests/Feature/Settings/TwoFactorAuthenticationTest.php
+
+		-
+			rawMessage: 'Call to method extend() of internal class Pest\Configuration from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Pest.php
+
+		-
+			rawMessage: 'Call to method in() of internal class Pest\PendingCalls\UsesCall from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Pest.php
+
+		-
+			rawMessage: 'Call to method use() of internal class Pest\PendingCalls\UsesCall from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Pest.php
+
+		-
+			rawMessage: 'Undefined variable: $this'
+			identifier: variable.undefined
+			count: 1
+			path: tests/Pest.php
+
+		-
+			rawMessage: 'Call to method toBeTrue() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Unit/ExampleTest.php
