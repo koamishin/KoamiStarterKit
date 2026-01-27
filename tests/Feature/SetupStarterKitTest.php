@@ -42,4 +42,3 @@ test('workflow file exists and can be read', function () {
     expect($content)->toContain('REGISTRY')
         ->toContain('IMAGE_NAME');
 });
-
