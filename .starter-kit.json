@@ -1,0 +1,6 @@
+{
+    "docker_enabled": true,
+    "docker_registry": "docker.io",
+    "docker_image_name": "yukazakiri\/koamistarterkit",
+    "configured_at": "2026-01-27T13:59:36+00:00"
+}

@@ -1,0 +1,153 @@
+#!/usr/bin/env sh
+set -e
+
+container_mode=${CONTAINER_MODE:-"http"}
+octane_server=${OCTANE_SERVER}
+running_migrations_and_seeders=${RUNNING_MIGRATIONS_AND_SEEDERS:-"false"}
+
+# Provide sane defaults for service env vars so health checks don't fail when
+# project .env hasn't been loaded into the container environment yet.
+REDIS_HOST="${REDIS_HOST:-redis}"
+REDIS_PORT="${REDIS_PORT:-6379}"
+DB_HOST="${DB_HOST:-pgsql}"
+DB_PORT="${DB_PORT:-5432}"
+export REDIS_HOST REDIS_PORT DB_HOST DB_PORT
+
+initialStuff() {
+    echo "Container mode: $container_mode"
+
+    if [ ! -d "/var/www/html/vendor/laravel/horizon" ]; then
+        echo "Horizon not installed. Disabling Horizon supervisor config."
+        if [ -f "/etc/supervisor/conf.d/supervisord.horizon.conf" ]; then
+            echo "" > /etc/supervisor/conf.d/supervisord.horizon.conf
+        fi
+    fi
+
+    if [ ! -d "/var/www/html/vendor/laravel/pulse" ]; then
+        echo "Pulse not installed. Disabling Pulse supervisor config."
+        if [ -f "/etc/supervisor/conf.d/supervisord.pulse.conf" ]; then
+            echo "" > /etc/supervisor/conf.d/supervisord.pulse.conf
+        fi
+    fi
+
+    if [ ! -d "/var/www/html/vendor/laravel/telescope" ]; then
+        if [ -f "/etc/supervisor/conf.d/supervisord.telescope.conf" ]; then
+            echo "Telescope not installed. Disabling Telescope supervisor config."
+            echo "" > /etc/supervisor/conf.d/supervisord.telescope.conf
+        fi
+    fi
+
+    check_connections
+
+    php artisan storage:link; \
+    php artisan optimize:clear; \
+    php artisan optimize;
+}
+
+check_connections() {
+    echo "Checking connections..."
+
+    # Check Redis
+    echo "Testing Redis connection to ${REDIS_HOST}:${REDIS_PORT}..."
+    php -r "
+        \$maxTries = 30;
+        for (\$i = 0; \$i < \$maxTries; \$i++) {
+            try {
+                \$redis = new Redis();
+                \$redis->connect(getenv('REDIS_HOST'), getenv('REDIS_PORT'));
+                if (\$redis->ping()) {
+                    echo 'Redis connection successful.' . PHP_EOL;
+                    exit(0);
+                }
+            } catch (Exception \$e) {}
+            sleep(1);
+        }
+        echo 'Failed to connect to Redis.' . PHP_EOL;
+        exit(1);
+    "
+
+    # Check Database
+    echo "Testing Database connection to ${DB_HOST}:${DB_PORT}..."
+    if [ -z "${DB_DATABASE}" ] || [ -z "${DB_USERNAME}" ]; then
+        echo "Skipping Database check (DB_DATABASE/DB_USERNAME not set in environment)."
+    else
+        php -r "
+            \$maxTries = 30;
+            for (\$i = 0; \$i < \$maxTries; \$i++) {
+                try {
+                    \$dsn = 'pgsql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_DATABASE');
+                    \$pdo = new PDO(\$dsn, getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
+                    echo 'Database connection successful.' . PHP_EOL;
+                    exit(0);
+                } catch (Exception \$e) {}
+                sleep(1);
+            }
+            echo 'Failed to connect to Database.' . PHP_EOL;
+            exit(1);
+        "
+    fi
+
+    # Check Storage
+    echo "Testing Storage permissions..."
+    php -r "
+        \$path = '/var/www/html/storage/framework/testing/connection_test';
+        @mkdir(dirname(\$path), 0777, true);
+        if (@file_put_contents(\$path, 'test') !== false && @unlink(\$path)) {
+            echo 'Storage is writable and readable.' . PHP_EOL;
+            exit(0);
+        }
+        echo 'Storage is NOT writable or readable.' . PHP_EOL;
+        exit(1);
+    "
+
+    # Check OPcache directory
+    echo "Testing OPcache directory..."
+    php -r "
+        \$opcacheDir = '/tmp/opcache-file-cache';
+        if (!is_dir(\$opcacheDir)) {
+            mkdir(\$opcacheDir, 0777, true);
+        }
+        if (is_dir(\$opcacheDir) && is_writable(\$opcacheDir)) {
+            echo 'OPcache directory is accessible and writable.' . PHP_EOL;
+            exit(0);
+        }
+        echo 'OPcache directory is NOT accessible or writable.' . PHP_EOL;
+        exit(1);
+    "
+}
+
+if [ "$1" != "" ]; then
+    exec "$@"
+elif [ "${container_mode}" = "http" ]; then
+    initialStuff
+    echo "Octane Server: $octane_server"
+    if [ "${octane_server}"  = "frankenphp" ]; then
+        exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.frankenphp.conf
+    elif [ "${octane_server}"  = "swoole" ]; then
+        exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.swoole.conf
+    elif [ "${octane_server}"  = "roadrunner" ]; then
+        exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.roadrunner.conf
+    else
+        echo "Invalid Octane server supplied."
+        exit 1
+    fi
+elif [ "${container_mode}" = "horizon" ]; then
+    initialStuff
+    exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.horizon.conf
+elif [ "${container_mode}" = "reverb" ]; then
+    initialStuff
+    exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.reverb.conf
+elif [ "${container_mode}" = "scheduler" ]; then
+    initialStuff
+    exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.scheduler.conf
+elif [ "${container_mode}" = "worker" ]; then
+    if [ -z "${WORKER_COMMAND}" ]; then
+        echo "WORKER_COMMAND is undefined."
+        exit 1
+    fi
+    initialStuff
+    exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.worker.conf
+else
+    echo "Container mode mismatched."
+    exit 1
+fi

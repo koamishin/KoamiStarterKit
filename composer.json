@@ -1,18 +1,41 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/vue-starter-kit",
+    "name": "yukazakiri/koamistarterkit",
+    "version": "1.0.0",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "KoamiStarterKit - A modern Laravel 12 starter kit with Vue 3, Inertia.js, Tailwind CSS, Fortify authentication, and Wayfinder routing. Production-ready with Octane, comprehensive testing setup with Pest, and automated CI/CD workflows.",
     "keywords": [
         "laravel",
+        "laravel-12",
+        "vue",
+        "vue3",
+        "inertia",
+        "inertiajs",
+        "tailwind",
+        "tailwindcss",
+        "fortify",
+        "wayfinder",
+        "octane",
+        "pest",
+        "starter-kit",
+        "boilerplate",
         "framework"
     ],
+    "homepage": "https://github.com/yukazakiri/Koamistarterkit",
+    "readme": "README.md",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "yukazakiri",
+            "email": "info@koamishin.org"
+        }
+    ],
     "require": {
         "php": "^8.2",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
+        "laravel/octane": "^2.13",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9"
     },
@@ -102,7 +125,11 @@
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi",
             "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
-            "@php artisan migrate --graceful --ansi"
+            "@php artisan migrate --graceful --ansi",
+            "@php artisan storage:link --ansi",
+            "@php artisan setup:starter-kit --ansi",
+            "npm install --silent",
+            "npm run build"
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
