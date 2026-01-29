@@ -1,14 +1,14 @@
 {
-  "version": "1.1.1",
-  "image": "ghcr.io/koamishin/KoamiStarterKit:v1.1.1",
-  "commit": "a9840b76e941ee8626322d62494126dee201734a",
+  "version": "1.2.0",
+  "image": "ghcr.io/koamishin/KoamiStarterKit:v1.2.0",
+  "commit": "3a74e02fad46d2973eb2144d0dbbd95190f8fea2",
   "branch": "main",
-  "timestamp": "2026-01-29T03:45:53Z",
-  "build_url": "https://github.com/koamishin/KoamiStarterKit/actions/runs/21464752678",
+  "timestamp": "2026-01-29T08:31:33Z",
+  "build_url": "https://github.com/koamishin/KoamiStarterKit/actions/runs/21470997559",
   "release_type": "official",
   "changelog": {
-    "current": "Version 1.1.1 - manual release",
-    "previous": "1.0.0"
+    "current": "Version 1.2.0 - manual release",
+    "previous": "1.1.1"
   },
   "metadata": {
     "author": "yukazakiri",
