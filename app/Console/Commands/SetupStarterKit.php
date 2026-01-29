@@ -313,6 +313,7 @@ class SetupStarterKit extends Command
                 'username: \${{ github.actor }}',
                 $content
             );
+
             // Update password for GitHub Container Registry
             return preg_replace(
                 '/password: \$\{\{ secrets\.DOCKER_PASSWORD \}\}/',
@@ -326,6 +327,7 @@ class SetupStarterKit extends Command
             'username: \${{ secrets.DOCKER_USERNAME }}',
             $content
         );
+
         return preg_replace(
             '/password: \$\{\{ secrets\.GITHUB_TOKEN \}\}/',
             'password: \${{ secrets.DOCKER_PASSWORD }}',
