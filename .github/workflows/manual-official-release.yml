@@ -44,6 +44,7 @@ permissions:
 
 env:
   DOCKER_ENABLED: true
+  PACKAGIST_ENABLED: true
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -519,7 +520,7 @@ jobs:
           fetch-depth: 50
 
       - name: Notify Packagist
-        if: ${{ secrets.PACKAGIST_TOKEN != '' && secrets.PACKAGIST_USERNAME != '' }}
+        if: env.PACKAGIST_ENABLED == 'true' && secrets.PACKAGIST_TOKEN != '' && secrets.PACKAGIST_USERNAME != ''
         run: |
           curl -XPOST -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}" https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }} -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'
 

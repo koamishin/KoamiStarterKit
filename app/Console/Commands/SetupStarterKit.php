@@ -89,6 +89,12 @@ class SetupStarterKit extends Command
             hint: 'This will update workflow files to use your Docker registry'
         );
 
+        $usePackagist = confirm(
+            label: 'Do you want to enable automated Packagist updates?',
+            default: true,
+            hint: 'This will notify Packagist to update your package whenever you release'
+        );
+
         $dockerRegistry = 'docker.io';
         $dockerImageName = strtolower($githubUsername.'/'.$packageName);
         $dockerHubAuthor = '';
@@ -149,6 +155,7 @@ class SetupStarterKit extends Command
                 ['Author Email', $authorEmail],
                 ['GitHub Repository', "https://github.com/{$githubUsername}/".ucfirst($packageName)],
                 ['Docker Registry', $useDocker ? $dockerRegistry : 'Not configured'],
+                ['Packagist Updates', $usePackagist ? 'Enabled' : 'Disabled'],
                 ['Docker Hub Author', $useDocker && $registryType === 'dockerhub' ? $dockerHubAuthor : 'N/A'],
                 ['Docker Image', $useDocker ? $dockerImageName : 'Not configured'],
             ]
@@ -164,10 +171,10 @@ class SetupStarterKit extends Command
         $this->updateComposerJson($githubUsername, $packageName, $authorName, $authorEmail);
 
         // Create starter kit config
-        $this->createStarterKitConfig($useDocker, $dockerRegistry, $dockerImageName, $registryType, $dockerHubAuthor);
+        $this->createStarterKitConfig($useDocker, $dockerRegistry, $dockerImageName, $registryType, $dockerHubAuthor, $usePackagist);
 
         // Update workflow files
-        $this->updateAllWorkflowFiles($useDocker, $dockerRegistry, $dockerImageName, $registryType);
+        $this->updateAllWorkflowFiles($useDocker, $dockerRegistry, $dockerImageName, $registryType, $usePackagist);
 
         // Display required environment variables
         $this->displayRequiredSecrets($useDocker, $registryType);
@@ -214,10 +221,11 @@ class SetupStarterKit extends Command
     /**
      * Create starter kit configuration file.
      */
-    protected function createStarterKitConfig(bool $dockerEnabled, string $registry, string $imageName, string $registryType, string $dockerHubAuthor): void
+    protected function createStarterKitConfig(bool $dockerEnabled, string $registry, string $imageName, string $registryType, string $dockerHubAuthor, bool $packagistEnabled): void
     {
         $config = [
             'docker_enabled' => $dockerEnabled,
+            'packagist_enabled' => $packagistEnabled,
             'docker_registry' => $registry,
             'docker_registry_type' => $registryType,
             'docker_image_name' => $imageName,
@@ -236,7 +244,7 @@ class SetupStarterKit extends Command
     /**
      * Update all GitHub workflow files with Docker settings.
      */
-    protected function updateAllWorkflowFiles(bool $dockerEnabled, string $registry, string $imageName, string $registryType): void
+    protected function updateAllWorkflowFiles(bool $dockerEnabled, string $registry, string $imageName, string $registryType, bool $packagistEnabled): void
     {
         $workflowDir = base_path('.github/workflows');
         $workflowFiles = ['auto-release.yml', 'docker-latest.yml', 'manual-official-release.yml'];
@@ -271,6 +279,9 @@ class SetupStarterKit extends Command
             // Update DOCKER_ENABLED environment variable
             $content = $this->updateDockerEnabledVar($content, $dockerEnabled);
 
+            // Update PACKAGIST_ENABLED environment variable
+            $content = $this->updatePackagistEnabledVar($content, $packagistEnabled);
+
             File::put($filePath, $content);
 
             info("✓ Updated .github/workflows/{$workflowFile}");
@@ -298,6 +309,42 @@ class SetupStarterKit extends Command
 
         return preg_replace(
             '/env:\n  REGISTRY:/',
+            $envSection,
+            $content,
+            1
+        );
+    }
+
+    /**
+     * Update or add PACKAGIST_ENABLED environment variable.
+     */
+    protected function updatePackagistEnabledVar(string $content, bool $enabled): string
+    {
+        // Only apply to files that actually have the Packagist notification step
+        if (! str_contains($content, 'Notify Packagist')) {
+            return $content;
+        }
+
+        $enabledStr = $enabled ? 'true' : 'false';
+
+        // Check if PACKAGIST_ENABLED already exists
+        if (preg_match('/PACKAGIST_ENABLED: (true|false)/', $content)) {
+            return preg_replace(
+                '/PACKAGIST_ENABLED: (true|false)/',
+                "PACKAGIST_ENABLED: {$enabledStr}",
+                $content
+            );
+        }
+
+        // If not, inject it before REGISTRY
+        if (! str_contains($content, 'REGISTRY:')) {
+            return $content;
+        }
+
+        $envSection = "  PACKAGIST_ENABLED: {$enabledStr}  # Set to false if you don't want Packagist auto-updates (configured via setup:starter-kit)\n  REGISTRY:";
+
+        return preg_replace(
+            '/  REGISTRY:/',
             $envSection,
             $content,
             1

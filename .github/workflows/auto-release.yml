@@ -10,6 +10,7 @@ permissions:
 
 env:
   DOCKER_ENABLED: true # Set to false if you don't want Docker CI/CD (configured via setup:starter-kit)
+  PACKAGIST_ENABLED: true # Set to false if you don't want Packagist auto-updates (configured via setup:starter-kit)
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -358,7 +359,7 @@ jobs:
           echo "🎉 Pre-release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.analyze-commit.outputs.tag }}"
 
       - name: Notify Packagist
-        if: ${{ secrets.PACKAGIST_TOKEN != '' && secrets.PACKAGIST_USERNAME != '' }}
+        if: env.PACKAGIST_ENABLED == 'true' && secrets.PACKAGIST_TOKEN != '' && secrets.PACKAGIST_USERNAME != ''
         run: |
           curl -XPOST -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}" https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }} -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'
 
