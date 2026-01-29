@@ -313,29 +313,24 @@ class SetupStarterKit extends Command
                 'username: \${{ github.actor }}',
                 $content
             );
-
             // Update password for GitHub Container Registry
-            $content = preg_replace(
+            return preg_replace(
                 '/password: \$\{\{ secrets\.DOCKER_PASSWORD \}\}/',
                 'password: \${{ secrets.GITHUB_TOKEN }}',
-                $content
-            );
-        } else {
-            // Ensure Docker Hub credentials are set
-            $content = preg_replace(
-                '/username: \$\{\{ github\.actor \}\}/',
-                'username: \${{ secrets.DOCKER_USERNAME }}',
-                $content
-            );
-
-            $content = preg_replace(
-                '/password: \$\{\{ secrets\.GITHUB_TOKEN \}\}/',
-                'password: \${{ secrets.DOCKER_PASSWORD }}',
-                $content
+                (string) $content
             );
         }
-
-        return $content;
+        // Ensure Docker Hub credentials are set
+        $content = preg_replace(
+            '/username: \$\{\{ github\.actor \}\}/',
+            'username: \${{ secrets.DOCKER_USERNAME }}',
+            $content
+        );
+        return preg_replace(
+            '/password: \$\{\{ secrets\.GITHUB_TOKEN \}\}/',
+            'password: \${{ secrets.DOCKER_PASSWORD }}',
+            (string) $content
+        );
     }
 
     /**
