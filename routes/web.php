@@ -10,7 +10,7 @@ Route::get('/', fn () => Inertia::render('Welcome', [
 
 Route::get('dashboard', fn () => Inertia::render('Dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('web')->group(function () {
+Route::middleware('web')->group(function (): void {
     /** @phpstan-ignore-next-line */
     Route::impersonate();
     Route::get('impersonate/take-redirect', [\App\Http\Controllers\ImpersonateController::class, 'takeRedirect'])->name('impersonate.take-redirect');

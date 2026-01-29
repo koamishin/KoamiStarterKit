@@ -182,9 +182,9 @@ class UserResource extends Resource
                 Action::make('impersonate')
                     ->label('Impersonate')
                     ->icon('heroicon-o-user-plus')
-                    ->url(fn (User $record) => route('impersonate', $record->id))
+                    ->url(fn (User $user): string => route('impersonate', $user->id))
                     ->openUrlInNewTab()
-                    ->visible(fn (User $record) => ($user = Auth::user()) instanceof User && $user->hasRole('admin') && $record->canBeImpersonated()),
+                    ->visible(fn (User $record): bool => ($user = Auth::user()) instanceof User && $user->hasRole('admin') && $record->canBeImpersonated()),
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('verify_email')
