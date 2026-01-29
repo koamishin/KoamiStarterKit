@@ -33,48 +33,14 @@ I wanted a **"battery-included"** starting point where I could run one command a
 
 ## ✨ Features
 
-This kit is **opinionated** and **battery-included**. It comes pre-wired with everything you need to build a production-ready application.
+**Battery-included, but not bloated.** Everything you need to ship.
 
-### 🔐 Authentication & Security
-
-- **Complete Auth System**: Powered by [Laravel Fortify](https://laravel.com/docs/fortify).
-    - Login & Registration
-    - Password Reset & Confirmation
-    - Email Verification
-- **Two-Factor Authentication**: Built-in 2FA support with QR codes and recovery codes.
-- **Profile Management**: Update profile information, change passwords, and delete accounts.
-- **Session Management**: Secure session handling with browser session flushing.
-
-### 🎛️ Admin Panel (Filament)
-
-- **Pre-configured Admin**: A ready-to-use [Filament](https://filamentphp.com) admin panel.
-- **User Management**: Complete CRUD resource for managing users out of the box.
-- **Scalable**: Easily add new resources and pages using Filament's CLI.
-
-### 🎨 Modern UI/UX (Shadcn Vue)
-
-- **Component Library**: Over 40+ accessible components from [Shadcn Vue](https://www.shadcn-vue.com/).
-    - _Essentials_: Buttons, Inputs, Cards, Dialogs, Dropdowns.
-    - _Data_: Tables, Charts, Pagination.
-    - _Layout_: Resizable panels, Scroll areas, Sheets.
-- **Multiple Layouts**:
-    - **Auth**: Split, Card, and Simple layouts.
-    - **App**: Responsive Sidebar layout with collapsible navigation.
-- **Theme System**: Built-in Dark Mode and Color Theme switcher.
-- **Toast Notifications**: Integrated [Sonner](https://sonner.emilkowal.ski/) for beautiful toast notifications.
-
-### 🛠 Developer Experience (DX)
-
-- **Type-Safe Routing**: [Wayfinder](https://github.com/laravel/wayfinder) generates TypeScript definitions for your Laravel routes. No more magic strings!
-- **Interactive Setup**: `php artisan setup:starter-kit` command to personalize your project in seconds.
-- **Quality Tools**: Pre-configured with Pint, Rector, PHPStan, ESLint, and Prettier.
-- **CI/CD**: GitHub Actions for testing, linting, and Docker builds.
-
-### ⚡ Performance
-
-- **Laravel Octane**: Pre-configured for high-performance serving.
-- **Inertia.js v2**: Fast, modern Single Page Application (SPA) experience.
-- **Vite**: Blazing fast frontend build tool.
+- **🔐 Complete Authentication**: Powered by **Fortify**. Login, Registration, 2FA, Email Verification, and Profile Management ready to go.
+- **🎛️ Admin Panel**: Pre-configured **Filament** admin dashboard with User Management.
+- **🎨 40+ UI Components**: Beautiful, accessible components from **Shadcn Vue**, plus dark mode and multiple layouts.
+- **🛠️ Type-Safe Routing**: **Wayfinder** ensures your frontend knows your backend routes. No more broken links.
+- **⚡ High Performance**: **Laravel Octane** + **Inertia.js v2** + **Vite** for instant page loads.
+- **🚢 Production Ready**: **Docker** support, **GitHub Actions** CI/CD, and strict code quality tools (Pint, PHPStan, Rector) pre-configured.
 
 ---
 
