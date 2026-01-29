@@ -359,6 +359,8 @@ class SetupStarterKit extends Command
         }
 
         $secrets[] = ['DISCORD_WEBHOOK_URL', 'Discord webhook for notifications', 'Optional - for Discord release notifications'];
+        $secrets[] = ['PACKAGIST_USERNAME', 'Packagist username', 'Optional - for automated Packagist updates'];
+        $secrets[] = ['PACKAGIST_TOKEN', 'Packagist API token', 'Optional - for automated Packagist updates'];
 
         $this->table(
             ['Secret Name', 'Description', 'Notes'],

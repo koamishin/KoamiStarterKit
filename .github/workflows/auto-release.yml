@@ -2,14 +2,14 @@ name: Auto Pre-release and Docker Tag
 
 on:
   push:
-    branches: [ develop, main ]
+    branches: [develop, main]
 
 permissions:
   contents: write
   packages: write
 
 env:
-  DOCKER_ENABLED: true  # Set to false if you don't want Docker CI/CD (configured via setup:starter-kit)
+  DOCKER_ENABLED: true # Set to false if you don't want Docker CI/CD (configured via setup:starter-kit)
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -97,10 +97,10 @@ jobs:
           # - Feature/Major commits: increment MINOR, reset PATCH to 0
           # - Patch/Fix/Chore commits: increment PATCH only
           PRERELEASE_PREFIX="beta"
-          
+
           # Find the latest dev tag for this base version with format v{BASE}-dev.X.Y
           LATEST_DEV_TAG=$(git tag -l "v${BASE_VERSION}-${PRERELEASE_PREFIX}.*.*" --sort=-v:refname | head -n1 || true)
-          
+
           if [ -n "${LATEST_DEV_TAG:-}" ]; then
             # Extract the dev minor and patch from the tag (e.g., v1.2.3-dev.2.5 -> 2 and 5)
             DEV_SUFFIX="${LATEST_DEV_TAG#v${BASE_VERSION}-${PRERELEASE_PREFIX}.}"
@@ -132,7 +132,7 @@ jobs:
           esac
 
           TAG="v${BASE_VERSION}-${PRERELEASE_PREFIX}.${DEV_MINOR}.${DEV_PATCH}"
-          
+
           # Ensure tag doesn't already exist (safety check)
           while git rev-parse "$TAG" >/dev/null 2>&1; do
             DEV_PATCH=$((DEV_PATCH + 1))
@@ -227,7 +227,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate changelog
+      - name: Generate changelog and version artifact
         id: changelog
         shell: bash
         run: |
@@ -282,6 +282,19 @@ jobs:
           📊 *Build: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}*
           EOF
 
+          # Create version.json for release artifacts
+          cat > version.json << EOF
+          {
+            "version": "${VERSION}",
+            "image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}",
+            "commit": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "build_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "release_type": "${RELEASE_TYPE}"
+          }
+          EOF
+
       - name: Create Git tag (idempotent)
         shell: bash
         run: |
@@ -312,71 +325,9 @@ jobs:
             version.json
           generate_release_notes: false
 
-  update-composer-version:
-    runs-on: ubuntu-latest
-    needs: [analyze-commit, build-and-push, create-release]
-    if: always() && needs.analyze-commit.result == 'success' && (needs.build-and-push.result == 'success' || needs.build-and-push.result == 'skipped') && (needs.create-release.result == 'success' || needs.create-release.result == 'skipped')
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Update composer.json version
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          VERSION="${{ needs.analyze-commit.outputs.version }}"
-          TAG="${{ needs.analyze-commit.outputs.tag }}"
-          RELEASE_TYPE="${{ needs.analyze-commit.outputs.release_type }}"
-          COMMIT_MSG="${{ needs.analyze-commit.outputs.commit_message }}"
-
-          # Get previous version from composer.json
-          PREVIOUS_VERSION="1.0.0"
-          if [ -f "composer.json" ]; then
-            PREVIOUS_VERSION=$(jq -r '.version // "1.0.0"' composer.json 2>/dev/null || echo "1.0.0")
-          fi
-
-          # Pull latest changes to avoid conflicts
-          git pull origin ${GITHUB_REF_NAME}
-
-          # Update composer.json version field using jq
-          jq --arg version "$VERSION" '.version = $version' composer.json > composer.json.tmp
-          mv composer.json.tmp composer.json
-
-          # Create version.json for release artifacts (not committed to repo)
-          cat > version.json << EOF
-          {
-            "version": "${VERSION}",
-            "image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}",
-            "commit": "${{ github.sha }}",
-            "branch": "${{ github.ref_name }}",
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "build_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-            "release_type": "${RELEASE_TYPE}",
-            "changelog": {
-              "current": "Version ${VERSION} - ${COMMIT_MSG}",
-              "previous": "${PREVIOUS_VERSION}"
-            },
-            "metadata": {
-              "author": "${{ github.actor }}",
-              "workflow": "${{ github.workflow }}",
-              "repository": "${{ github.repository }}"
-            }
-          }
-          EOF
-
-          # Commit only composer.json (version.json is just for release artifacts)
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add composer.json
-          git diff --staged --quiet || (git commit -m "chore: bump version to ${VERSION} [skip ci]" && git push)
-
   notify:
     runs-on: ubuntu-latest
-    needs: [analyze-commit, build-and-push, create-release, update-composer-version, optimize_ci]
+    needs: [analyze-commit, build-and-push, create-release, optimize_ci]
     if: always() && needs.optimize_ci.outputs.skip == 'false'
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -406,12 +357,16 @@ jobs:
 
           echo "🎉 Pre-release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.analyze-commit.outputs.tag }}"
 
+      - name: Notify Packagist
+        if: ${{ secrets.PACKAGIST_TOKEN != '' && secrets.PACKAGIST_USERNAME != '' }}
+        run: |
+          curl -XPOST -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}" https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }} -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'
+
       - name: Send Discord notification
         if: ${{ env.DISCORD_WEBHOOK_URL != '' }}
         env:
           BUILD_RESULT: ${{ needs.build-and-push.result }}
           RELEASE_RESULT: ${{ needs.create-release.result }}
-          VERSION_RESULT: ${{ needs.update-composer-version.result }}
         shell: bash
         run: |
           set -euo pipefail
@@ -432,7 +387,6 @@ jobs:
 
           BUILD_ICON=$(status_icon "$BUILD_RESULT")
           RELEASE_ICON=$(status_icon "$RELEASE_RESULT")
-          VERSION_ICON=$(status_icon "$VERSION_RESULT")
 
           if [ "$BUILD_RESULT" = "success" ]; then
             COLOR=5763719
@@ -458,7 +412,6 @@ jobs:
             --arg summary "$SUMMARY" \
             --arg build "$BUILD_ICON Build: $BUILD_RESULT" \
             --arg release "$RELEASE_ICON Release: $RELEASE_RESULT" \
-            --arg version "$VERSION_ICON Version File: $VERSION_RESULT" \
             --arg versionLabel "${{ needs.analyze-commit.outputs.version }}" \
             --arg tag "${{ needs.analyze-commit.outputs.tag }}" \
             --arg type "${{ needs.analyze-commit.outputs.release_type }}" \
@@ -485,7 +438,6 @@ jobs:
                     { "name": "Docker Alias", "value": $dockerAlias, "inline": false },
                     { "name": "Build Stage", "value": $build, "inline": true },
                     { "name": "Release Stage", "value": $release, "inline": true },
-                    { "name": "Version File", "value": $version, "inline": true },
                     { "name": "Branch", "value": $branch, "inline": true },
                     { "name": "Actor", "value": $actor, "inline": true },
                     { "name": "Commit", "value": $commit, "inline": false },

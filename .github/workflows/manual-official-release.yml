@@ -410,6 +410,18 @@ jobs:
 
             fs.writeFileSync('RELEASE_NOTES.md', lines.join('\n'));
 
+            // Create version.json for release artifacts
+            const versionJson = {
+              version: version,
+              image: `${registry}/${imageName}:${tag}`,
+              commit: context.sha,
+              branch: context.ref.replace('refs/heads/', ''),
+              timestamp: new Date().toISOString(),
+              build_url: `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
+              release_type: "official"
+            };
+            fs.writeFileSync('version.json', JSON.stringify(versionJson, null, 2));
+
       - name: Create Git tag (idempotent)
         shell: bash
         run: |
@@ -505,6 +517,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 50
+
+      - name: Notify Packagist
+        if: ${{ secrets.PACKAGIST_TOKEN != '' && secrets.PACKAGIST_USERNAME != '' }}
+        run: |
+          curl -XPOST -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}" https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }} -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'
 
       - name: Send Discord notification
         if: ${{ env.DISCORD_WEBHOOK_URL != '' }}
