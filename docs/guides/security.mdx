@@ -1,0 +1,21 @@
+---
+title: Security Considerations
+description: Authentication, authorization, and sensitive operations.
+---
+
+# Security Considerations
+
+## Authentication
+
+Strictly handled by **Laravel Fortify**. Do not manually implement login controllers unless necessary.
+
+## Authorization
+
+Use **Spatie Permissions**.
+
+- `@can('edit posts')` in Blade.
+- `v-if="$page.props.auth.can['edit posts']"` in Vue (requires prop sharing).
+
+## Impersonation Risks
+
+Impersonation is a sensitive feature. It is restricted to users with the `super_admin` role (or equivalent permission) within the `UserResource`.

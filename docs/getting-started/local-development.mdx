@@ -1,0 +1,124 @@
+---
+title: Local Development
+description: How to set up and run your local development environment efficiently.
+---
+
+# Local Development
+
+KoamiStarterKit is optimized for a seamless local development experience. Once you have installed the project, getting up and running is designed to be a single command.
+
+## The "One Command" Start
+
+Instead of running separate terminal tabs for your backend, frontend, queues, and logs, we provide a unified command using `concurrently`.
+
+```bash
+composer run dev
+```
+
+This single command automatically starts the following services in parallel:
+
+1.  **Laravel Server:** `php artisan serve` (Backend)
+2.  **Vite:** `npm run dev` (Frontend with HMR)
+3.  **Queue Worker:** `php artisan queue:listen` (Background jobs)
+4.  **Pail:** `php artisan pail` (Real-time application logs)
+
+> **Note:** Access your application at `http://localhost:8000`.
+
+## Database Management
+
+### Default: SQLite
+
+By default, the starter kit is configured to use **SQLite**.
+
+- **Zero Config:** No external database server required.
+- **File Location:** `database/database.sqlite`.
+- **GUI:** We recommend using a tool like **TablePlus** or **DB Browser for SQLite** to inspect your data.
+
+### Switching to MySQL/PostgreSQL
+
+If you prefer a more robust database for development (or to match production):
+
+1.  **Update `.env`:**
+    ```env
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=my_app
+    DB_USERNAME=root
+    DB_PASSWORD=
+    ```
+2.  **Laravel Sail (Docker):**
+    Since `laravel/sail` is included in the dev dependencies, you can easily scaffold a Docker environment:
+    ```bash
+    php artisan sail:install
+    ./vendor/bin/sail up -d
+    ./vendor/bin/sail artisan migrate
+    ```
+
+## Tooling & IDE Setup
+
+To get the best experience (especially with Vue 3 and Tailwind), we strongly recommend **VS Code** with the following extensions:
+
+### Recommended Extensions
+
+- **Vue - Official (Volar):** Essential for Vue 3 SFC support.
+- **Tailwind CSS IntelliSense:** Autocomplete for Tailwind classes.
+- **PHP Intelephense:** Better PHP code intelligence.
+- **ESLint:** Real-time linting for JavaScript/TypeScript.
+- **Prettier:** Automatic code formatting.
+
+### VS Code Settings
+
+Create a `.vscode/settings.json` file to ensure consistent formatting on save:
+
+```json
+{
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "[vue]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[php]": {
+        "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+    }
+}
+```
+
+## Debugging
+
+### Real-time Logs (Pail)
+
+Because `composer run dev` starts **Laravel Pail**, you will see application logs (errors, exceptions, `Log::info()`) streaming directly in your terminal window. You don't need to `tail -f storage/logs/laravel.log`.
+
+### Tinker
+
+For interacting with your application's data and classes via the command line:
+
+```bash
+php artisan tinker
+```
+
+Example usage:
+
+```php
+> User::factory()->create();
+> $user = User::first();
+> $user->notify(new WelcomeNotification());
+```
+
+## Code Quality Checks
+
+Before pushing code, it's good practice to run the quality suite:
+
+```bash
+# Fix code style (PHP)
+composer lint
+
+# Analyze types (PHP)
+composer phpstan
+
+# Run tests
+composer test
+```

@@ -1,0 +1,37 @@
+---
+title: Directory Structure
+description: Explanation of the project's folder organization.
+---
+
+# Directory Structure
+
+The project follows standard Laravel conventions with specific enhancements for Inertia and TypeScript.
+
+```text
+.
+├── app/
+│   ├── Actions/            # Business logic (Fortify actions, etc.)
+│   ├── Console/            # Custom commands (e.g., SetupStarterKit)
+│   ├── Filament/           # Admin Panel Resources, Pages, and Widgets
+│   ├── Http/
+│   │   ├── Controllers/    # Standard controllers
+│   │   └── Middleware/     # HandleInertiaRequests, HandleAppearance
+│   └── Models/             # Eloquent Models (User, etc.)
+├── config/                 # Application configuration
+├── resources/
+│   ├── css/                # Filament custom themes
+│   ├── js/                 # Vue 3 Frontend Source
+│   │   ├── components/     # Global Vue components
+│   │   │   └── ui/         # Shadcn Vue components
+│   │   ├── layouts/        # Page layouts (AppShell, etc.)
+│   │   ├── pages/          # Inertia Page components
+│   │   ├── wayfinder/      # Route definition helpers
+│   │   ├── app.ts          # Frontend entry point
+│   │   └── ssr.ts          # Server-Side Rendering entry point
+│   └── views/              # Blade templates (app.blade.php, emails)
+├── routes/
+│   ├── web.php             # Application routes
+│   └── auth.php            # Fortify/Auth routes
+├── tests/                  # Pest test suite
+└── vite.config.ts          # Vite configuration
+```

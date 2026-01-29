@@ -1,0 +1,125 @@
+---
+title: CI/CD & Containers
+description: Learn about the automated CI/CD pipelines, Docker container generation, and how to self-host the application.
+---
+
+# CI/CD & Containers
+
+KoamiStarterKit comes with a robust, enterprise-grade CI/CD pipeline built on **GitHub Actions**. It automatically handles testing, linting, Docker image building, and releasing.
+
+## Automated Setup
+
+You don't need to manually edit YAML files to get started. The project includes a setup wizard that configures everything for you.
+
+```bash
+php artisan setup:starter-kit
+```
+
+This command will:
+
+1.  **Configure your Registry:** Choose between Docker Hub (`docker.io`) or GitHub Container Registry (`ghcr.io`).
+2.  **Update Workflows:** Automatically replaces placeholders in `.github/workflows/` with your repository and registry details.
+3.  **Set Permissions:**Configures the necessary tokens and secrets usage.
+
+## Workflow Overview
+
+The project includes four main workflows:
+
+### 1. `ci.yml` (Continuous Integration)
+
+Runs on every push and pull request to main branches.
+
+- **Pint:** Checks and auto-fixes PHP coding style.
+- **PHPStan:** Performs static analysis to catch type errors.
+- **Rector:** Auto-refactors code to modern standards.
+- **Tests:** Runs the Pest test suite on PHP 8.4 and 8.5.
+- **Frontend:** Lints Vue/TypeScript files.
+
+### 2. `auto-release.yml` (Continuous Delivery)
+
+Runs when you push to `develop` or `main`.
+
+- **Semantic Versioning:** Analyzes your commit messages (e.g., `feat:`, `fix:`) to determine the next version number.
+- **Docker Build:** Builds a multi-arch Docker image using **FrankenPHP**.
+- **Registry Push:** Pushes the image to your configured registry (GHCR/DockerHub).
+- **Pre-release:** Creates a GitHub Pre-release with auto-generated changelogs.
+- **Notifications:** Sends a summary to Discord (if configured).
+
+### 3. `manual-official-release.yml`
+
+Triggered manually for stable production releases.
+
+- Promotes a pre-release to "Official".
+- Tags the Docker image as `:latest`.
+- Updates `version.json`.
+
+## Docker Architecture
+
+The project uses a **Multi-Stage Build** process to ensure small, secure, and optimized images.
+
+- **Base:** `dunglas/frankenphp` (High-performance application server).
+- **Build Stage:** Uses `oven/bun` to compile frontend assets (Vite).
+- **Runtime:** minimal production image containing only necessary artifacts.
+
+### Included Services
+
+The Docker container is a "Single Container" solution managed by **Supervisor**. It runs:
+
+- **FrankenPHP:** The web server.
+- **Horizon:** Queue worker for background jobs.
+- **Scheduler:** Runs scheduled tasks (CRON).
+- **Pulse:** Server monitoring.
+
+## Self-Hosting Guide
+
+Because the container includes the web server, workers, and scheduler, self-hosting is incredibly simple. You can run the entire application with a single Docker command.
+
+### Prerequisites
+
+- Docker installed on your server.
+- A database (managed RDS, or a separate Postgres/MySQL container).
+- Redis (for queues/cache).
+
+### Running the Image
+
+```bash
+# 1. Login to your registry
+echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
+
+# 2. Run the application
+docker run -d \
+  --name my-app \
+  -p 80:8000 \
+  -e APP_KEY="base64:..." \
+  -e DB_CONNECTION=pgsql \
+  -e DB_HOST=10.0.0.2 \
+  -e REDIS_HOST=10.0.0.3 \
+  ghcr.io/your-username/my-app:latest
+```
+
+### Docker Compose Example
+
+For a full stack setup (App + DB + Redis):
+
+```yaml
+services:
+    app:
+        image: ghcr.io/your-username/my-app:latest
+        ports:
+            - '80:8000'
+        environment:
+            APP_KEY: '${APP_KEY}'
+            DB_HOST: db
+            REDIS_HOST: redis
+        depends_on:
+            - db
+            - redis
+
+    db:
+        image: postgres:15
+        environment:
+            POSTGRES_PASSWORD: secret
+
+    redis:
+        image: redis:alpine
+```

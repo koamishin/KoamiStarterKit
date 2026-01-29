@@ -1,0 +1,23 @@
+---
+title: Configuration
+description: Environment variables, config files, and defaults.
+---
+
+# Configuration
+
+Configuration is handled via `.env` environment variables and files in `config/`.
+
+## Key `.env` Variables
+
+| Variable        | Description                              | Default          |
+| :-------------- | :--------------------------------------- | :--------------- |
+| `APP_NAME`      | Project name (used in titles/emails)     | Laravel          |
+| `APP_URL`       | Base URL (critical for asset generation) | http://localhost |
+| `DB_CONNECTION` | Database driver                          | sqlite           |
+| `VITE_APP_NAME` | Exposed to frontend                      | ${APP_NAME}      |
+
+## Config Files
+
+- **`config/fortify.php`**: Authentication settings (features enabled/disabled).
+- **`config/permission.php`**: Role-Based Access Control (RBAC) settings.
+- **`config/ziggy.php`**: Routing configuration for frontend integration.

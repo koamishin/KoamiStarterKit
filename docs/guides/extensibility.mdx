@@ -1,0 +1,23 @@
+---
+title: Extensibility
+description: How to add new features, components, and admin resources.
+---
+
+# Extensibility
+
+## Adding UI Components
+
+The project uses **Shadcn Vue**. To add new components:
+
+1.  Ideally, use the `shadcn-vue` CLI (if configured) or manually copy component code into `resources/js/components/ui`.
+2.  Import them in your pages: `import { Button } from '@/components/ui/button'`.
+
+## Adding Admin Resources
+
+To add a new CRUD section to the admin panel:
+
+```bash
+php artisan make:filament-resource Post
+```
+
+This generates the Resource, Table, and Form classes in `app/Filament/Resources`.

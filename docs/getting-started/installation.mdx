@@ -1,0 +1,159 @@
+---
+title: Installation
+description: Comprehensive installation guide for KoamiStarterKit using the Laravel Installer, Composer, or manual setup.
+---
+
+# Setup & Installation
+
+KoamiStarterKit is designed to be flexible. You can install it using the method that best fits your workflow.
+
+## Prerequisites
+
+Before you begin, ensure your development environment meets the following requirements:
+
+- **PHP 8.2+** (with extensions: `ctype`, `curl`, `dom`, `fileinfo`, `filter`, `hash`, `mbstring`, `openssl`, `pcre`, `pdo`, `session`, `tokenizer`, `xml`)
+- **Composer** (Dependency Manager for PHP)
+- **Node.js & NPM** (LTS version recommended)
+- **Docker** (Optional, but recommended for local services like Redis/Postgres)
+
+---
+
+## Method 1: The Laravel Installer (Recommended)
+
+The easiest way to start is using the official Laravel CLI. This feels native to the ecosystem.
+
+### 1. Install the Laravel Installer
+
+If you haven't already:
+
+```bash
+composer global require laravel/installer
+```
+
+### 2. Create a New Project
+
+Use the `--using` flag to scaffold your app directly from the starter kit repository:
+
+```bash
+laravel new my-app --using=koamishin/koamistarterkit
+```
+
+### 3. Enter the Directory
+
+```bash
+cd my-app
+```
+
+### 4. Run the Setup Wizard
+
+We have a custom Artisan command to personalize the kit for you:
+
+```bash
+php artisan setup:starter-kit
+```
+
+---
+
+## Method 2: Composer Create-Project
+
+If you prefer using Composer directly without the global Laravel installer:
+
+### 1. Run Create Project
+
+```bash
+composer create-project koamishin/koamistarterkit my-app
+```
+
+### 2. Enter Directory & Setup
+
+```bash
+cd my-app
+php artisan setup:starter-kit
+```
+
+---
+
+## Method 3: Manual Installation (Git Clone)
+
+For contributors or those who want full control over the initialization process.
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/koamishin/KoamiStarterKit.git my-app
+cd my-app
+```
+
+### 2. Install PHP Dependencies
+
+```bash
+composer install
+```
+
+### 3. Environment Setup
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Generate your application encryption key:
+
+```bash
+php artisan key:generate
+```
+
+### 4. Database Setup
+
+By default, the project is configured for **SQLite**. Create the database file:
+
+```bash
+touch database/database.sqlite
+```
+
+_If you prefer MySQL or PostgreSQL, update `DB_CONNECTION` in your `.env` file._
+
+Run migrations:
+
+```bash
+php artisan migrate
+```
+
+### 5. Install Node Dependencies
+
+```bash
+npm install
+```
+
+### 6. Run the Setup Wizard
+
+Finalize the configuration:
+
+```bash
+php artisan setup:starter-kit
+```
+
+---
+
+## Post-Installation Steps
+
+Regardless of the method you chose, once installed, you can start the development server.
+
+### Start Development Server
+
+This command runs the Laravel backend, Vite frontend server, Queue worker, and Pail (logger) concurrently:
+
+```bash
+composer run dev
+```
+
+Visit `http://localhost:8000` in your browser.
+
+### Verify Installation
+
+To ensure everything is working correctly, you can run the test suite:
+
+```bash
+composer test
+```

@@ -1,0 +1,50 @@
+---
+title: Examples
+description: Code snippets and common usage examples.
+---
+
+# Examples
+
+## Frontend Page Component
+
+A typical Inertia page in `resources/js/pages/Dashboard.vue`:
+
+```vue
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Head } from '@inertiajs/vue3';
+
+defineProps<{
+    user: User;
+}>();
+</script>
+
+<template>
+    <Head title="Dashboard" />
+
+    <AppLayout>
+        <div class="py-12">
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div
+                    class="overflow-hidden bg-white p-6 shadow-xl sm:rounded-lg"
+                >
+                    Welcome back, {{ user.name }}!
+                </div>
+            </div>
+        </div>
+    </AppLayout>
+</template>
+```
+
+## Backend Route Definition
+
+Defining a route that is accessible via Wayfinder:
+
+```php
+// routes/web.php
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
+});
+```

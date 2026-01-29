@@ -1,0 +1,30 @@
+---
+title: Core Concepts
+description: Deep dive into Hybrid Frontend, Wayfinder, and Impersonation.
+---
+
+# Core Concepts
+
+## Hybrid Frontend
+
+The application runs two distinct frontends:
+
+- **User Facing:** `resources/js` (Vue 3). Single Page Application experience.
+- **Admin Facing:** `app/Filament` (Blade/Livewire). Server-driven admin interface.
+
+## Wayfinder
+
+Instead of hardcoding URLs or manual route strings, KoamiStarterKit uses **Wayfinder**.
+
+- **Concept:** Generates TypeScript definitions for your backend routes.
+- **Usage:** Allows you to use `route('posts.show', { post: 1 })` with full type safety in your Vue components.
+
+## User Impersonation
+
+A critical support feature allowing admins to view the app as a specific user.
+
+- **Backend:** Managed by `lab404/laravel-impersonate`.
+- **Integration:**
+    - **Admin:** Button in Filament User Resource.
+    - **Frontend:** `ImpersonateBanner.vue` component listens for `page.props.impersonating` state.
+    - **Middleware:** `HandleInertiaRequests` injects the impersonation state into global props.

@@ -1,0 +1,79 @@
+---
+title: Branding & Customization
+description: Customize branding elements, logos, and manage themes.
+---
+
+# Branding & Customization
+
+KoamiStarterKit is built to be easily rebranded. You can change the application name, logos, and manage visual themes with simple commands and configuration changes.
+
+## Branding
+
+### Application Name
+
+The application name is used in the browser title, emails, and parts of the UI.
+Update it in your `.env` file:
+
+```env
+APP_NAME="My Awesome App"
+```
+
+### Logos & Icons
+
+The project separates the logo logic into two Vue components found in `resources/js/components/`:
+
+1.  **`KoamishinLogo.vue`:** This is the SVG icon. Replace the `<svg>...</svg>` content with your own brand mark.
+2.  **`AppLogo.vue`:** This is the full logo (Icon + Text) used in the sidebar and auth pages. It imports `KoamishinLogo` and adds the text "Koamishin Starterkit". You should update the text here to match your brand.
+
+### Favicon
+
+Replace the `public/favicon.ico` file with your own favicon.
+
+## Theming
+
+The starter kit uses a powerful theming system compatible with **Shadcn** and **Tailwind CSS v4**. Themes are CSS files stored in `resources/css/themes/`.
+
+### Managing Themes
+
+We provide a set of Artisan commands to manage your themes easily.
+
+#### 1. Import a Theme
+
+You can import any theme from the [tweakcn.com](https://tweakcn.com) theme generator. Copy the "Export JSON" URL and run:
+
+```bash
+php artisan theme:import https://tweakcn.com/api/themes/your-theme-id
+```
+
+This will:
+
+- Download the theme definition.
+- Generate a CSS file in `resources/css/themes/`.
+- Automatically register it in `resources/js/conf/themes.ts`.
+- Make it available in the **Theme Switcher** UI immediately.
+
+#### 2. Add a Theme Manually
+
+If you have a local theme definition or want to create one from scratch:
+
+```bash
+php artisan theme:add my-custom-theme
+```
+
+#### 3. Remove a Theme
+
+To delete a theme and remove it from the configuration:
+
+```bash
+php artisan theme:remove ocean
+```
+
+### Admin Panel (Filament)
+
+The admin panel has its own separate theme configuration located at `resources/css/filament/admin/theme.css`.
+To customize the admin panel colors, you can modify the `AdminPanelProvider` or the CSS file directly.
+
+## UI Components
+
+The project uses **Shadcn Vue** components. These are not installed via npm but are "copy-pasted" into your project, giving you full control over their code.
+You can find them in `resources/js/components/ui/`. Feel free to modify them to fit your design system requirements.

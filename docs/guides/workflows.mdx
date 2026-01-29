@@ -1,0 +1,21 @@
+---
+title: Workflows
+description: Typical execution flow, startup process, and request lifecycle.
+---
+
+# Workflows
+
+## Development Loop
+
+The project uses `concurrently` (via `composer run dev`) to manage the dev stack.
+
+1.  **Laravel Server:** Serves the backend and API.
+2.  **Vite:** Hot Module Replacement (HMR) for Vue components.
+3.  **Queue:** Processes background jobs (emails, etc.).
+4.  **Pail:** Streams logs to your terminal.
+
+## Authentication Flow (Fortify)
+
+1.  **Login:** Request to `/login` -> Fortify Action -> Authenticate Session.
+2.  **2FA:** If enabled, Fortify interrupts flow -> User enters OTP -> Session Fully Authenticated.
+3.  **Redirect:** User sent to `RouteServiceProvider::HOME` (usually `/dashboard`).

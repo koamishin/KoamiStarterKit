@@ -1,0 +1,25 @@
+---
+title: Development Guide
+description: Coding conventions, testing, and debugging.
+---
+
+# Development Guide
+
+## Coding Conventions
+
+- **Linting:** Run `composer lint` (uses Laravel Pint) before committing.
+- **Static Analysis:** Run `composer phpstan` to catch type errors.
+- **Refactoring:** Run `composer rector` to apply automated modernizations.
+
+## Testing
+
+The project uses **Pest PHP** for testing.
+
+- **Run All Tests:** `composer test`
+- **Unit Tests:** `php artisan test --unit`
+- **Feature Tests:** `php artisan test`
+
+## Debugging
+
+- **Tinker:** `php artisan tinker` for REPL access to your models.
+- **Browser Logs:** `php artisan pail` streams logs directly to your CLI during `composer run dev`.
