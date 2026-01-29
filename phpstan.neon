@@ -16,11 +16,12 @@ parameters:
         - storage
         - vendor
     
-    # Ignore common Laravel patterns
+    # Ignore common Laravel patterns and Pest internal classes
     ignoreErrors:
         - '#Unsafe usage of new static#'
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
         - '#Call to an undefined method Illuminate\\Database\\Query\\Builder#'
+        - '#Call to method .+ of internal class Pest\\.+ from outside its root namespace Pest\.#'
     
     # Report unused declarations
     reportUnmatchedIgnoredErrors: false

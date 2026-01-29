@@ -1,8 +1,8 @@
 {
     "docker_enabled": true,
-    "docker_registry": "docker.io",
-    "docker_registry_type": "dockerhub",
-    "docker_image_name": "koamishin\/koamistarterkit",
+    "docker_registry": "ghcr.io",
+    "docker_registry_type": "ghcr",
+    "docker_image_name": "koamishin/koamistarterkit",
     "configured_at": "2026-01-29T01:00:55+00:00",
     "docker_hub_author": "koamishin"
 }
