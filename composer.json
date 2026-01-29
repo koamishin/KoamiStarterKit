@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "yukazakiri/koamistarterkit",
+    "name": "koamishin/koamistarterkiy",
     "version": "1.0.0",
     "type": "project",
     "description": "KoamiStarterKit - A modern Laravel 12 starter kit with Vue 3, Inertia.js, Tailwind CSS, Fortify authentication, and Wayfinder routing. Production-ready with Octane, comprehensive testing setup with Pest, and automated CI/CD workflows.",
@@ -21,13 +21,13 @@
         "boilerplate",
         "framework"
     ],
-    "homepage": "https://github.com/yukazakiri/Koamistarterkit",
+    "homepage": "https://github.com/koamishin/Koamistarterkiy",
     "readme": "README.md",
     "license": "MIT",
     "authors": [
         {
             "name": "yukazakiri",
-            "email": "info@koamishin.org"
+            "email": "marianolouis18@gmail.com"
         }
     ],
     "require": {

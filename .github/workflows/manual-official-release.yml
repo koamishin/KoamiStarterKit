@@ -44,7 +44,7 @@ permissions:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: yukazakiri/koamistarterkit
+  IMAGE_NAME: koamishin/koamistarterkit
 
 jobs:
   prepare:
@@ -181,7 +181,7 @@ jobs:
           TAG: ${{ needs.prepare.outputs.tag }}
           EXTRA_NOTES: ${{ needs.prepare.outputs.extra_notes }}
           REGISTRY: docker.io
-          IMAGE_NAME: yukazakiri/koamistarterkit
+          IMAGE_NAME: koamishin/koamistarterkit
         with:
           script: |
             const fs = require('fs');

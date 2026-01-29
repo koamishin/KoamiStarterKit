@@ -11,7 +11,7 @@ permissions:
 env:
   DOCKER_ENABLED: true  # Set to false if you don't want Docker CI/CD (configured via setup:starter-kit)
   REGISTRY: docker.io
-  IMAGE_NAME: yukazakiri/koamistarterkit
+  IMAGE_NAME: koamishin/koamistarterkit
 
 jobs:
   optimize_ci:

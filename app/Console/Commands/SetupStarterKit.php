@@ -9,6 +9,7 @@ use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\intro;
 use function Laravel\Prompts\outro;
+use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 use function Laravel\Prompts\warning;
 
@@ -90,21 +91,51 @@ class SetupStarterKit extends Command
 
         $dockerRegistry = 'docker.io';
         $dockerImageName = strtolower($githubUsername.'/'.$packageName);
+        $dockerHubAuthor = '';
+        $registryType = 'dockerhub';
 
         if ($useDocker) {
-            $dockerRegistry = text(
-                label: 'Docker Registry',
-                placeholder: 'e.g., docker.io, ghcr.io',
-                default: 'docker.io',
-                required: true
+            $registryType = select(
+                label: 'Select Docker Registry',
+                options: [
+                    'dockerhub' => 'Docker Hub (docker.io)',
+                    'ghcr' => 'GitHub Container Registry (ghcr.io)',
+                ],
+                default: 'dockerhub',
+                hint: 'Choose where to publish your Docker images'
             );
 
-            $dockerImageName = text(
-                label: 'Docker Image Name',
-                placeholder: 'e.g., username/image-name',
-                default: strtolower($githubUsername.'/'.$packageName),
-                required: true
-            );
+            if ($registryType === 'dockerhub') {
+                $dockerRegistry = 'docker.io';
+
+                $dockerHubAuthor = text(
+                    label: 'Docker Hub Username/Organization',
+                    placeholder: 'e.g., yourdockerhubusername',
+                    default: $githubUsername,
+                    required: true,
+                    validate: fn ($value): ?string => match (true) {
+                        ! preg_match('/^[a-zA-Z0-9_-]+$/', (string) $value) => 'Docker Hub username can only contain alphanumeric characters, underscores, and hyphens.',
+                        default => null
+                    }
+                );
+
+                $dockerImageName = text(
+                    label: 'Docker Image Name',
+                    placeholder: 'e.g., dockerhubuser/image-name',
+                    default: strtolower($dockerHubAuthor.'/'.$packageName),
+                    required: true
+                );
+            } else {
+                $dockerRegistry = 'ghcr.io';
+
+                $dockerImageName = text(
+                    label: 'Docker Image Name',
+                    placeholder: 'e.g., github-username/image-name',
+                    default: strtolower($githubUsername.'/'.$packageName),
+                    required: true,
+                    hint: 'For GitHub Container Registry, this should match your GitHub username/org'
+                );
+            }
         }
 
         // Show summary
@@ -118,6 +149,7 @@ class SetupStarterKit extends Command
                 ['Author Email', $authorEmail],
                 ['GitHub Repository', "https://github.com/{$githubUsername}/".ucfirst($packageName)],
                 ['Docker Registry', $useDocker ? $dockerRegistry : 'Not configured'],
+                ['Docker Hub Author', $useDocker && $registryType === 'dockerhub' ? $dockerHubAuthor : 'N/A'],
                 ['Docker Image', $useDocker ? $dockerImageName : 'Not configured'],
             ]
         );
@@ -132,13 +164,13 @@ class SetupStarterKit extends Command
         $this->updateComposerJson($githubUsername, $packageName, $authorName, $authorEmail);
 
         // Create starter kit config
-        $this->createStarterKitConfig($useDocker, $dockerRegistry, $dockerImageName);
+        $this->createStarterKitConfig($useDocker, $dockerRegistry, $dockerImageName, $registryType, $dockerHubAuthor);
 
         // Update workflow files
-        $this->updateAllWorkflowFiles($useDocker, $dockerRegistry, $dockerImageName);
+        $this->updateAllWorkflowFiles($useDocker, $dockerRegistry, $dockerImageName, $registryType);
 
         // Display required environment variables
-        $this->displayRequiredSecrets($useDocker);
+        $this->displayRequiredSecrets($useDocker, $registryType);
 
         outro('✅ KoamiStarterKit setup complete!');
 
@@ -182,14 +214,19 @@ class SetupStarterKit extends Command
     /**
      * Create starter kit configuration file.
      */
-    protected function createStarterKitConfig(bool $dockerEnabled, string $registry, string $imageName): void
+    protected function createStarterKitConfig(bool $dockerEnabled, string $registry, string $imageName, string $registryType, string $dockerHubAuthor): void
     {
         $config = [
             'docker_enabled' => $dockerEnabled,
             'docker_registry' => $registry,
+            'docker_registry_type' => $registryType,
             'docker_image_name' => $imageName,
             'configured_at' => now()->toIso8601String(),
         ];
+
+        if ($registryType === 'dockerhub' && $dockerHubAuthor !== '') {
+            $config['docker_hub_author'] = $dockerHubAuthor;
+        }
 
         File::put(base_path('.starter-kit.json'), json_encode($config, JSON_PRETTY_PRINT)."\n");
 
@@ -199,7 +236,7 @@ class SetupStarterKit extends Command
     /**
      * Update all GitHub workflow files with Docker settings.
      */
-    protected function updateAllWorkflowFiles(bool $dockerEnabled, string $registry, string $imageName): void
+    protected function updateAllWorkflowFiles(bool $dockerEnabled, string $registry, string $imageName, string $registryType): void
     {
         $workflowDir = base_path('.github/workflows');
         $workflowFiles = ['auto-release.yml', 'docker-latest.yml', 'manual-official-release.yml'];
@@ -225,6 +262,11 @@ class SetupStarterKit extends Command
                 "IMAGE_NAME: {$imageName}",
                 (string) $content
             );
+
+            // Update Docker login credentials based on registry type
+            if ($dockerEnabled) {
+                $content = $this->updateDockerCredentials($content, $registryType);
+            }
 
             // Add conditional check for Docker jobs if Docker is not enabled
             if (! $dockerEnabled) {
@@ -260,9 +302,46 @@ class SetupStarterKit extends Command
     }
 
     /**
+     * Update Docker credentials in workflow file based on registry type.
+     */
+    protected function updateDockerCredentials(string $content, string $registryType): string
+    {
+        if ($registryType === 'ghcr') {
+            // Update username for GitHub Container Registry
+            $content = preg_replace(
+                '/username: \$\{\{ secrets\.DOCKER_USERNAME \}\}/',
+                'username: \${{ github.actor }}',
+                $content
+            );
+
+            // Update password for GitHub Container Registry
+            $content = preg_replace(
+                '/password: \$\{\{ secrets\.DOCKER_PASSWORD \}\}/',
+                'password: \${{ secrets.GITHUB_TOKEN }}',
+                $content
+            );
+        } else {
+            // Ensure Docker Hub credentials are set
+            $content = preg_replace(
+                '/username: \$\{\{ github\.actor \}\}/',
+                'username: \${{ secrets.DOCKER_USERNAME }}',
+                $content
+            );
+
+            $content = preg_replace(
+                '/password: \$\{\{ secrets\.GITHUB_TOKEN \}\}/',
+                'password: \${{ secrets.DOCKER_PASSWORD }}',
+                $content
+            );
+        }
+
+        return $content;
+    }
+
+    /**
      * Display required environment variables and GitHub secrets.
      */
-    protected function displayRequiredSecrets(bool $useDocker): void
+    protected function displayRequiredSecrets(bool $useDocker, string $registryType = 'dockerhub'): void
     {
         $this->newLine();
         info('🔐 Required GitHub Secrets:');
@@ -270,8 +349,13 @@ class SetupStarterKit extends Command
         $secrets = [];
 
         if ($useDocker) {
-            $secrets[] = ['DOCKER_USERNAME', 'Your Docker Hub username', 'Required for Docker image publishing'];
-            $secrets[] = ['DOCKER_PASSWORD', 'Your Docker Hub access token', 'Create at: https://hub.docker.com/settings/security'];
+            if ($registryType === 'dockerhub') {
+                $secrets[] = ['DOCKER_USERNAME', 'Your Docker Hub username', 'Required for Docker image publishing'];
+                $secrets[] = ['DOCKER_PASSWORD', 'Your Docker Hub access token', 'Create at: https://hub.docker.com/settings/security'];
+            } else {
+                info('ℹ️  GitHub Container Registry uses GITHUB_TOKEN automatically - no additional secrets needed for Docker!');
+                $this->newLine();
+            }
         }
 
         $secrets[] = ['DISCORD_WEBHOOK_URL', 'Discord webhook for notifications', 'Optional - for Discord release notifications'];
