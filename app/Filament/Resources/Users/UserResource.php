@@ -8,7 +8,6 @@ use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Models\User;
 use BackedEnum;
-use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -16,6 +15,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -32,7 +32,7 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::User;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -177,16 +177,22 @@ class UserResource extends Resource
                     ->nullable(),
             ])
             ->recordActions([
+                \Filament\Tables\Actions\Action::make('impersonate')
+                    ->label('Impersonate')
+                    ->icon('heroicon-o-user-plus')
+                    ->url(fn (User $record) => route('impersonate', $record->id))
+                    ->openUrlInNewTab()
+                    ->visible(fn (User $record) => auth()->user()?->hasRole('admin') && $record->canBeImpersonated()),
                 ViewAction::make(),
                 EditAction::make(),
-                Action::make('verify_email')
+                \Filament\Tables\Actions\Action::make('verify_email')
                     ->icon('heroicon-o-check')
                     ->label('Verify')
                     ->action(fn (User $user) => $user->forceFill(['email_verified_at' => now()])->save())
                     ->visible(fn (User $user): bool => $user->email_verified_at === null)
                     ->requiresConfirmation()
                     ->color('success'),
-                Action::make('unverify_email')
+                \Filament\Tables\Actions\Action::make('unverify_email')
                     ->icon('heroicon-o-x-mark')
                     ->label('Unverify')
                     ->action(fn (User $user) => $user->forceFill(['email_verified_at' => null])->save())

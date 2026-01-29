@@ -46,6 +46,7 @@
 </head>
 
 <body class="font-sans antialiased">
+    @include('impersonate-banner')
     @inertia
 </body>
 
