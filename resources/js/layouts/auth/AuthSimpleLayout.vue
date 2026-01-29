@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { home } from '@/routes';
 
 defineProps<{
@@ -13,6 +14,7 @@ defineProps<{
     <div
         class="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10"
     >
+        <ImpersonateBanner class="absolute top-0 left-0 w-full" />
         <div class="w-full max-w-sm">
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col items-center gap-4">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -62,6 +63,7 @@ const features = [
     <div
         class="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary selection:text-primary-foreground"
     >
+        <ImpersonateBanner />
         <!-- Navbar -->
         <header
             class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/60"
