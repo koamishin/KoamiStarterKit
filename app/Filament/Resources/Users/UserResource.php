@@ -2,32 +2,32 @@
 
 namespace App\Filament\Resources\Users;
 
-use App\Filament\Resources\Users\Pages\CreateUser;
-use App\Filament\Resources\Users\Pages\EditUser;
-use App\Filament\Resources\Users\Pages\ListUsers;
-use App\Filament\Resources\Users\Pages\ViewUser;
-use App\Models\User;
 use BackedEnum;
+use App\Models\User;
+use Filament\Tables\Table;
+use Filament\Actions\Action;
+use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
+use Filament\Actions\DeleteAction;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Hash;
+use Filament\Actions\BulkActionGroup;
+use Filament\Forms\Components\Select;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Filters\TernaryFilter;
-use Filament\Tables\Table;
-use Illuminate\Support\Facades\Hash;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Forms\Components\DateTimePicker;
+use App\Filament\Resources\Users\Pages\EditUser;
+use App\Filament\Resources\Users\Pages\ViewUser;
+use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Filament\Resources\Users\Pages\CreateUser;
 
 class UserResource extends Resource
 {
@@ -53,15 +53,15 @@ class UserResource extends Resource
                             ->unique(ignoreRecord: true),
                         TextInput::make('password')
                             ->password()
-                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                            ->dehydrated(fn ($state): bool => filled($state))
-                            ->required(fn (string $context): bool => $context === 'create')
+                            ->dehydrateStateUsing(fn($state) => Hash::make($state))
+                            ->dehydrated(fn($state): bool => filled($state))
+                            ->required(fn(string $context): bool => $context === 'create')
                             ->confirmed()
                             ->maxLength(255),
                         TextInput::make('password_confirmation')
                             ->password()
-                            ->required(fn (string $context): bool => $context === 'create')
-                            ->visible(fn (string $context): bool => $context === 'create' || $context === 'edit'),
+                            ->required(fn(string $context): bool => $context === 'create')
+                            ->visible(fn(string $context): bool => $context === 'create' || $context === 'edit'),
                         Select::make('roles')
                             ->relationship('roles', 'name')
                             ->multiple()
@@ -95,7 +95,7 @@ class UserResource extends Resource
                             ->copyable(),
                         TextEntry::make('roles.name')
                             ->badge()
-                            ->color(fn (string $state): string => match ($state) {
+                            ->color(fn(string $state): string => match ($state) {
                                 'admin' => 'danger',
                                 'user' => 'success',
                                 default => 'gray',
@@ -113,13 +113,13 @@ class UserResource extends Resource
                             ->dateTime()
                             ->placeholder('Unverified')
                             ->badge()
-                            ->color(fn ($state): string => $state ? 'success' : 'danger'),
+                            ->color(fn($state): string => $state ? 'success' : 'danger'),
                         TextEntry::make('two_factor_confirmed_at')
                             ->label('Two Factor Authentication')
                             ->dateTime()
                             ->placeholder('Disabled')
                             ->badge()
-                            ->color(fn ($state): string => $state ? 'success' : 'warning'),
+                            ->color(fn($state): string => $state ? 'success' : 'warning'),
                     ])->columns(2),
             ]);
     }
@@ -138,7 +138,7 @@ class UserResource extends Resource
                     ->sortable(),
                 TextColumn::make('roles.name')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'admin' => 'danger',
                         'user' => 'success',
                         default => 'gray',
@@ -150,8 +150,8 @@ class UserResource extends Resource
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
                     ->colors([
-                        'success' => fn ($state): bool => $state !== null,
-                        'danger' => fn ($state): bool => $state === null,
+                        'success' => fn($state): bool => $state !== null,
+                        'danger' => fn($state): bool => $state === null,
                     ])
                     ->sortable(),
                 IconColumn::make('two_factor_confirmed_at')
@@ -160,8 +160,8 @@ class UserResource extends Resource
                     ->trueIcon('heroicon-o-lock-closed')
                     ->falseIcon('heroicon-o-lock-open')
                     ->colors([
-                        'success' => fn ($state): bool => $state !== null,
-                        'warning' => fn ($state): bool => $state === null,
+                        'success' => fn($state): bool => $state !== null,
+                        'warning' => fn($state): bool => $state === null,
                     ])
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -181,23 +181,23 @@ class UserResource extends Resource
                 Action::make('impersonate')
                     ->label('Impersonate')
                     ->icon('heroicon-o-user-plus')
-                    ->url(fn (User $record) => route('impersonate', $record->id))
+                    ->url(fn(User $record) => route('impersonate', $record->id))
                     ->openUrlInNewTab()
-                    ->visible(fn (User $record) => auth()->user()?->hasRole('admin') && ! $record->hasRole('admin')),
+                    ->visible(fn(User $record) => auth()->user()?->hasRole('admin') && $record->canBeImpersonated()),
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('verify_email')
                     ->icon('heroicon-o-check')
                     ->label('Verify')
-                    ->action(fn (User $user) => $user->forceFill(['email_verified_at' => now()])->save())
-                    ->visible(fn (User $user): bool => $user->email_verified_at === null)
+                    ->action(fn(User $user) => $user->forceFill(['email_verified_at' => now()])->save())
+                    ->visible(fn(User $user): bool => $user->email_verified_at === null)
                     ->requiresConfirmation()
                     ->color('success'),
                 Action::make('unverify_email')
                     ->icon('heroicon-o-x-mark')
                     ->label('Unverify')
-                    ->action(fn (User $user) => $user->forceFill(['email_verified_at' => null])->save())
-                    ->visible(fn (User $user): bool => $user->email_verified_at !== null)
+                    ->action(fn(User $user) => $user->forceFill(['email_verified_at' => null])->save())
+                    ->visible(fn(User $user): bool => $user->email_verified_at !== null)
                     ->requiresConfirmation()
                     ->color('danger'),
                 DeleteAction::make(),
@@ -208,13 +208,13 @@ class UserResource extends Resource
                     BulkAction::make('verify_selected')
                         ->label('Verify Selected')
                         ->icon('heroicon-o-check')
-                        ->action(fn ($records) => $records->each->forceFill(['email_verified_at' => now()])->each->save())
+                        ->action(fn($records) => $records->each->forceFill(['email_verified_at' => now()])->each->save())
                         ->requiresConfirmation()
                         ->color('success'),
                     BulkAction::make('unverify_selected')
                         ->label('Unverify Selected')
                         ->icon('heroicon-o-x-mark')
-                        ->action(fn ($records) => $records->each->forceFill(['email_verified_at' => null])->each->save())
+                        ->action(fn($records) => $records->each->forceFill(['email_verified_at' => null])->each->save())
                         ->requiresConfirmation()
                         ->color('danger'),
                 ]),
