@@ -268,11 +268,8 @@ class SetupStarterKit extends Command
                 $content = $this->updateDockerCredentials($content, $registryType);
             }
 
-            // Add conditional check for Docker jobs if Docker is not enabled
-            if (! $dockerEnabled) {
-                // Add a check at the top of the file to skip Docker jobs
-                $content = $this->addDockerEnabledCheck($content, $workflowFile);
-            }
+            // Update DOCKER_ENABLED environment variable
+            $content = $this->updateDockerEnabledVar($content, $dockerEnabled);
 
             File::put($filePath, $content);
 
@@ -281,24 +278,30 @@ class SetupStarterKit extends Command
     }
 
     /**
-     * Add Docker enabled check to workflow file.
+     * Update or add DOCKER_ENABLED environment variable.
      */
-    protected function addDockerEnabledCheck(string $content, string $filename): string
+    protected function updateDockerEnabledVar(string $content, bool $enabled): string
     {
-        // Add environment variable at the top to control Docker jobs
-        if (str_contains($filename, 'auto-release') || str_contains($filename, 'docker-latest') || str_contains($filename, 'manual')) {
-            // Add a comment and environment check
-            $envSection = "env:\n  DOCKER_ENABLED: false  # Set to true after configuring Docker in setup\n  REGISTRY:";
+        $enabledStr = $enabled ? 'true' : 'false';
 
-            $content = preg_replace(
-                '/env:\n  REGISTRY:/',
-                $envSection,
-                $content,
-                1
+        // Check if DOCKER_ENABLED already exists
+        if (preg_match('/DOCKER_ENABLED: (true|false)/', $content)) {
+            return preg_replace(
+                '/DOCKER_ENABLED: (true|false)/',
+                "DOCKER_ENABLED: {$enabledStr}",
+                $content
             );
         }
 
-        return $content;
+        // If not, inject it before REGISTRY
+        $envSection = "env:\n  DOCKER_ENABLED: {$enabledStr}  # Set to false if you don't want Docker CI/CD (configured via setup:starter-kit)\n  REGISTRY:";
+
+        return preg_replace(
+            '/env:\n  REGISTRY:/',
+            $envSection,
+            $content,
+            1
+        );
     }
 
     /**
