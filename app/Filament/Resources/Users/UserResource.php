@@ -22,6 +22,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
@@ -177,22 +178,22 @@ class UserResource extends Resource
                     ->nullable(),
             ])
             ->recordActions([
-                \Filament\Tables\Actions\Action::make('impersonate')
+                Action::make('impersonate')
                     ->label('Impersonate')
                     ->icon('heroicon-o-user-plus')
                     ->url(fn (User $record) => route('impersonate', $record->id))
                     ->openUrlInNewTab()
-                    ->visible(fn (User $record) => auth()->user()?->hasRole('admin') && $record->canBeImpersonated()),
+                    ->visible(fn (User $record) => auth()->user()?->hasRole('admin') && ! $record->hasRole('admin')),
                 ViewAction::make(),
                 EditAction::make(),
-                \Filament\Tables\Actions\Action::make('verify_email')
+                Action::make('verify_email')
                     ->icon('heroicon-o-check')
                     ->label('Verify')
                     ->action(fn (User $user) => $user->forceFill(['email_verified_at' => now()])->save())
                     ->visible(fn (User $user): bool => $user->email_verified_at === null)
                     ->requiresConfirmation()
                     ->color('success'),
-                \Filament\Tables\Actions\Action::make('unverify_email')
+                Action::make('unverify_email')
                     ->icon('heroicon-o-x-mark')
                     ->label('Unverify')
                     ->action(fn (User $user) => $user->forceFill(['email_verified_at' => null])->save())
