@@ -53,7 +53,7 @@ class UserResource extends Resource
                         TextInput::make('password')
                             ->password()
                             ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                            ->dehydrated(fn ($state) => filled($state))
+                            ->dehydrated(fn ($state): bool => filled($state))
                             ->required(fn (string $context): bool => $context === 'create')
                             ->confirmed()
                             ->maxLength(255),
@@ -100,13 +100,13 @@ class UserResource extends Resource
                             ->dateTime()
                             ->placeholder('Unverified')
                             ->badge()
-                            ->color(fn ($state) => $state ? 'success' : 'danger'),
+                            ->color(fn ($state): string => $state ? 'success' : 'danger'),
                         TextEntry::make('two_factor_confirmed_at')
                             ->label('Two Factor Authentication')
                             ->dateTime()
                             ->placeholder('Disabled')
                             ->badge()
-                            ->color(fn ($state) => $state ? 'success' : 'warning'),
+                            ->color(fn ($state): string => $state ? 'success' : 'warning'),
                     ])->columns(2),
             ]);
     }
@@ -129,8 +129,8 @@ class UserResource extends Resource
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
                     ->colors([
-                        'success' => fn ($state) => $state !== null,
-                        'danger' => fn ($state) => $state === null,
+                        'success' => fn ($state): bool => $state !== null,
+                        'danger' => fn ($state): bool => $state === null,
                     ])
                     ->sortable(),
                 IconColumn::make('two_factor_confirmed_at')
@@ -139,8 +139,8 @@ class UserResource extends Resource
                     ->trueIcon('heroicon-o-lock-closed')
                     ->falseIcon('heroicon-o-lock-open')
                     ->colors([
-                        'success' => fn ($state) => $state !== null,
-                        'warning' => fn ($state) => $state === null,
+                        'success' => fn ($state): bool => $state !== null,
+                        'warning' => fn ($state): bool => $state === null,
                     ])
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -162,15 +162,15 @@ class UserResource extends Resource
                 Action::make('verify_email')
                     ->icon('heroicon-o-check')
                     ->label('Verify')
-                    ->action(fn (User $record) => $record->forceFill(['email_verified_at' => now()])->save())
-                    ->visible(fn (User $record) => $record->email_verified_at === null)
+                    ->action(fn (User $user) => $user->forceFill(['email_verified_at' => now()])->save())
+                    ->visible(fn (User $user): bool => $user->email_verified_at === null)
                     ->requiresConfirmation()
                     ->color('success'),
                 Action::make('unverify_email')
                     ->icon('heroicon-o-x-mark')
                     ->label('Unverify')
-                    ->action(fn (User $record) => $record->forceFill(['email_verified_at' => null])->save())
-                    ->visible(fn (User $record) => $record->email_verified_at !== null)
+                    ->action(fn (User $user) => $user->forceFill(['email_verified_at' => null])->save())
+                    ->visible(fn (User $user): bool => $user->email_verified_at !== null)
                     ->requiresConfirmation()
                     ->color('danger'),
                 DeleteAction::make(),
