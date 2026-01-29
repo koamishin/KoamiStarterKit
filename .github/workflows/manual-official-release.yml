@@ -512,6 +512,8 @@ jobs:
     if: always()
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
+      PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -520,9 +522,9 @@ jobs:
           fetch-depth: 50
 
       - name: Notify Packagist
-        if: env.PACKAGIST_ENABLED == 'true' && secrets.PACKAGIST_TOKEN != '' && secrets.PACKAGIST_USERNAME != ''
+        if: ${{ env.PACKAGIST_ENABLED == 'true' && env.PACKAGIST_TOKEN != '' && env.PACKAGIST_USERNAME != '' }}
         run: |
-          curl -XPOST -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}" https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }} -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'
+          curl -XPOST -u "${{ env.PACKAGIST_USERNAME }}:${{ env.PACKAGIST_TOKEN }}" https://packagist.org/api/update-package?username=${{ env.PACKAGIST_USERNAME }} -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'
 
       - name: Send Discord notification
         if: ${{ env.DISCORD_WEBHOOK_URL != '' }}
