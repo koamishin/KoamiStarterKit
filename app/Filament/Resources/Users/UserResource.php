@@ -61,6 +61,11 @@ class UserResource extends Resource
                             ->password()
                             ->required(fn (string $context): bool => $context === 'create')
                             ->visible(fn (string $context): bool => $context === 'create' || $context === 'edit'),
+                        Select::make('roles')
+                            ->relationship('roles', 'name')
+                            ->multiple()
+                            ->preload()
+                            ->searchable(),
                     ])->columns(2),
 
                 Section::make('Security')
@@ -87,6 +92,13 @@ class UserResource extends Resource
                         TextEntry::make('email')
                             ->label('Email Address')
                             ->copyable(),
+                        TextEntry::make('roles.name')
+                            ->badge()
+                            ->color(fn (string $state): string => match ($state) {
+                                'admin' => 'danger',
+                                'user' => 'success',
+                                default => 'gray',
+                            }),
                         TextEntry::make('created_at')
                             ->dateTime(),
                         TextEntry::make('updated_at')
@@ -122,6 +134,14 @@ class UserResource extends Resource
                 TextColumn::make('email')
                     ->searchable()
                     ->copyable()
+                    ->sortable(),
+                TextColumn::make('roles.name')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'admin' => 'danger',
+                        'user' => 'success',
+                        default => 'gray',
+                    })
                     ->sortable(),
                 IconColumn::make('email_verified_at')
                     ->label('Verified')
