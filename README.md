@@ -51,8 +51,15 @@ This kit is **opinionated**. It comes pre-wired with the tools I believe offer t
 
 ### 🧹 Code Quality
 -   **[Laravel Pint](https://laravel.com/docs/pint)**: PHP code style fixer (built on CS Fixer).
+-   **[PHPStan](https://phpstan.org)**: Static analysis tool to find bugs before they happen.
+-   **[Rector](https://getrector.com)**: Instant upgrades and automated refactoring.
 -   **[Prettier](https://prettier.io)**: Opinionated code formatter for JS/Vue/HTML.
 -   **[ESLint](https://eslint.org)**: Find and fix problems in your JavaScript.
+
+### 🚢 DevOps Ready
+-   **[Docker](https://www.docker.com)**: Fully containerized with a production-ready `Dockerfile`.
+-   **[GitHub Actions](https://github.com/features/actions)**: Pre-configured CI/CD pipelines for testing and deployment.
+-   **[GHCR Integration](https://github.com/features/packages)**: Automated image builds pushed to GitHub Container Registry.
 
 ---
 
