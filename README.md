@@ -33,37 +33,48 @@ I wanted a **"battery-included"** starting point where I could run one command a
 
 ## ✨ Features
 
-This kit is **opinionated**. It comes pre-wired with the tools I believe offer the best Developer Experience (DX) for building modern web applications in 2026.
+This kit is **opinionated** and **battery-included**. It comes pre-wired with everything you need to build a production-ready application.
 
-### 🛠 Backend
+### 🔐 Authentication & Security
 
-- **[Laravel 12](https://laravel.com)**: The latest and greatest.
-- **[Laravel Octane](https://laravel.com/docs/octane)**: Supercharged performance with Frankentrans.
-- **[Laravel Fortify](https://laravel.com/docs/fortify)**: Headless authentication backend.
-- **[Wayfinder](https://github.com/laravel/wayfinder)**: TypeScript types for your routes.
-- **[Pest](https://pestphp.com)**: Elegant testing framework.
+- **Complete Auth System**: Powered by [Laravel Fortify](https://laravel.com/docs/fortify).
+    - Login & Registration
+    - Password Reset & Confirmation
+    - Email Verification
+- **Two-Factor Authentication**: Built-in 2FA support with QR codes and recovery codes.
+- **Profile Management**: Update profile information, change passwords, and delete accounts.
+- **Session Management**: Secure session handling with browser session flushing.
 
-### 🎨 Frontend
+### 🎛️ Admin Panel (Filament)
 
-- **[Vue 3](https://vuejs.org)**: The progressive JavaScript framework.
-- **[Inertia.js v2](https://inertiajs.com)**: Build single-page apps without the complexity.
-- **[Tailwind CSS 4](https://tailwindcss.com)**: Next-gen utility-first CSS.
-- **[Shadcn Vue](https://www.shadcn-vue.com/)**: Beautiful, reusable components built with Radix Vue.
-- **[Ziggy](https://github.com/tighten/ziggy)**: Use your Laravel routes in JavaScript.
+- **Pre-configured Admin**: A ready-to-use [Filament](https://filamentphp.com) admin panel.
+- **User Management**: Complete CRUD resource for managing users out of the box.
+- **Scalable**: Easily add new resources and pages using Filament's CLI.
 
-### 🧹 Code Quality
+### 🎨 Modern UI/UX (Shadcn Vue)
 
-- **[Laravel Pint](https://laravel.com/docs/pint)**: PHP code style fixer (built on CS Fixer).
-- **[PHPStan](https://phpstan.org)**: Static analysis tool to find bugs before they happen.
-- **[Rector](https://getrector.com)**: Instant upgrades and automated refactoring.
-- **[Prettier](https://prettier.io)**: Opinionated code formatter for JS/Vue/HTML.
-- **[ESLint](https://eslint.org)**: Find and fix problems in your JavaScript.
+- **Component Library**: Over 40+ accessible components from [Shadcn Vue](https://www.shadcn-vue.com/).
+    - _Essentials_: Buttons, Inputs, Cards, Dialogs, Dropdowns.
+    - _Data_: Tables, Charts, Pagination.
+    - _Layout_: Resizable panels, Scroll areas, Sheets.
+- **Multiple Layouts**:
+    - **Auth**: Split, Card, and Simple layouts.
+    - **App**: Responsive Sidebar layout with collapsible navigation.
+- **Theme System**: Built-in Dark Mode and Color Theme switcher.
+- **Toast Notifications**: Integrated [Sonner](https://sonner.emilkowal.ski/) for beautiful toast notifications.
 
-### 🚢 DevOps Ready
+### 🛠 Developer Experience (DX)
 
-- **[Docker](https://www.docker.com)**: Fully containerized with a production-ready `Dockerfile`.
-- **[GitHub Actions](https://github.com/features/actions)**: Pre-configured CI/CD pipelines for testing and deployment.
-- **[GHCR Integration](https://github.com/features/packages)**: Automated image builds pushed to GitHub Container Registry.
+- **Type-Safe Routing**: [Wayfinder](https://github.com/laravel/wayfinder) generates TypeScript definitions for your Laravel routes. No more magic strings!
+- **Interactive Setup**: `php artisan setup:starter-kit` command to personalize your project in seconds.
+- **Quality Tools**: Pre-configured with Pint, Rector, PHPStan, ESLint, and Prettier.
+- **CI/CD**: GitHub Actions for testing, linting, and Docker builds.
+
+### ⚡ Performance
+
+- **Laravel Octane**: Pre-configured for high-performance serving.
+- **Inertia.js v2**: Fast, modern Single Page Application (SPA) experience.
+- **Vite**: Blazing fast frontend build tool.
 
 ---
 
@@ -114,20 +125,20 @@ This runs both the Laravel server and the Vite development server concurrently.
 
 ### UI Components (Shadcn)
 
-We've pre-installed the core components you need to build a dashbaord or landing page:
+This starter kit includes a comprehensive suite of UI components to jumpstart your development:
 
-- Buttons, Cards, Inputs
-- Dropdowns, Dialogs, sheets
-- Sidebar, Navigation Menu
-- And more...
+<details>
+<summary><strong>Click to view all included components</strong></summary>
 
-### Authentication
+- **Form Elements**: Input, Select, Checkbox, Radio, Switch, Slider, Textarea, Form, Combobox
+- **Feedback**: Alert, Badge, Progress, Skeleton, Sonner (Toast), Spinner, Tooltip
+- **Overlay**: Dialog, Drawer, Sheet, Popover, Hover Card, Context Menu, Dropdown Menu
+- **Layout**: Card, Aspect Ratio, Resizable, Scroll Area, Separator
+- **Navigation**: Sidebar, Navigation Menu, Breadcrumb, Tabs, Menubar, Pagination, Stepper
+- **Data Display**: Table, Avatar, Accordion, Collapsible, Carousel, Calendar
+- **Charts**: Extensive charting library support
 
-Ready-to-use authentication views and logic powered by Fortify:
-
-- Login & Registration
-- Password Reset
-- Email Verification
+</details>
 
 ---
 
