@@ -96,7 +96,7 @@ jobs:
           # Dev releases use format: v{BASE}-dev.{MINOR}.{PATCH}
           # - Feature/Major commits: increment MINOR, reset PATCH to 0
           # - Patch/Fix/Chore commits: increment PATCH only
-          PRERELEASE_PREFIX="dev"
+          PRERELEASE_PREFIX="beta"
           
           # Find the latest dev tag for this base version with format v{BASE}-dev.X.Y
           LATEST_DEV_TAG=$(git tag -l "v${BASE_VERSION}-${PRERELEASE_PREFIX}.*.*" --sort=-v:refname | head -n1 || true)
