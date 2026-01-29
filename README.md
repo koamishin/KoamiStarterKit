@@ -36,39 +36,44 @@ I wanted a **"battery-included"** starting point where I could run one command a
 This kit is **opinionated**. It comes pre-wired with the tools I believe offer the best Developer Experience (DX) for building modern web applications in 2026.
 
 ### 🛠 Backend
--   **[Laravel 12](https://laravel.com)**: The latest and greatest.
--   **[Laravel Octane](https://laravel.com/docs/octane)**: Supercharged performance with Frankentrans.
--   **[Laravel Fortify](https://laravel.com/docs/fortify)**: Headless authentication backend.
--   **[Wayfinder](https://github.com/laravel/wayfinder)**: TypeScript types for your routes.
--   **[Pest](https://pestphp.com)**: Elegant testing framework.
+
+- **[Laravel 12](https://laravel.com)**: The latest and greatest.
+- **[Laravel Octane](https://laravel.com/docs/octane)**: Supercharged performance with Frankentrans.
+- **[Laravel Fortify](https://laravel.com/docs/fortify)**: Headless authentication backend.
+- **[Wayfinder](https://github.com/laravel/wayfinder)**: TypeScript types for your routes.
+- **[Pest](https://pestphp.com)**: Elegant testing framework.
 
 ### 🎨 Frontend
--   **[Vue 3](https://vuejs.org)**: The progressive JavaScript framework.
--   **[Inertia.js v2](https://inertiajs.com)**: Build single-page apps without the complexity.
--   **[Tailwind CSS 4](https://tailwindcss.com)**: Next-gen utility-first CSS.
--   **[Shadcn Vue](https://www.shadcn-vue.com/)**: Beautiful, reusable components built with Radix Vue.
--   **[Ziggy](https://github.com/tighten/ziggy)**: Use your Laravel routes in JavaScript.
+
+- **[Vue 3](https://vuejs.org)**: The progressive JavaScript framework.
+- **[Inertia.js v2](https://inertiajs.com)**: Build single-page apps without the complexity.
+- **[Tailwind CSS 4](https://tailwindcss.com)**: Next-gen utility-first CSS.
+- **[Shadcn Vue](https://www.shadcn-vue.com/)**: Beautiful, reusable components built with Radix Vue.
+- **[Ziggy](https://github.com/tighten/ziggy)**: Use your Laravel routes in JavaScript.
 
 ### 🧹 Code Quality
--   **[Laravel Pint](https://laravel.com/docs/pint)**: PHP code style fixer (built on CS Fixer).
--   **[PHPStan](https://phpstan.org)**: Static analysis tool to find bugs before they happen.
--   **[Rector](https://getrector.com)**: Instant upgrades and automated refactoring.
--   **[Prettier](https://prettier.io)**: Opinionated code formatter for JS/Vue/HTML.
--   **[ESLint](https://eslint.org)**: Find and fix problems in your JavaScript.
+
+- **[Laravel Pint](https://laravel.com/docs/pint)**: PHP code style fixer (built on CS Fixer).
+- **[PHPStan](https://phpstan.org)**: Static analysis tool to find bugs before they happen.
+- **[Rector](https://getrector.com)**: Instant upgrades and automated refactoring.
+- **[Prettier](https://prettier.io)**: Opinionated code formatter for JS/Vue/HTML.
+- **[ESLint](https://eslint.org)**: Find and fix problems in your JavaScript.
 
 ### 🚢 DevOps Ready
--   **[Docker](https://www.docker.com)**: Fully containerized with a production-ready `Dockerfile`.
--   **[GitHub Actions](https://github.com/features/actions)**: Pre-configured CI/CD pipelines for testing and deployment.
--   **[GHCR Integration](https://github.com/features/packages)**: Automated image builds pushed to GitHub Container Registry.
+
+- **[Docker](https://www.docker.com)**: Fully containerized with a production-ready `Dockerfile`.
+- **[GitHub Actions](https://github.com/features/actions)**: Pre-configured CI/CD pipelines for testing and deployment.
+- **[GHCR Integration](https://github.com/features/packages)**: Automated image builds pushed to GitHub Container Registry.
 
 ---
 
 ## 🏁 Getting Started
 
 ### Prerequisites
--   PHP 8.2+
--   Composer
--   Node.js & NPM/Bun
+
+- PHP 8.2+
+- Composer
+- Node.js & NPM/Bun
 
 ### Installation
 
@@ -78,6 +83,20 @@ You can create a new project using Composer:
 composer create-project koamishin/koamistarterkit my-app
 cd my-app
 ```
+
+### ⚙️ Setup & Configuration
+
+Once installed, personalize the starter kit with your own project details using our setup wizard:
+
+```bash
+php artisan setup:starter-kit
+```
+
+This interactive tool will:
+
+- 🎨 **Personalize** `composer.json` with your author and package details.
+- 🐳 **Configure Docker** settings (Docker Hub vs GHCR).
+- 🤖 **Update GitHub Actions** workflows to use your repository and registry.
 
 ### Development
 
@@ -94,17 +113,21 @@ This runs both the Laravel server and the Vite development server concurrently.
 ## 📦 What's Inside?
 
 ### UI Components (Shadcn)
+
 We've pre-installed the core components you need to build a dashbaord or landing page:
--   Buttons, Cards, Inputs
--   Dropdowns, Dialogs, sheets
--   Sidebar, Navigation Menu
--   And more...
+
+- Buttons, Cards, Inputs
+- Dropdowns, Dialogs, sheets
+- Sidebar, Navigation Menu
+- And more...
 
 ### Authentication
+
 Ready-to-use authentication views and logic powered by Fortify:
--   Login & Registration
--   Password Reset
--   Email Verification
+
+- Login & Registration
+- Password Reset
+- Email Verification
 
 ---
 
