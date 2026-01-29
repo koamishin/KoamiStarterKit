@@ -4,35 +4,35 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g. 1.33.1 or v1.33.1)"
+        description: 'Version to release (e.g. 1.33.1 or v1.33.1)'
         required: true
         type: string
       publish_latest:
-        description: "Also push Docker :latest tag"
+        description: 'Also push Docker :latest tag'
         required: true
         default: true
         type: boolean
       draft:
-        description: "Create the GitHub release as a draft"
+        description: 'Create the GitHub release as a draft'
         required: true
         default: false
         type: boolean
       prerelease:
-        description: "Mark the GitHub release as a pre-release"
+        description: 'Mark the GitHub release as a pre-release'
         required: true
         default: false
         type: boolean
       update_version_file:
-        description: "Update and commit version.json"
+        description: 'Update and commit version.json'
         required: true
         default: true
         type: boolean
       extra_notes:
-        description: "Extra release notes (optional)"
+        description: 'Extra release notes (optional)'
         required: false
         type: string
       fail_if_tag_exists:
-        description: "Fail if the Git tag already exists"
+        description: 'Fail if the Git tag already exists'
         required: true
         default: true
         type: boolean
@@ -277,13 +277,13 @@ jobs:
             }
 
             const categories = {
-              'Breaking Changes': [],
-              Features: [],
-              Fixes: [],
-              Refactors: [],
-              Docs: [],
-              Chores: [],
-              Other: [],
+              '💥 Breaking Changes': [],
+              '✨ Features': [],
+              '🐛 Fixes': [],
+              '♻️ Refactors': [],
+              '📚 Documentation': [],
+              '🔧 Chores': [],
+              '📦 Other': [],
             };
 
             const categoryForPr = (pr) => {
@@ -293,25 +293,25 @@ jobs:
               const has = (needle) => normalized.some((l) => l === needle || l.includes(needle));
 
               if (has('breaking') || has('major')) {
-                return 'Breaking Changes';
+                return '💥 Breaking Changes';
               }
               if (has('feature') || has('enhancement') || has('feat')) {
-                return 'Features';
+                return '✨ Features';
               }
               if (has('fix') || has('bug') || has('bugfix') || has('hotfix')) {
-                return 'Fixes';
+                return '🐛 Fixes';
               }
               if (has('refactor')) {
-                return 'Refactors';
+                return '♻️ Refactors';
               }
               if (has('docs') || has('documentation')) {
-                return 'Docs';
+                return '📚 Documentation';
               }
               if (has('chore') || has('ci') || has('build')) {
-                return 'Chores';
+                return '🔧 Chores';
               }
 
-              return 'Other';
+              return '📦 Other';
             };
 
             const prs = Array.from(prByNumber.values()).sort((a, b) => a.number - b.number);
@@ -332,7 +332,7 @@ jobs:
               : null;
 
             const lines = [];
-            lines.push(`# DccpAdminV3 ${tag} (Official Release)`);
+            lines.push(`# Koamishin Starterkit ${tag} (Official Release)`);
             lines.push('');
             lines.push('✅ **Channel:** Official');
             lines.push(`📦 **Version:** ${version}`);
@@ -416,7 +416,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
-          name: DccpAdminV3 ${{ needs.prepare.outputs.tag }}
+          name: Koamishin Starterkit ${{ needs.prepare.outputs.tag }}
           body_path: RELEASE_NOTES.md
           draft: ${{ needs.prepare.outputs.draft == 'true' }}
           prerelease: ${{ needs.prepare.outputs.prerelease == 'true' }}
@@ -554,7 +554,7 @@ jobs:
             --arg contributors "$CONTRIBUTORS" \
             --argjson color "$COLOR" \
             '{
-              "username": "DCCP Release Bot",
+              "username": "Koamishin Release Bot",
               "embeds": [
                 {
                   "title": "Official Release • \($summary)",
