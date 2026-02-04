@@ -23,12 +23,11 @@
 
 ## 🚀 Why This Exists?
 
-Let's be real. Setting up a new Laravel project often involves the same repetitive dance: installing your favorite frontend tools, configuring TypeScript, setting up linting, adding UI components... it's a hassle.
+I’m tired of repeating the same setup every time I start a Laravel project—installing frontend tools, tweaking TypeScript, wiring up linters, hunting for UI components.  
 
-I created **Koamishin Starterkit** because I got tired of that dance.
+So I built **Koamishin Starterkit**: one command, zero friction, and I’m straight into shipping features instead of fighting config files.  
 
-I wanted a **"battery-included"** starting point where I could run one command and immediately start building the features that actually matter. No more "hassle things"—just pure coding.
-
+Use it as-is, fork it, or cherry-pick the parts you like—whatever gets you coding faster.
 ---
 
 ## ✨ Features
@@ -61,6 +60,13 @@ You can create a new project using Composer:
 ```bash
 composer create-project koamishin/koamistarterkit my-app
 cd my-app
+```
+
+Or use laravel new command:
+
+```bash
+laravel new my-app --using=starter-kit=koamishin/koamistarterkit
+
 ```
 
 ### ⚙️ Setup & Configuration
