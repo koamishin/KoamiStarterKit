@@ -3,6 +3,7 @@ import AppContent from '@/components/AppContent.vue';
 import AppHeader from '@/components/AppHeader.vue';
 import AppShell from '@/components/AppShell.vue';
 import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
+import Sonner from '@/components/ui/sonner/Sonner.vue';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {
@@ -21,5 +22,6 @@ withDefaults(defineProps<Props>(), {
         <AppContent>
             <slot />
         </AppContent>
+        <Sonner />
     </AppShell>
 </template>

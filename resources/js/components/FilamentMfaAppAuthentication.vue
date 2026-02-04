@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useClipboard } from '@vueuse/core';
+import { toast } from 'vue-sonner';
 import { Copy } from 'lucide-vue-next';
 import AlertError from '@/components/AlertError.vue';
 import InputError from '@/components/InputError.vue';
@@ -97,6 +98,7 @@ const openSetup = async () => {
     } catch (error: any) {
         enableError.value = error.response?.data?.message ?? 'Failed to start setup';
         setup.value = null;
+        toast.error(enableError.value);
     } finally {
         isLoadingSetup.value = false;
     }
@@ -137,9 +139,11 @@ const enable = async () => {
         }
 
         closeSetup();
+        toast.success('Authenticator app enabled successfully');
     } catch (error: any) {
         enableError.value = error.response?.data?.message ?? 'Failed to enable';
         enableFieldError.value = error.response?.data?.errors?.code?.[0] ?? null;
+        toast.error(enableError.value);
     }
 };
 
@@ -150,8 +154,10 @@ const disable = async () => {
         await http.delete(disableRoute.url());
         isEnabled.value = false;
         emit('update:enabled', false);
+        toast.success('Authenticator app disabled successfully');
     } catch (error: any) {
         enableError.value = error.response?.data?.message ?? 'Failed to disable';
+        toast.error(enableError.value);
     }
 };
 
@@ -165,8 +171,10 @@ const regenerateRecoveryCodes = async () => {
 
         enabledRecoveryCodes.value = response.data.recoveryCodes;
         recoveryCodesModalOpen.value = true;
+        toast.success('Recovery codes regenerated successfully');
     } catch (error: any) {
         enableError.value = error.response?.data?.message ?? 'Failed to regenerate codes';
+        toast.error(enableError.value);
     }
 };
 

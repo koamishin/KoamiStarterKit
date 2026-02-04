@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { toRefs } from 'vue';
+import { toast } from 'vue-sonner';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import DeleteUser from '@/components/DeleteUser.vue';
@@ -24,7 +25,28 @@ const form = useForm({
 const submit = () => {
     form.patch(update().url, {
         preserveScroll: true,
+        onSuccess: () => toast.success('Profile information updated'),
+        onError: () => toast.error('Failed to update profile information'),
     });
+};
+
+const resendVerification = () => {
+    toast.promise(
+        new Promise((resolve, reject) => {
+            const link = document.createElement('a');
+            link.href = send().url;
+            
+            form.post(send().url, {
+                onSuccess: () => resolve('Verification email sent'),
+                onError: () => reject('Failed to resend verification email'),
+            });
+        }),
+        {
+            loading: 'Sending verification email...',
+            success: 'A new verification link has been sent to your email address.',
+            error: 'Failed to send verification link. Please try again.',
+        }
+    );
 };
 
 const breadcrumbs = [{ title: 'Profile settings', href: edit().url }];
@@ -81,14 +103,13 @@ const { mustVerifyEmail, status } = toRefs(props);
                     >
                         <p class="-mt-4 text-sm text-muted-foreground">
                             Your email address is unverified.
-                            <Link
-                                :href="send().url"
-                                method="post"
-                                as="button"
-                                class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                            <button
+                                type="button"
+                                @click="resendVerification"
+                                class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500 cursor-pointer"
                             >
                                 Click here to resend the verification email.
-                            </Link>
+                            </button>
                         </p>
 
                         <div
