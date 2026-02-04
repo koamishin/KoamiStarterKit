@@ -31,4 +31,3 @@ class EditProfile extends BaseEditProfile
             ->columns(2);
     }
 }
-
