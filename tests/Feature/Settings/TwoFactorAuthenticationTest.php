@@ -2,78 +2,99 @@
 
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
-use Laravel\Fortify\Features;
+use Filament\Auth\MultiFactor\Email\Notifications\VerifyEmailAuthentication;
+use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Notification;
 
-test('two factor settings page can be rendered', function (): void {
-    if (! Features::canManageTwoFactorAuthentication()) {
-        $this->markTestSkipped('Two-factor authentication is not enabled.');
-    }
-
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => true,
-    ]);
-
+test('profile settings page includes filament mfa configuration', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->withSession(['auth.password_confirmed_at' => time()])
-        ->get(route('two-factor.show'))
+        ->get(route('security.edit'))
         ->assertInertia(fn (Assert $assert): \Inertia\Testing\AssertableInertia => $assert
-            ->component('settings/TwoFactor')
-            ->where('twoFactorEnabled', false)
+            ->component('settings/Security')
+            ->has('filamentMfa.providers')
+            ->has('filamentMfa.state')
         );
 });
 
-test('two factor settings page requires password confirmation when enabled', function (): void {
-    if (! Features::canManageTwoFactorAuthentication()) {
-        $this->markTestSkipped('Two-factor authentication is not enabled.');
-    }
-
+test('app mfa can be set up and enabled', function (): void {
     $user = User::factory()->create();
 
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => true,
+    $this->actingAs($user);
+
+    $setupResponse = $this->postJson(route('security.mfa.app.setup'));
+
+    $setupResponse->assertOk();
+
+    $payload = $setupResponse->json();
+
+    filament()->setCurrentPanel('admin');
+    $panel = Filament::getPanel('admin');
+    $provider = $panel->getMultiFactorAuthenticationProviders()['app'];
+
+    $code = $provider->getCurrentCode($user, $payload['secret']);
+
+    $enableResponse = $this->postJson(route('security.mfa.app.enable'), [
+        'encrypted' => $payload['encrypted'],
+        'code' => $code,
     ]);
 
-    $response = $this->actingAs($user)
-        ->get(route('two-factor.show'));
+    $enableResponse->assertOk();
 
-    $response->assertRedirect(route('password.confirm'));
+    $user->refresh();
+    expect($user->getAppAuthenticationSecret())->not->toBeNull();
 });
 
-test('two factor settings page does not requires password confirmation when disabled', function (): void {
-    if (! Features::canManageTwoFactorAuthentication()) {
-        $this->markTestSkipped('Two-factor authentication is not enabled.');
-    }
-
+test('app mfa can be disabled', function (): void {
     $user = User::factory()->create();
+    $this->actingAs($user);
 
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => false,
-    ]);
+    $setupResponse = $this->postJson(route('security.mfa.app.setup'));
+    $payload = $setupResponse->json();
 
-    $this->actingAs($user)
-        ->get(route('two-factor.show'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $assert): \Inertia\Testing\AssertableInertia => $assert
-            ->component('settings/TwoFactor')
-        );
+    filament()->setCurrentPanel('admin');
+    $panel = Filament::getPanel('admin');
+    $provider = $panel->getMultiFactorAuthenticationProviders()['app'];
+
+    $code = $provider->getCurrentCode($user, $payload['secret']);
+
+    $this->postJson(route('security.mfa.app.enable'), [
+        'encrypted' => $payload['encrypted'],
+        'code' => $code,
+    ])->assertOk();
+
+    $this->deleteJson(route('security.mfa.app.disable'))->assertOk();
+
+    $user->refresh();
+    expect($user->getAppAuthenticationSecret())->toBeNull();
 });
 
-test('two factor settings page returns forbidden response when two factor is disabled', function (): void {
-    if (! Features::canManageTwoFactorAuthentication()) {
-        $this->markTestSkipped('Two-factor authentication is not enabled.');
-    }
-
-    config(['fortify.features' => []]);
-
+test('email mfa can be enabled and disabled', function (): void {
     $user = User::factory()->create();
+    $this->actingAs($user);
 
-    $this->actingAs($user)
-        ->withSession(['auth.password_confirmed_at' => time()])
-        ->get(route('two-factor.show'))
-        ->assertForbidden();
+    Notification::fake();
+
+    $this->postJson(route('security.mfa.email.start'))->assertOk();
+
+    $code = null;
+
+    Notification::assertSentTo($user, VerifyEmailAuthentication::class, function (VerifyEmailAuthentication $notification) use (&$code): bool {
+        $code = $notification->code;
+
+        return true;
+    });
+
+    $this->postJson(route('security.mfa.email.enable'), [
+        'code' => $code,
+    ])->assertOk();
+
+    $user->refresh();
+    expect($user->hasEmailAuthentication())->toBeTrue();
+
+    $this->deleteJson(route('security.mfa.email.disable'))->assertOk();
+
+    $user->refresh();
+    expect($user->hasEmailAuthentication())->toBeFalse();
 });

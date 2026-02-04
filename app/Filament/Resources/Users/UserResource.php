@@ -75,10 +75,6 @@ class UserResource extends Resource
                         DateTimePicker::make('email_verified_at')
                             ->label('Email Verified At')
                             ->helperText('Leave empty to keep unverified.'),
-                        DateTimePicker::make('two_factor_confirmed_at')
-                            ->label('Two Factor Confirmed At')
-                            ->disabled()
-                            ->helperText('Managed via 2FA actions.'),
                     ])->columns(2)
                     ->collapsible(),
             ]);
@@ -115,12 +111,16 @@ class UserResource extends Resource
                             ->placeholder('Unverified')
                             ->badge()
                             ->color(fn ($state): string => $state ? 'success' : 'danger'),
-                        TextEntry::make('two_factor_confirmed_at')
-                            ->label('Two Factor Authentication')
-                            ->dateTime()
-                            ->placeholder('Disabled')
+                        TextEntry::make('app_authentication_secret')
+                            ->label('App MFA')
+                            ->formatStateUsing(fn ($state): string => filled($state) ? 'Enabled' : 'Disabled')
                             ->badge()
-                            ->color(fn ($state): string => $state ? 'success' : 'warning'),
+                            ->color(fn ($state): string => filled($state) ? 'success' : 'warning'),
+                        TextEntry::make('has_email_authentication')
+                            ->label('Email MFA')
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Enabled' : 'Disabled')
+                            ->badge()
+                            ->color(fn (bool $state): string => $state ? 'success' : 'warning'),
                     ])->columns(2),
             ]);
     }
@@ -155,14 +155,24 @@ class UserResource extends Resource
                         'danger' => fn ($state): bool => $state === null,
                     ])
                     ->sortable(),
-                IconColumn::make('two_factor_confirmed_at')
-                    ->label('2FA')
+                IconColumn::make('app_authentication_secret')
+                    ->label('App MFA')
                     ->boolean()
                     ->trueIcon('heroicon-o-lock-closed')
                     ->falseIcon('heroicon-o-lock-open')
                     ->colors([
-                        'success' => fn ($state): bool => $state !== null,
-                        'warning' => fn ($state): bool => $state === null,
+                        'success' => fn ($state): bool => filled($state),
+                        'warning' => fn ($state): bool => blank($state),
+                    ])
+                    ->sortable(),
+                IconColumn::make('has_email_authentication')
+                    ->label('Email MFA')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-envelope')
+                    ->falseIcon('heroicon-o-envelope-open')
+                    ->colors([
+                        'success' => fn (bool $state): bool => $state,
+                        'warning' => fn (bool $state): bool => ! $state,
                     ])
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -174,8 +184,11 @@ class UserResource extends Resource
                 TernaryFilter::make('email_verified_at')
                     ->label('Email Verified')
                     ->nullable(),
-                TernaryFilter::make('two_factor_confirmed_at')
-                    ->label('2FA Enabled')
+                TernaryFilter::make('app_authentication_secret')
+                    ->label('App MFA Enabled')
+                    ->nullable(),
+                TernaryFilter::make('has_email_authentication')
+                    ->label('Email MFA Enabled')
                     ->nullable(),
             ])
             ->recordActions([

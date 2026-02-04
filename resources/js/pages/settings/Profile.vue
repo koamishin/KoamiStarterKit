@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { toRefs } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import DeleteUser from '@/components/DeleteUser.vue';
@@ -8,15 +9,9 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
 import { type SharedData } from '@/types';
 import { edit, update } from '@/routes/profile';
 import { send } from '@/routes/verification';
-
-defineProps<{
-    mustVerifyEmail: boolean;
-    status?: string;
-}>();
 
 const page = usePage<SharedData>();
 const user = page.props.auth.user;
@@ -33,6 +28,13 @@ const submit = () => {
 };
 
 const breadcrumbs = [{ title: 'Profile settings', href: edit().url }];
+
+const props = defineProps<{
+    mustVerifyEmail: boolean;
+    status?: string;
+}>();
+
+const { mustVerifyEmail, status } = toRefs(props);
 </script>
 
 <template>
@@ -116,14 +118,6 @@ const breadcrumbs = [{ title: 'Profile settings', href: edit().url }];
                         </Transition>
                     </div>
                 </form>
-            </div>
-
-            <div class="space-y-6">
-                <Heading
-                    title="Personalization"
-                    description="Pick a theme that matches your style"
-                />
-                <ThemeSwitcher />
             </div>
 
             <DeleteUser />

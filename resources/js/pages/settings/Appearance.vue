@@ -2,6 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import Heading from '@/components/Heading.vue';
+import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/appearance';
@@ -29,6 +30,15 @@ const breadcrumbItems: BreadcrumbItem[] = [
                     description="Update your account's appearance settings"
                 />
                 <AppearanceTabs />
+            </div>
+
+            <div class="space-y-6">
+                <Heading
+                    variant="small"
+                    title="Personalization"
+                    description="Choose a color theme that matches your style"
+                />
+                <ThemeSwitcher />
             </div>
         </SettingsLayout>
     </AppLayout>

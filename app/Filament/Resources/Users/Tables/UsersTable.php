@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 
 class UsersTable
@@ -31,8 +32,13 @@ class UsersTable
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('two_factor_confirmed_at')
-                    ->dateTime()
+                IconColumn::make('app_authentication_secret')
+                    ->label('App MFA')
+                    ->boolean()
+                    ->sortable(),
+                IconColumn::make('has_email_authentication')
+                    ->label('Email MFA')
+                    ->boolean()
                     ->sortable(),
             ])
             ->filters([
