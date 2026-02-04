@@ -6,6 +6,7 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import AlertError from '@/components/AlertError.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -19,9 +20,8 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
-import { useAppearance } from '@/composables/useAppearance';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
-import { confirm } from '@/routes/two-factor';
+import { enable as enableApp } from '@/routes/security/mfa/app';
 import type { TwoFactorConfigContent } from '@/types';
 
 type Props = {
@@ -29,14 +29,18 @@ type Props = {
     twoFactorEnabled: boolean;
 };
 
-const { resolvedAppearance } = useAppearance();
-
 const props = defineProps<Props>();
 const isOpen = defineModel<boolean>('isOpen');
 
 const { copy, copied } = useClipboard();
-const { qrCodeSvg, manualSetupKey, clearSetupData, fetchSetupData, errors } =
-    useTwoFactorAuth();
+const {
+    qrCodeDataUri,
+    secret,
+    encrypted,
+    clearSetupData,
+    fetchSetupData,
+    errors,
+} = useTwoFactorAuth();
 
 const showVerificationStep = ref(false);
 const code = ref<string>('');
@@ -48,7 +52,7 @@ const modalConfig = computed<TwoFactorConfigContent>(() => {
         return {
             title: 'Two-Factor Authentication Enabled',
             description:
-                'Two-factor authentication is now enabled. Scan the QR code or enter the setup key in your authenticator app.',
+                'Two-factor authentication is now enabled. Store these recovery codes in a secure location.',
             buttonText: 'Close',
         };
     }
@@ -101,7 +105,7 @@ watch(
             return;
         }
 
-        if (!qrCodeSvg.value) {
+        if (!qrCodeDataUri.value) {
             await fetchSetupData();
         }
     },
@@ -153,41 +157,38 @@ watch(
                 <template v-if="!showVerificationStep">
                     <AlertError v-if="errors?.length" :errors="errors" />
                     <template v-else>
-                        <div
-                            class="relative mx-auto flex max-w-md items-center overflow-hidden"
-                        >
-                            <div
-                                class="relative mx-auto aspect-square w-64 overflow-hidden rounded-lg border border-border"
+                        <Card class="w-full">
+                            <CardHeader
+                                class="flex flex-col items-center justify-center"
+                            >
+                                <CardTitle class="text-lg"
+                                    >Scan QR Code</CardTitle
+                                >
+                            </CardHeader>
+                            <CardContent
+                                class="flex flex-col items-center justify-center space-y-4"
                             >
                                 <div
-                                    v-if="!qrCodeSvg"
-                                    class="absolute inset-0 z-10 flex aspect-square h-auto w-full animate-pulse items-center justify-center bg-background"
-                                >
-                                    <Spinner class="size-6" />
-                                </div>
-                                <div
-                                    v-else
-                                    class="relative z-10 overflow-hidden border p-5"
+                                    class="relative mx-auto flex max-w-md items-center overflow-hidden"
                                 >
                                     <div
-                                        v-html="qrCodeSvg"
-                                        class="flex aspect-square size-full items-center justify-center"
-                                        :style="{
-                                            filter:
-                                                resolvedAppearance === 'dark'
-                                                    ? 'invert(1) brightness(1.5)'
-                                                    : undefined,
-                                        }"
-                                    />
+                                        class="relative mx-auto aspect-square w-64 overflow-hidden rounded-lg border border-border bg-white p-4"
+                                    >
+                                        <div
+                                            v-if="!qrCodeDataUri"
+                                            class="absolute inset-0 z-10 flex aspect-square h-auto w-full animate-pulse items-center justify-center bg-background"
+                                        >
+                                            <Spinner class="size-6" />
+                                        </div>
+                                        <img
+                                            v-else
+                                            :src="qrCodeDataUri"
+                                            class="flex aspect-square size-full items-center justify-center"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="flex w-full items-center space-x-5">
-                            <Button class="w-full" @click="handleModalNextStep">
-                                {{ modalConfig.buttonText }}
-                            </Button>
-                        </div>
+                            </CardContent>
+                        </Card>
 
                         <div
                             class="relative flex w-full items-center justify-center"
@@ -196,7 +197,7 @@ watch(
                                 class="absolute inset-0 top-1/2 h-px w-full bg-border"
                             />
                             <span class="relative bg-card px-2 py-1"
-                                >or, enter the code manually</span
+                                >Or, enter manually</span
                             >
                         </div>
 
@@ -207,7 +208,7 @@ watch(
                                 class="flex w-full items-stretch overflow-hidden rounded-xl border border-border"
                             >
                                 <div
-                                    v-if="!manualSetupKey"
+                                    v-if="!secret"
                                     class="flex h-full w-full items-center justify-center bg-muted p-3"
                                 >
                                     <Spinner />
@@ -216,11 +217,11 @@ watch(
                                     <input
                                         type="text"
                                         readonly
-                                        :value="manualSetupKey"
+                                        :value="secret"
                                         class="h-full w-full bg-background p-3 text-foreground"
                                     />
                                     <button
-                                        @click="copy(manualSetupKey || '')"
+                                        @click="copy(secret || '')"
                                         class="relative block h-auto border-l border-border px-3 hover:bg-muted"
                                     >
                                         <Check
@@ -232,18 +233,22 @@ watch(
                                 </template>
                             </div>
                         </div>
+                        <Button class="w-full" @click="handleModalNextStep">
+                            {{ modalConfig.buttonText }}
+                        </Button>
                     </template>
                 </template>
 
                 <template v-else>
                     <Form
-                        v-bind="confirm.form()"
+                        v-bind="
+                            enableApp.form({ code: code, encrypted: encrypted })
+                        "
                         reset-on-error
                         @finish="code = ''"
                         @success="isOpen = false"
                         v-slot="{ errors, processing }"
                     >
-                        <input type="hidden" name="code" :value="code" />
                         <div
                             ref="pinInputContainerRef"
                             class="relative w-full space-y-3"
@@ -265,12 +270,7 @@ watch(
                                         />
                                     </InputOTPGroup>
                                 </InputOTP>
-                                <InputError
-                                    :message="
-                                        errors?.confirmTwoFactorAuthentication
-                                            ?.code
-                                    "
-                                />
+                                <InputError :message="errors.code" />
                             </div>
 
                             <div class="flex w-full items-center space-x-5">

@@ -28,6 +28,7 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
+import http from '@/lib/http';
 import {
     disable as disableRoute,
     enable as enableRoute,
@@ -55,10 +56,6 @@ const emit = defineEmits<{
     (e: 'update:enabled', value: boolean): void;
 }>();
 
-const csrfToken = document
-    .querySelector('meta[name="csrf-token"]')
-    ?.getAttribute('content');
-
 const isEnabled = ref(props.enabled);
 watch(
     () => props.enabled,
@@ -81,38 +78,6 @@ const { copy, copied } = useClipboard();
 
 const canSubmit = computed(() => code.value.length === 6 && setup.value !== null);
 
-const requestJson = async <T>(url: string, options: RequestInit): Promise<T> => {
-    const response = await fetch(url, {
-        credentials: 'same-origin',
-        ...options,
-        headers: {
-            Accept: 'application/json',
-            ...(options.method && options.method !== 'GET'
-                ? {
-                      'Content-Type': 'application/json',
-                      'X-CSRF-TOKEN': csrfToken ?? '',
-                  }
-                : {}),
-            ...(options.headers ?? {}),
-        },
-    });
-
-    if (response.status === 204) {
-        return {} as T;
-    }
-
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message =
-            data?.message ??
-            (typeof data === 'string' ? data : 'Request failed');
-        throw Object.assign(new Error(message), { response, data });
-    }
-
-    return data as T;
-};
-
 const openSetup = async () => {
     setupModalOpen.value = true;
     enableError.value = null;
@@ -127,12 +92,10 @@ const openSetup = async () => {
     isLoadingSetup.value = true;
 
     try {
-        setup.value = await requestJson<SetupResponse>(
-            setupRoute.url(),
-            { method: 'POST', body: JSON.stringify({}) },
-        );
+        const response = await http.post<SetupResponse>(setupRoute.url());
+        setup.value = response.data;
     } catch (error: any) {
-        enableError.value = error?.message ?? 'Failed to start setup';
+        enableError.value = error.response?.data?.message ?? 'Failed to start setup';
         setup.value = null;
     } finally {
         isLoadingSetup.value = false;
@@ -157,20 +120,17 @@ const enable = async () => {
     enableFieldError.value = null;
 
     try {
-        const response = await requestJson<EnableResponse>(
+        const response = await http.post<EnableResponse>(
             enableRoute.url(),
             {
-                method: 'POST',
-                body: JSON.stringify({
-                    encrypted: setup.value.encrypted,
-                    code: code.value,
-                }),
+                encrypted: setup.value.encrypted,
+                code: code.value,
             },
         );
 
         isEnabled.value = true;
         emit('update:enabled', true);
-        enabledRecoveryCodes.value = response.recoveryCodes ?? null;
+        enabledRecoveryCodes.value = response.data.recoveryCodes ?? null;
 
         if (enabledRecoveryCodes.value?.length) {
             recoveryCodesModalOpen.value = true;
@@ -178,8 +138,8 @@ const enable = async () => {
 
         closeSetup();
     } catch (error: any) {
-        enableError.value = error?.message ?? 'Failed to enable';
-        enableFieldError.value = error?.data?.errors?.code?.[0] ?? null;
+        enableError.value = error.response?.data?.message ?? 'Failed to enable';
+        enableFieldError.value = error.response?.data?.errors?.code?.[0] ?? null;
     }
 };
 
@@ -187,11 +147,11 @@ const disable = async () => {
     enableError.value = null;
 
     try {
-        await requestJson(disableRoute.url(), { method: 'DELETE' });
+        await http.delete(disableRoute.url());
         isEnabled.value = false;
         emit('update:enabled', false);
     } catch (error: any) {
-        enableError.value = error?.message ?? 'Failed to disable';
+        enableError.value = error.response?.data?.message ?? 'Failed to disable';
     }
 };
 
@@ -199,15 +159,14 @@ const regenerateRecoveryCodes = async () => {
     enableError.value = null;
 
     try {
-        const response = await requestJson<{ recoveryCodes: string[] }>(
+        const response = await http.post<{ recoveryCodes: string[] }>(
             recoveryCodes.url(),
-            { method: 'POST', body: JSON.stringify({}) },
         );
 
-        enabledRecoveryCodes.value = response.recoveryCodes;
+        enabledRecoveryCodes.value = response.data.recoveryCodes;
         recoveryCodesModalOpen.value = true;
     } catch (error: any) {
-        enableError.value = error?.message ?? 'Failed to regenerate codes';
+        enableError.value = error.response?.data?.message ?? 'Failed to regenerate codes';
     }
 };
 
@@ -233,7 +192,7 @@ const recoveryCodesText = computed(() =>
         </CardHeader>
 
         <CardContent>
-            <AlertError v-if="enableError" :message="enableError" />
+            <AlertError v-if="enableError" :errors="[enableError]" />
         </CardContent>
 
         <CardFooter class="flex items-center gap-2">
@@ -300,7 +259,7 @@ const recoveryCodesText = computed(() =>
                 <div class="space-y-2">
                     <p class="text-sm font-medium">Authentication code</p>
                     <div class="flex justify-center">
-                        <InputOTP v-model="code" :max-length="6">
+                        <InputOTP v-model="code" :maxLength="6">
                             <InputOTPGroup>
                                 <InputOTPSlot
                                     v-for="slot in 6"
@@ -378,4 +337,3 @@ const recoveryCodesText = computed(() =>
         </DialogContent>
     </Dialog>
 </template>
-

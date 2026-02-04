@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ShieldBan, ShieldCheck } from 'lucide-vue-next';
 import { onUnmounted, ref } from 'vue';
 import Heading from '@/components/Heading.vue';
@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { disable, enable, show } from '@/routes/two-factor';
+import { edit as show } from '@/routes/security';
+import { disable as disableApp } from '@/routes/security/mfa/app';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {
@@ -72,16 +73,12 @@ onUnmounted(() => {
                         >
                             <ShieldCheck />Continue Setup
                         </Button>
-                        <Form
+                        <Button
                             v-else
-                            v-bind="enable.form()"
-                            @success="showSetupModal = true"
-                            #default="{ processing }"
+                            @click="showSetupModal = true"
                         >
-                            <Button type="submit" :disabled="processing">
-                                <ShieldCheck />Enable 2FA</Button
-                            ></Form
-                        >
+                            <ShieldCheck />Enable 2FA
+                        </Button>
                     </div>
                 </div>
 
@@ -101,7 +98,7 @@ onUnmounted(() => {
                     <TwoFactorRecoveryCodes />
 
                     <div class="relative inline">
-                        <Form v-bind="disable.form()" #default="{ processing }">
+                        <Form v-bind="disableApp.form()" #default="{ processing }">
                             <Button
                                 variant="destructive"
                                 type="submit"

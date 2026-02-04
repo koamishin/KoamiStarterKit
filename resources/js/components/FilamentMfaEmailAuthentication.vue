@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import AlertError from '@/components/AlertError.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
+import http from '@/lib/http';
 import {
     disable as disableRoute,
     enable as enableRoute,
@@ -40,10 +42,6 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'update:enabled', value: boolean): void;
 }>();
-
-const csrfToken = document
-    .querySelector('meta[name="csrf-token"]')
-    ?.getAttribute('content');
 
 const isEnabled = ref(props.enabled);
 watch(
@@ -62,38 +60,6 @@ const code = ref('');
 
 const canSubmit = computed(() => code.value.length === 6);
 
-const requestJson = async <T>(url: string, options: RequestInit): Promise<T> => {
-    const response = await fetch(url, {
-        credentials: 'same-origin',
-        ...options,
-        headers: {
-            Accept: 'application/json',
-            ...(options.method && options.method !== 'GET'
-                ? {
-                      'Content-Type': 'application/json',
-                      'X-CSRF-TOKEN': csrfToken ?? '',
-                  }
-                : {}),
-            ...(options.headers ?? {}),
-        },
-    });
-
-    if (response.status === 204) {
-        return {} as T;
-    }
-
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message =
-            data?.message ??
-            (typeof data === 'string' ? data : 'Request failed');
-        throw Object.assign(new Error(message), { response, data });
-    }
-
-    return data as T;
-};
-
 const openEnable = async () => {
     modalOpen.value = true;
     error.value = null;
@@ -103,13 +69,13 @@ const openEnable = async () => {
     isSending.value = true;
 
     try {
-        await requestJson(start.url(), {
-            method: 'POST',
-            body: JSON.stringify({}),
-        });
+        await http.post(start.url());
+        toast.success('A new code has been sent to your email address.');
     } catch (e: any) {
-        error.value = e?.message ?? 'Failed to send code';
-        fieldError.value = e?.data?.errors?.email?.[0] ?? null;
+        const defaultMessage = 'Failed to send code';
+        const validationMessage = e.response?.data?.errors?.email?.[0];
+        error.value = validationMessage ?? e.response?.data?.message ?? defaultMessage;
+        toast.error(error.value);
     } finally {
         isSending.value = false;
     }
@@ -121,12 +87,11 @@ const resend = async () => {
     isSending.value = true;
 
     try {
-        await requestJson(resendRoute.url(), {
-            method: 'POST',
-            body: JSON.stringify({}),
-        });
+        await http.post(resendRoute.url());
+        toast.success('A new code has been sent to your email address.');
     } catch (e: any) {
-        error.value = e?.message ?? 'Failed to resend code';
+        error.value = e.response?.data?.message ?? 'Failed to resend code';
+        toast.error(error.value);
     } finally {
         isSending.value = false;
     }
@@ -138,17 +103,16 @@ const enable = async () => {
     isSubmitting.value = true;
 
     try {
-        await requestJson(enableRoute.url(), {
-            method: 'POST',
-            body: JSON.stringify({ code: code.value }),
-        });
+        await http.post(enableRoute.url(), { code: code.value });
 
         isEnabled.value = true;
         emit('update:enabled', true);
         modalOpen.value = false;
+        toast.success('Email authentication has been enabled.');
     } catch (e: any) {
-        error.value = e?.message ?? 'Failed to enable';
-        fieldError.value = e?.data?.errors?.code?.[0] ?? null;
+        error.value = e.response?.data?.message ?? 'Failed to enable';
+        fieldError.value = e.response?.data?.errors?.code?.[0] ?? null;
+        toast.error(error.value);
     } finally {
         isSubmitting.value = false;
     }
@@ -158,11 +122,13 @@ const disable = async () => {
     error.value = null;
 
     try {
-        await requestJson(disableRoute.url(), { method: 'DELETE' });
+        await http.delete(disableRoute.url());
         isEnabled.value = false;
         emit('update:enabled', false);
+        toast.success('Email authentication has been disabled.');
     } catch (e: any) {
-        error.value = e?.message ?? 'Failed to disable';
+        error.value = e.response?.data?.message ?? 'Failed to disable';
+        toast.error(error.value);
     }
 };
 </script>
@@ -184,7 +150,7 @@ const disable = async () => {
         </CardHeader>
 
         <CardContent>
-            <AlertError v-if="error" :message="error" />
+            <AlertError v-if="error" :errors="[error]" />
         </CardContent>
 
         <CardFooter class="flex items-center gap-2">
@@ -209,7 +175,7 @@ const disable = async () => {
             <div v-else class="space-y-4">
                 <div class="space-y-2">
                     <div class="flex justify-center">
-                        <InputOTP v-model="code" :max-length="6">
+                        <InputOTP v-model="code" :maxLength="6">
                             <InputOTPGroup>
                                 <InputOTPSlot
                                     v-for="slot in 6"
@@ -240,4 +206,3 @@ const disable = async () => {
         </DialogContent>
     </Dialog>
 </template>
-

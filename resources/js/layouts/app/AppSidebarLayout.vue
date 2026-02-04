@@ -4,6 +4,7 @@ import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
 import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
+import Sonner from '@/components/ui/sonner/Sonner.vue';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {
@@ -23,5 +24,6 @@ withDefaults(defineProps<Props>(), {
             <AppSidebarHeader :breadcrumbs="breadcrumbs" />
             <slot />
         </AppContent>
+        <Sonner />
     </AppShell>
 </template>
