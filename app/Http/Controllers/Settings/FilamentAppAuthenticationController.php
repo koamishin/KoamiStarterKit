@@ -18,7 +18,7 @@ class FilamentAppAuthenticationController extends Controller
 {
     public function setup(Request $request): JsonResponse
     {
-        $provider = $this->getAppAuthenticationProvider();
+        $appAuthentication = $this->getAppAuthenticationProvider();
 
         $user = $request->user();
 
@@ -26,10 +26,10 @@ class FilamentAppAuthenticationController extends Controller
             abort(500);
         }
 
-        $secret = $provider->generateSecret();
+        $secret = $appAuthentication->generateSecret();
 
-        $recoveryCodes = $provider->isRecoverable()
-            ? $provider->generateRecoveryCodes()
+        $recoveryCodes = $appAuthentication->isRecoverable()
+            ? $appAuthentication->generateRecoveryCodes()
             : null;
 
         $encrypted = encrypt([
@@ -41,16 +41,16 @@ class FilamentAppAuthenticationController extends Controller
         return response()->json([
             'encrypted' => $encrypted,
             'secret' => $secret,
-            'qrCodeDataUri' => $provider->generateQrCodeDataUri($secret),
+            'qrCodeDataUri' => $appAuthentication->generateQrCodeDataUri($secret),
             'recoveryCodes' => $recoveryCodes,
         ]);
     }
 
-    public function enable(FilamentAppAuthenticationEnableRequest $request): JsonResponse
+    public function enable(FilamentAppAuthenticationEnableRequest $filamentAppAuthenticationEnableRequest): JsonResponse
     {
-        $provider = $this->getAppAuthenticationProvider();
+        $appAuthentication = $this->getAppAuthenticationProvider();
 
-        $user = $request->user();
+        $user = $filamentAppAuthenticationEnableRequest->user();
 
         if (
             (! $user instanceof Authenticatable)
@@ -60,23 +60,23 @@ class FilamentAppAuthenticationController extends Controller
             abort(500);
         }
 
-        $encrypted = decrypt($request->validated('encrypted'));
+        $encrypted = decrypt($filamentAppAuthenticationEnableRequest->validated('encrypted'));
 
         if (($encrypted['userId'] ?? null) !== $user->getAuthIdentifier()) {
             abort(403);
         }
 
-        if (! $provider->verifyCode($request->validated('code'), $encrypted['secret'] ?? null)) {
+        if (! $appAuthentication->verifyCode($filamentAppAuthenticationEnableRequest->validated('code'), $encrypted['secret'] ?? null)) {
             throw ValidationException::withMessages([
                 'code' => __('The provided authentication code is invalid.'),
             ]);
         }
 
-        DB::transaction(function () use ($encrypted, $provider, $user): void {
-            $provider->saveSecret($user, $encrypted['secret'] ?? null);
+        DB::transaction(function () use ($encrypted, $appAuthentication, $user): void {
+            $appAuthentication->saveSecret($user, $encrypted['secret'] ?? null);
 
-            if ($provider->isRecoverable()) {
-                $provider->saveRecoveryCodes($user, $encrypted['recoveryCodes'] ?? null);
+            if ($appAuthentication->isRecoverable()) {
+                $appAuthentication->saveRecoveryCodes($user, $encrypted['recoveryCodes'] ?? null);
             }
         });
 
@@ -87,7 +87,7 @@ class FilamentAppAuthenticationController extends Controller
 
     public function disable(Request $request): JsonResponse
     {
-        $provider = $this->getAppAuthenticationProvider();
+        $appAuthentication = $this->getAppAuthenticationProvider();
 
         $user = $request->user();
 
@@ -99,9 +99,9 @@ class FilamentAppAuthenticationController extends Controller
             abort(500);
         }
 
-        DB::transaction(function () use ($provider, $user): void {
-            $provider->saveSecret($user, null);
-            $provider->saveRecoveryCodes($user, null);
+        DB::transaction(function () use ($appAuthentication, $user): void {
+            $appAuthentication->saveSecret($user, null);
+            $appAuthentication->saveRecoveryCodes($user, null);
         });
 
         return response()->json();
@@ -109,7 +109,7 @@ class FilamentAppAuthenticationController extends Controller
 
     public function regenerateRecoveryCodes(Request $request): JsonResponse
     {
-        $provider = $this->getAppAuthenticationProvider();
+        $appAuthentication = $this->getAppAuthenticationProvider();
 
         $user = $request->user();
 
@@ -117,14 +117,14 @@ class FilamentAppAuthenticationController extends Controller
             abort(500);
         }
 
-        if (! $provider->isRecoverable()) {
+        if (! $appAuthentication->isRecoverable()) {
             abort(404);
         }
 
-        $recoveryCodes = $provider->generateRecoveryCodes();
+        $recoveryCodes = $appAuthentication->generateRecoveryCodes();
 
-        DB::transaction(function () use ($provider, $recoveryCodes, $user): void {
-            $provider->saveRecoveryCodes($user, $recoveryCodes);
+        DB::transaction(function () use ($appAuthentication, $recoveryCodes, $user): void {
+            $appAuthentication->saveRecoveryCodes($user, $recoveryCodes);
         });
 
         return response()->json([

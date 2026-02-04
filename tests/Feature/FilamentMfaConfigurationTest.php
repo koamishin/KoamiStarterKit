@@ -7,7 +7,7 @@ use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Facades\Schema;
 
-test('users table has Filament MFA columns', function () {
+test('users table has Filament MFA columns', function (): void {
     expect(Schema::hasColumns('users', [
         'app_authentication_secret',
         'app_authentication_recovery_codes',
@@ -15,7 +15,7 @@ test('users table has Filament MFA columns', function () {
     ]))->toBeTrue();
 });
 
-test('user model implements Filament MFA contracts', function () {
+test('user model implements Filament MFA contracts', function (): void {
     $interfaces = class_implements(User::class);
 
     expect($interfaces)->toContain(HasAppAuthentication::class);

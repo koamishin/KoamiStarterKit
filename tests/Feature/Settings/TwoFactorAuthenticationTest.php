@@ -80,8 +80,8 @@ test('email mfa can be enabled and disabled', function (): void {
 
     $code = null;
 
-    Notification::assertSentTo($user, VerifyEmailAuthentication::class, function (VerifyEmailAuthentication $notification) use (&$code): bool {
-        $code = $notification->code;
+    Notification::assertSentTo($user, VerifyEmailAuthentication::class, function (VerifyEmailAuthentication $verifyEmailAuthentication) use (&$code): bool {
+        $code = $verifyEmailAuthentication->code;
 
         return true;
     });

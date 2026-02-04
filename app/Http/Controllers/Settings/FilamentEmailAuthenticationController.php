@@ -18,7 +18,7 @@ class FilamentEmailAuthenticationController extends Controller
 {
     public function start(Request $request): JsonResponse
     {
-        $provider = $this->getEmailAuthenticationProvider();
+        $emailAuthentication = $this->getEmailAuthenticationProvider();
 
         $user = $request->user();
 
@@ -32,7 +32,7 @@ class FilamentEmailAuthenticationController extends Controller
             ]);
         }
 
-        if (! $provider->sendCode($user)) {
+        if (! $emailAuthentication->sendCode($user)) {
             return response()->json([
                 'message' => __('Too many requests. Please wait before requesting another code.'),
             ], 429);
@@ -46,24 +46,24 @@ class FilamentEmailAuthenticationController extends Controller
         return $this->start($request);
     }
 
-    public function enable(FilamentEmailAuthenticationEnableRequest $request): JsonResponse
+    public function enable(FilamentEmailAuthenticationEnableRequest $filamentEmailAuthenticationEnableRequest): JsonResponse
     {
-        $provider = $this->getEmailAuthenticationProvider();
+        $emailAuthentication = $this->getEmailAuthenticationProvider();
 
-        $user = $request->user();
+        $user = $filamentEmailAuthenticationEnableRequest->user();
 
         if ((! $user instanceof Authenticatable) || (! $user instanceof HasEmailAuthentication)) {
             abort(500);
         }
 
-        if (! $provider->verifyCode($request->validated('code'))) {
+        if (! $emailAuthentication->verifyCode($filamentEmailAuthenticationEnableRequest->validated('code'))) {
             throw ValidationException::withMessages([
                 'code' => __('The provided authentication code is invalid.'),
             ]);
         }
 
-        DB::transaction(function () use ($provider, $user): void {
-            $provider->enableEmailAuthentication($user);
+        DB::transaction(function () use ($emailAuthentication, $user): void {
+            $emailAuthentication->enableEmailAuthentication($user);
         });
 
         return response()->json();

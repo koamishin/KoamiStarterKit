@@ -161,8 +161,8 @@ class UserResource extends Resource
                     ->trueIcon('heroicon-o-lock-closed')
                     ->falseIcon('heroicon-o-lock-open')
                     ->colors([
-                        'success' => fn ($state): bool => filled($state),
-                        'warning' => fn ($state): bool => blank($state),
+                        'success' => filled(...),
+                        'warning' => blank(...),
                     ])
                     ->sortable(),
                 IconColumn::make('has_email_authentication')

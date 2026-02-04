@@ -5,14 +5,14 @@ use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 
-test('admin panel uses the custom profile page', function () {
+test('admin panel uses the custom profile page', function (): void {
     $panel = Filament::getPanel('admin');
 
     expect($panel)->not->toBeNull();
     expect($panel->getProfilePage())->toBe(EditProfile::class);
 });
 
-test('profile menu item points to the custom profile page', function () {
+test('profile menu item points to the custom profile page', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user);
