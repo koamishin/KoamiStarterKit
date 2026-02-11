@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Actions\Action;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
@@ -63,6 +64,24 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,
+            ])
+            ->plugins([
+                FilamentShieldPlugin::make()
+    ->gridColumns([
+        'default' => 1,
+        'sm' => 2,
+        'lg' => 3
+    ])
+    ->sectionColumnSpan(1)
+    ->checkboxListColumns([
+        'default' => 1,
+        'sm' => 2,
+        'lg' => 4,
+    ])
+    ->resourceCheckboxListColumns([
+        'default' => 1,
+        'sm' => 2,
+    ]),
             ])
             ->middleware([
                 EncryptCookies::class,
