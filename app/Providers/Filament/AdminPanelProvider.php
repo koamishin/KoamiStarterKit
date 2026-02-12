@@ -39,6 +39,7 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_START,
                 fn (): string => Blade::render('@include("impersonate-banner")'),
             )
+            ->databaseNotifications()
             ->login()
             ->colors([
                 'primary' => Color::Amber,

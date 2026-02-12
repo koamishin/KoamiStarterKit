@@ -14,7 +14,7 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $adminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $userRole = Role::firstOrCreate(['name' => 'user']);
 
         // Create a default admin user if it doesn't exist
