@@ -51,11 +51,11 @@ class SetupStarterKit extends Command
             label: 'GitHub Username/Organization',
             placeholder: 'e.g., yourusername',
             required: true,
-            hint: 'Used for composer vendor name and GitHub repository URL',
             validate: fn ($value): ?string => match (true) {
                 ! preg_match('/^[a-zA-Z0-9-]+$/', (string) $value) => 'GitHub username can only contain alphanumeric characters and hyphens.',
                 default => null
-            }
+            },
+            hint: 'Used for composer vendor name and GitHub repository URL'
         );
 
         $packageName = text(
@@ -63,11 +63,11 @@ class SetupStarterKit extends Command
             placeholder: 'e.g., my-awesome-app',
             default: 'my-app',
             required: true,
-            hint: 'Used for composer package name, Docker image name, and GitHub repository name',
             validate: fn ($value): ?string => match (true) {
                 ! preg_match('/^[a-z0-9-]+$/', (string) $value) => 'Application name must be lowercase with hyphens only.',
                 default => null
-            }
+            },
+            hint: 'Used for composer package name, Docker image name, and GitHub repository name'
         );
 
         $authorName = text(
@@ -81,11 +81,11 @@ class SetupStarterKit extends Command
             label: 'Author Email',
             placeholder: 'e.g., john@example.com',
             required: true,
-            hint: 'Your email will be added to composer.json authors',
             validate: fn ($value): ?string => match (true) {
                 ! filter_var($value, FILTER_VALIDATE_EMAIL) => 'Please enter a valid email address.',
                 default => null
-            }
+            },
+            hint: 'Your email will be added to composer.json authors'
         );
 
         $useDocker = confirm(
@@ -124,11 +124,11 @@ class SetupStarterKit extends Command
                     placeholder: 'e.g., yourdockerhubusername',
                     default: $githubUsername,
                     required: true,
-                    hint: 'Your Docker Hub username or organization name',
                     validate: fn ($value): ?string => match (true) {
                         ! preg_match('/^[a-zA-Z0-9_-]+$/', (string) $value) => 'Docker Hub username can only contain alphanumeric characters, underscores, and hyphens.',
                         default => null
-                    }
+                    },
+                    hint: 'Your Docker Hub username or organization name'
                 );
 
                 $dockerImageName = text(
