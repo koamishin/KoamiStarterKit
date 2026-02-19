@@ -27,7 +27,7 @@ class SetupStarterKit extends Command
      *
      * @var string
      */
-    protected $description = 'Configure KoamiStarterKit with your GitHub username and project settings';
+    protected $description = 'Initialize your Laravel application from KoamiStarterKit with your project settings';
 
     /**
      * Execute the console command.
@@ -36,8 +36,9 @@ class SetupStarterKit extends Command
     {
         intro('🚀 KoamiStarterKit Setup');
 
-        info('This command will configure your starter kit with your GitHub username and project settings.');
+        info('This command will initialize your application with your project settings.');
         info('It will update composer.json, workflow files, and Docker configuration.');
+        info('Perfect for creating Laravel applications (not composer packages).');
 
         if (! confirm('Do you want to continue?', default: true)) {
             warning('Setup cancelled.');
@@ -50,6 +51,7 @@ class SetupStarterKit extends Command
             label: 'GitHub Username/Organization',
             placeholder: 'e.g., yourusername',
             required: true,
+            hint: 'Used for composer vendor name and GitHub repository URL',
             validate: fn ($value): ?string => match (true) {
                 ! preg_match('/^[a-zA-Z0-9-]+$/', (string) $value) => 'GitHub username can only contain alphanumeric characters and hyphens.',
                 default => null
@@ -57,12 +59,13 @@ class SetupStarterKit extends Command
         );
 
         $packageName = text(
-            label: 'Package Name (lowercase, no spaces)',
+            label: 'Application Name (lowercase, no spaces)',
             placeholder: 'e.g., my-awesome-app',
-            default: 'laravel-app',
+            default: 'my-app',
             required: true,
+            hint: 'Used for composer package name, Docker image name, and GitHub repository name',
             validate: fn ($value): ?string => match (true) {
-                ! preg_match('/^[a-z0-9-]+$/', (string) $value) => 'Package name must be lowercase with hyphens only.',
+                ! preg_match('/^[a-z0-9-]+$/', (string) $value) => 'Application name must be lowercase with hyphens only.',
                 default => null
             }
         );
@@ -70,13 +73,15 @@ class SetupStarterKit extends Command
         $authorName = text(
             label: 'Author Name',
             placeholder: 'e.g., John Doe',
-            required: true
+            required: true,
+            hint: 'Your name will be added to composer.json authors'
         );
 
         $authorEmail = text(
             label: 'Author Email',
             placeholder: 'e.g., john@example.com',
             required: true,
+            hint: 'Your email will be added to composer.json authors',
             validate: fn ($value): ?string => match (true) {
                 ! filter_var($value, FILTER_VALIDATE_EMAIL) => 'Please enter a valid email address.',
                 default => null
@@ -84,15 +89,15 @@ class SetupStarterKit extends Command
         );
 
         $useDocker = confirm(
-            label: 'Do you want to configure Docker settings?',
-            default: true,
-            hint: 'This will update workflow files to use your Docker registry'
+            label: 'Do you want to set up Docker for your application?',
+            default: false,
+            hint: 'Configure Docker CI/CD for building and publishing container images'
         );
 
         $usePackagist = confirm(
             label: 'Do you want to enable automated Packagist updates?',
-            default: true,
-            hint: 'This will notify Packagist to update your package whenever you release'
+            default: false,
+            hint: 'Only needed if you plan to publish your project as a composer package'
         );
 
         $dockerRegistry = 'docker.io';
@@ -102,13 +107,13 @@ class SetupStarterKit extends Command
 
         if ($useDocker) {
             $registryType = select(
-                label: 'Select Docker Registry',
+                label: 'Which Docker registry do you want to use?',
                 options: [
-                    'dockerhub' => 'Docker Hub (docker.io)',
-                    'ghcr' => 'GitHub Container Registry (ghcr.io)',
+                    'ghcr' => 'GitHub Container Registry (ghcr.io) - Recommended for GitHub users',
+                    'dockerhub' => 'Docker Hub (docker.io) - Public registry',
                 ],
-                default: 'dockerhub',
-                hint: 'Choose where to publish your Docker images'
+                default: 'ghcr',
+                hint: 'GHCR integrates seamlessly with GitHub Actions; Docker Hub is widely used'
             );
 
             if ($registryType === 'dockerhub') {
@@ -119,6 +124,7 @@ class SetupStarterKit extends Command
                     placeholder: 'e.g., yourdockerhubusername',
                     default: $githubUsername,
                     required: true,
+                    hint: 'Your Docker Hub username or organization name',
                     validate: fn ($value): ?string => match (true) {
                         ! preg_match('/^[a-zA-Z0-9_-]+$/', (string) $value) => 'Docker Hub username can only contain alphanumeric characters, underscores, and hyphens.',
                         default => null
@@ -129,7 +135,8 @@ class SetupStarterKit extends Command
                     label: 'Docker Image Name',
                     placeholder: 'e.g., dockerhubuser/image-name',
                     default: strtolower($dockerHubAuthor.'/'.$packageName),
-                    required: true
+                    required: true,
+                    hint: 'Full image name including username/organization'
                 );
             } else {
                 $dockerRegistry = 'ghcr.io';
@@ -139,7 +146,7 @@ class SetupStarterKit extends Command
                     placeholder: 'e.g., github-username/image-name',
                     default: strtolower($githubUsername.'/'.$packageName),
                     required: true,
-                    hint: 'For GitHub Container Registry, this should match your GitHub username/org'
+                    hint: 'For GHCR, this should match your GitHub username/org'
                 );
             }
         }
@@ -150,6 +157,7 @@ class SetupStarterKit extends Command
         $this->table(
             ['Setting', 'Value'],
             [
+                ['Application Name', $packageName],
                 ['Composer Package', $githubUsername.'/'.$packageName],
                 ['Author Name', $authorName],
                 ['Author Email', $authorEmail],
@@ -167,6 +175,9 @@ class SetupStarterKit extends Command
             return self::SUCCESS;
         }
 
+        // Check and initialize git repository if needed
+        $gitInitialized = $this->initializeGitRepository($githubUsername, $packageName);
+
         // Update composer.json
         $this->updateComposerJson($githubUsername, $packageName, $authorName, $authorEmail);
 
@@ -179,6 +190,11 @@ class SetupStarterKit extends Command
         // Display required environment variables
         $this->displayRequiredSecrets($useDocker, $registryType);
 
+        // Create initial commit if git was just initialized
+        if ($gitInitialized) {
+            $this->createInitialCommit($packageName);
+        }
+
         outro('✅ KoamiStarterKit setup complete!');
 
         info('Next steps:');
@@ -189,6 +205,112 @@ class SetupStarterKit extends Command
         info('  5. Run: composer run dev');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Check if git is initialized and initialize if not.
+     */
+    protected function initializeGitRepository(string $githubUsername, string $packageName): bool
+    {
+        $gitDir = base_path('.git');
+
+        if (is_dir($gitDir)) {
+            info('✓ Git repository already initialized');
+
+            return false;
+        }
+
+        $initializeGit = confirm(
+            label: 'No Git repository found. Initialize one?',
+            default: true,
+            hint: 'Recommended for version control and tracking your application changes'
+        );
+
+        if (! $initializeGit) {
+            warning('⚠ Git repository not initialized. Consider initializing manually with: git init');
+
+            return false;
+        }
+
+        // Initialize git repository
+        exec('git init', $output, $returnCode);
+
+        if ($returnCode !== 0) {
+            warning('⚠ Failed to initialize git repository. Please run: git init');
+
+            return false;
+        }
+
+        info('✓ Initialized empty Git repository');
+
+        // Prompt for remote URL
+        $addRemote = confirm(
+            label: 'Add GitHub remote repository?',
+            default: true,
+            hint: 'This will add your GitHub repository as the origin remote'
+        );
+
+        if ($addRemote) {
+            $remoteUrl = text(
+                label: 'GitHub Repository URL',
+                placeholder: "e.g., https://github.com/{$githubUsername}/{$packageName}.git",
+                default: "https://github.com/{$githubUsername}/{$packageName}.git",
+                hint: 'You can use HTTPS or SSH URL (e.g., git@github.com:user/repo.git)'
+            );
+
+            exec("git remote add origin {$remoteUrl}", $remoteOutput, $remoteReturnCode);
+
+            if ($remoteReturnCode === 0) {
+                info("✓ Added remote origin: {$remoteUrl}");
+            } else {
+                warning('⚠ Failed to add remote. You can add it manually with: git remote add origin <url>');
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Create an elegant initial commit.
+     */
+    protected function createInitialCommit(string $packageName): void
+    {
+        $createCommit = confirm(
+            label: 'Create initial commit?',
+            default: true,
+            hint: 'This will stage all files and create an initial commit'
+        );
+
+        if (! $createCommit) {
+            info('ℹ️  You can create your initial commit manually later.');
+
+            return;
+        }
+
+        // Stage all files
+        exec('git add -A', $addOutput, $addReturnCode);
+
+        if ($addReturnCode !== 0) {
+            warning('⚠ Failed to stage files. Please run: git add -A');
+
+            return;
+        }
+
+        // Create initial commit with elegant message
+        $commitMessage = "🎉 Initial commit: Initialize {$packageName}\n\n".
+            "Initialized from KoamiStarterKit - A modern Laravel 12 starter kit\n".
+            "with Vue 3, Inertia.js, Tailwind CSS, Fortify authentication,\n".
+            'and production-ready CI/CD workflows.';
+
+        exec('git commit -m '.escapeshellarg($commitMessage), $commitOutput, $commitReturnCode);
+
+        if ($commitReturnCode === 0) {
+            info('✓ Created initial commit');
+            info('  Commit message:');
+            $this->line("  \"🎉 Initial commit: Initialize {$packageName}\"");
+        } else {
+            warning('⚠ Failed to create initial commit. Please run: git commit -m "Initial commit"');
+        }
     }
 
     /**
