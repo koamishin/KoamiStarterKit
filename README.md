@@ -36,6 +36,7 @@ Use it as-is, fork it, or cherry-pick the parts you like—whatever gets you cod
 
 - **🔐 Complete Authentication**: Powered by **Fortify**. Login, Registration, 2FA, Email Verification, and Profile Management ready to go.
 - **👥 Roles & Permissions**: Built-in **Spatie Permissions**. Manage **Admins** (Filament access) and **Users** (Inertia access) out of the box.
+- **⌨️ User Activity Logs ** Included with Activity Logs filament plugin to monitor user activites on the application
 - **🕵️‍♂️ User Impersonation**: Admins can easily impersonate users to troubleshoot issues, with a visible banner and quick "Leave" action.
 - **🎛️ Admin Panel**: Pre-configured **Filament** admin dashboard with User Management.
 - **🎨 40+ UI Components**: Beautiful, accessible components from **Shadcn Vue**, plus dark mode and multiple layouts.
