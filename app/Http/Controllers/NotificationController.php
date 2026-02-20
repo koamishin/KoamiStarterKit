@@ -15,7 +15,7 @@ class NotificationController extends Controller
             ->latest()
             ->limit(50)
             ->get()
-            ->map(fn(DatabaseNotification $notification) => [
+            ->map(fn (DatabaseNotification $notification) => [
                 'id' => $notification->id,
                 'type' => $notification->type,
                 'data' => $notification->data,
