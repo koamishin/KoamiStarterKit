@@ -23,12 +23,11 @@
 
 ## 🚀 Why This Exists?
 
-I’m tired of repeating the same setup every time I start a Laravel project—installing frontend tools, tweaking TypeScript, wiring up linters, hunting for UI components.  
+I’m tired of repeating the same setup every time I start a Laravel project—installing frontend tools, tweaking TypeScript, wiring up linters, hunting for UI components.
 
-So I built **Koamishin Starterkit**: one command, zero friction, and I’m straight into shipping features instead of fighting config files.  
+So I built **Koamishin Starterkit**: one command, zero friction, and I’m straight into shipping features instead of fighting config files.
 
-Use it as-is, fork it, or cherry-pick the parts you like—whatever gets you coding faster.
----
+## Use it as-is, fork it, or cherry-pick the parts you like—whatever gets you coding faster.
 
 ## ✨ Features
 
@@ -38,6 +37,7 @@ Use it as-is, fork it, or cherry-pick the parts you like—whatever gets you cod
 - **👥 Roles & Permissions**: Built-in **Spatie Permissions**. Manage **Admins** (Filament access) and **Users** (Inertia access) out of the box.
 - **⌨️ User Activity Logs ** Included with Activity Logs filament plugin to monitor user activites on the application
 - **🕵️‍♂️ User Impersonation**: Admins can easily impersonate users to troubleshoot issues, with a visible banner and quick "Leave" action.
+- **🔔 Database Notifications**: Built-in notification system with a bell icon in the sidebar header. Shows unread count, dropdown list, and mark as read functionality.
 - **🎛️ Admin Panel**: Pre-configured **Filament** admin dashboard with User Management.
 - **🎨 40+ UI Components**: Beautiful, accessible components from **Shadcn Vue**, plus dark mode and multiple layouts.
 - **🛠️ Type-Safe Routing**: **Wayfinder** ensures your frontend knows your backend routes. No more broken links.
@@ -114,6 +114,49 @@ This starter kit includes a comprehensive suite of UI components to jumpstart yo
 - **Charts**: Extensive charting library support
 
 </details>
+
+---
+
+## 🔔 Using Notifications
+
+This starter kit includes a database notification system integrated into the sidebar header. Users can view and manage their notifications from the bell icon.
+
+### Sending Notifications
+
+Send notifications to users using Laravel's notification system:
+
+```php
+use App\Models\User;
+use App\Notifications\YourNotification;
+
+$user->notify(new YourNotification());
+```
+
+### Creating Notifications
+
+Create a new notification class:
+
+```bash
+php artisan make:notification YourNotification
+```
+
+In your notification class, define the database channel:
+
+```php
+public function via(object $notifiable): array
+{
+    return ['database'];
+}
+
+public function toArray(object $notifiable): array
+{
+    return [
+        'title' => 'Notification Title',
+        'message' => 'Your notification message here',
+        'action_url' => '/optional-action-url',
+    ];
+}
+```
 
 ---
 
