@@ -35,7 +35,7 @@ const resendVerification = () => {
         new Promise((resolve, reject) => {
             const link = document.createElement('a');
             link.href = send().url;
-            
+
             form.post(send().url, {
                 onSuccess: () => resolve('Verification email sent'),
                 onError: () => reject('Failed to resend verification email'),
@@ -43,9 +43,10 @@ const resendVerification = () => {
         }),
         {
             loading: 'Sending verification email...',
-            success: 'A new verification link has been sent to your email address.',
+            success:
+                'A new verification link has been sent to your email address.',
             error: 'Failed to send verification link. Please try again.',
-        }
+        },
     );
 };
 
@@ -106,7 +107,7 @@ const { mustVerifyEmail, status } = toRefs(props);
                             <button
                                 type="button"
                                 @click="resendVerification"
-                                class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500 cursor-pointer"
+                                class="cursor-pointer text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                             >
                                 Click here to resend the verification email.
                             </button>

@@ -6,7 +6,9 @@ const http = axios.create({
     },
 });
 
-const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+const token = document
+    .querySelector('meta[name="csrf-token"]')
+    ?.getAttribute('content');
 if (token) {
     http.defaults.headers.common['X-CSRF-TOKEN'] = token;
 }

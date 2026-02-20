@@ -74,7 +74,8 @@ const openEnable = async () => {
     } catch (e: any) {
         const defaultMessage = 'Failed to send code';
         const validationMessage = e.response?.data?.errors?.email?.[0];
-        error.value = validationMessage ?? e.response?.data?.message ?? defaultMessage;
+        error.value =
+            validationMessage ?? e.response?.data?.message ?? defaultMessage;
         toast.error(error.value);
     } finally {
         isSending.value = false;
@@ -155,7 +156,9 @@ const disable = async () => {
 
         <CardFooter class="flex items-center gap-2">
             <Button v-if="!isEnabled" @click="openEnable">Enable</Button>
-            <Button v-else variant="destructive" @click="disable">Disable</Button>
+            <Button v-else variant="destructive" @click="disable"
+                >Disable</Button
+            >
         </CardFooter>
     </Card>
 
@@ -196,10 +199,18 @@ const disable = async () => {
             </div>
 
             <DialogFooter>
-                <Button type="button" variant="secondary" @click="modalOpen = false">
+                <Button
+                    type="button"
+                    variant="secondary"
+                    @click="modalOpen = false"
+                >
                     Cancel
                 </Button>
-                <Button type="button" :disabled="!canSubmit || isSubmitting" @click="enable">
+                <Button
+                    type="button"
+                    :disabled="!canSubmit || isSubmitting"
+                    @click="enable"
+                >
                     Confirm
                 </Button>
             </DialogFooter>

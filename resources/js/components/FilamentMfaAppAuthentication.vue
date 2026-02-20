@@ -77,7 +77,9 @@ const enabledRecoveryCodes = ref<string[] | null>(null);
 
 const { copy, copied } = useClipboard();
 
-const canSubmit = computed(() => code.value.length === 6 && setup.value !== null);
+const canSubmit = computed(
+    () => code.value.length === 6 && setup.value !== null,
+);
 
 const openSetup = async () => {
     setupModalOpen.value = true;
@@ -96,7 +98,8 @@ const openSetup = async () => {
         const response = await http.post<SetupResponse>(setupRoute.url());
         setup.value = response.data;
     } catch (error: any) {
-        enableError.value = error.response?.data?.message ?? 'Failed to start setup';
+        enableError.value =
+            error.response?.data?.message ?? 'Failed to start setup';
         setup.value = null;
         toast.error(enableError.value);
     } finally {
@@ -122,13 +125,10 @@ const enable = async () => {
     enableFieldError.value = null;
 
     try {
-        const response = await http.post<EnableResponse>(
-            enableRoute.url(),
-            {
-                encrypted: setup.value.encrypted,
-                code: code.value,
-            },
-        );
+        const response = await http.post<EnableResponse>(enableRoute.url(), {
+            encrypted: setup.value.encrypted,
+            code: code.value,
+        });
 
         isEnabled.value = true;
         emit('update:enabled', true);
@@ -142,7 +142,8 @@ const enable = async () => {
         toast.success('Authenticator app enabled successfully');
     } catch (error: any) {
         enableError.value = error.response?.data?.message ?? 'Failed to enable';
-        enableFieldError.value = error.response?.data?.errors?.code?.[0] ?? null;
+        enableFieldError.value =
+            error.response?.data?.errors?.code?.[0] ?? null;
         toast.error(enableError.value);
     }
 };
@@ -156,7 +157,8 @@ const disable = async () => {
         emit('update:enabled', false);
         toast.success('Authenticator app disabled successfully');
     } catch (error: any) {
-        enableError.value = error.response?.data?.message ?? 'Failed to disable';
+        enableError.value =
+            error.response?.data?.message ?? 'Failed to disable';
         toast.error(enableError.value);
     }
 };
@@ -173,7 +175,8 @@ const regenerateRecoveryCodes = async () => {
         recoveryCodesModalOpen.value = true;
         toast.success('Recovery codes regenerated successfully');
     } catch (error: any) {
-        enableError.value = error.response?.data?.message ?? 'Failed to regenerate codes';
+        enableError.value =
+            error.response?.data?.message ?? 'Failed to regenerate codes';
         toast.error(enableError.value);
     }
 };
@@ -206,7 +209,9 @@ const recoveryCodesText = computed(() =>
         <CardFooter class="flex items-center gap-2">
             <Button v-if="!isEnabled" @click="openSetup">Enable</Button>
 
-            <Button v-else variant="destructive" @click="disable">Disable</Button>
+            <Button v-else variant="destructive" @click="disable"
+                >Disable</Button
+            >
 
             <Button
                 v-if="isEnabled && recoverable"
@@ -223,8 +228,8 @@ const recoveryCodesText = computed(() =>
             <DialogHeader>
                 <DialogTitle>Enable authenticator app</DialogTitle>
                 <DialogDescription>
-                    Scan the QR code or enter the setup key, then confirm using a
-                    code from your app.
+                    Scan the QR code or enter the setup key, then confirm using
+                    a code from your app.
                 </DialogDescription>
             </DialogHeader>
 

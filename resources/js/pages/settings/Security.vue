@@ -55,7 +55,9 @@ const breadcrumbItems: BreadcrumbItem[] = [
                 />
 
                 <div
-                    v-if="filamentMfa.providers.app || filamentMfa.providers.email"
+                    v-if="
+                        filamentMfa.providers.app || filamentMfa.providers.email
+                    "
                     class="space-y-4"
                 >
                     <FilamentMfaAppAuthentication
@@ -75,4 +77,3 @@ const breadcrumbItems: BreadcrumbItem[] = [
         </SettingsLayout>
     </AppLayout>
 </template>
-
