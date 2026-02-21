@@ -10,5 +10,6 @@ export type AppPageProps<
     name: string;
     auth: Auth;
     sidebarOpen: boolean;
+    authLayout: 'simple' | 'card' | 'split';
     [key: string]: unknown;
 };
