@@ -35,7 +35,9 @@ So I built **Koamishin Starterkit**: one command, zero friction, and I’m strai
 
 - **🔐 Complete Authentication**: Powered by **Fortify**. Login, Registration, 2FA, Email Verification, and Profile Management ready to go.
 - **👥 Roles & Permissions**: Built-in **Spatie Permissions**. Manage **Admins** (Filament access) and **Users** (Inertia access) out of the box.
-- **⌨️ User Activity Logs ** Included with Activity Logs filament plugin to monitor user activites on the application
+- **⚙️ System Settings**: Powerful settings management with **spatie/laravel-settings**. Configure application details, features, and security through a beautiful Filament interface.
+- **🎨 Auth Layout Switcher**: Choose between 3 beautiful authentication layouts (Simple, Card, Split) directly from the admin settings panel.
+- **⌨️ User Activity Logs** Included with Activity Logs filament plugin to monitor user activites on the application
 - **🕵️‍♂️ User Impersonation**: Admins can easily impersonate users to troubleshoot issues, with a visible banner and quick "Leave" action.
 - **🔔 Database Notifications**: Built-in notification system with a bell icon in the sidebar header. Shows unread count, dropdown list, and mark as read functionality.
 - **🎛️ Admin Panel**: Pre-configured **Filament** admin dashboard with User Management.
@@ -156,6 +158,80 @@ public function toArray(object $notifiable): array
         'action_url' => '/optional-action-url',
     ];
 }
+```
+
+---
+
+## ⚙️ System Settings
+
+This starter kit includes a comprehensive settings management system powered by **spatie/laravel-settings** with a beautiful Filament interface.
+
+### Settings Sections
+
+The settings are organized into three logical sections accessible from the admin panel at `/admin/settings`:
+
+<details>
+<summary><strong>Application Details</strong></summary>
+
+Configure your application's identity and display settings:
+
+- **Site Information**: Name, description, logo URL, favicon URL
+- **Date & Time**: Timezone, date format, time format
+- **Contact**: Contact email, support URL
+
+</details>
+
+<details>
+<summary><strong>Application Features</strong></summary>
+
+Toggle application features on or off:
+
+- **Authentication Features**: User registration, email verification, 2FA, password reset
+- **User Management**: User impersonation, default role for new users
+- **System Features**: Activity logging, notifications
+- **Auth Layout**: Choose between Simple, Card, or Split layout for authentication pages
+
+</details>
+
+<details>
+<summary><strong>Application Security</strong></summary>
+
+Configure security policies:
+
+- **Password Policy**: Minimum length, require uppercase/lowercase/numbers/symbols
+- **Session Settings**: Session lifetime, single session per user
+- **Login Protection**: Rate limiting attempts, lockout duration
+
+</details>
+
+### Auth Layout Switcher
+
+Choose from three beautiful authentication layouts directly from the settings panel:
+
+| Layout     | Description                                  |
+| ---------- | -------------------------------------------- |
+| **Simple** | Clean, centered layout with minimal styling  |
+| **Card**   | Form wrapped in a card component with shadow |
+| **Split**  | Side-by-side layout with branding panel      |
+
+The layout selection is instant and applies to all authentication pages (login, register, password reset).
+
+### Accessing Settings in Code
+
+```php
+use App\Settings\ApplicationFeaturesSettings;
+
+// Get settings instance
+$settings = app(ApplicationFeaturesSettings::class);
+
+// Access individual settings
+if ($settings->registration_enabled) {
+    // Allow registration
+}
+
+// Update settings
+$settings->auth_layout = 'card';
+$settings->save();
 ```
 
 ---
