@@ -29,7 +29,7 @@ test('settings cluster is registered in the admin panel', function (): void {
     $clusters = $panel->getClusters();
 
     $hasSettingsCluster = collect($clusters)->contains(
-        fn ($cluster) => $cluster === SettingsCluster::class
+        fn ($cluster): bool => $cluster === SettingsCluster::class
     );
 
     expect($hasSettingsCluster)->toBeTrue();
@@ -41,7 +41,7 @@ test('application details settings page is registered', function (): void {
     $pages = $panel->getPages();
 
     $hasPage = collect($pages)->contains(
-        fn ($page) => $page === ApplicationDetailsSettingsPage::class
+        fn ($page): bool => $page === ApplicationDetailsSettingsPage::class
     );
 
     expect($hasPage)->toBeTrue();
@@ -53,7 +53,7 @@ test('application features settings page is registered', function (): void {
     $pages = $panel->getPages();
 
     $hasPage = collect($pages)->contains(
-        fn ($page) => $page === ApplicationFeaturesSettingsPage::class
+        fn ($page): bool => $page === ApplicationFeaturesSettingsPage::class
     );
 
     expect($hasPage)->toBeTrue();
@@ -65,7 +65,7 @@ test('application security settings page is registered', function (): void {
     $pages = $panel->getPages();
 
     $hasPage = collect($pages)->contains(
-        fn ($page) => $page === ApplicationSecuritySettingsPage::class
+        fn ($page): bool => $page === ApplicationSecuritySettingsPage::class
     );
 
     expect($hasPage)->toBeTrue();
@@ -129,12 +129,12 @@ test('application details settings can be saved', function (): void {
         ->call('save')
         ->assertHasNoFormErrors();
 
-    $settings = app(ApplicationDetailsSettings::class);
-    $settings->refresh();
+    $applicationDetailsSettings = app(ApplicationDetailsSettings::class);
+    $applicationDetailsSettings->refresh();
 
-    expect($settings->site_name)->toBe('Updated Site Name');
-    expect($settings->site_description)->toBe('Updated Description');
-    expect($settings->timezone)->toBe('America/New_York');
+    expect($applicationDetailsSettings->site_name)->toBe('Updated Site Name');
+    expect($applicationDetailsSettings->site_description)->toBe('Updated Description');
+    expect($applicationDetailsSettings->timezone)->toBe('America/New_York');
 });
 
 test('application features settings can be saved', function (): void {
@@ -156,14 +156,14 @@ test('application features settings can be saved', function (): void {
         ->call('save')
         ->assertHasNoFormErrors();
 
-    $settings = app(ApplicationFeaturesSettings::class);
-    $settings->refresh();
+    $applicationFeaturesSettings = app(ApplicationFeaturesSettings::class);
+    $applicationFeaturesSettings->refresh();
 
-    expect($settings->registration_enabled)->toBeFalse();
-    expect($settings->email_verification_required)->toBeFalse();
-    expect($settings->two_factor_authentication_enabled)->toBeFalse();
-    expect($settings->password_reset_enabled)->toBeTrue();
-    expect($settings->auth_layout)->toBe('card');
+    expect($applicationFeaturesSettings->registration_enabled)->toBeFalse();
+    expect($applicationFeaturesSettings->email_verification_required)->toBeFalse();
+    expect($applicationFeaturesSettings->two_factor_authentication_enabled)->toBeFalse();
+    expect($applicationFeaturesSettings->password_reset_enabled)->toBeTrue();
+    expect($applicationFeaturesSettings->auth_layout)->toBe('card');
 });
 
 test('application security settings can be saved', function (): void {
@@ -186,12 +186,12 @@ test('application security settings can be saved', function (): void {
         ->call('save')
         ->assertHasNoFormErrors();
 
-    $settings = app(ApplicationSecuritySettings::class);
-    $settings->refresh();
+    $applicationSecuritySettings = app(ApplicationSecuritySettings::class);
+    $applicationSecuritySettings->refresh();
 
-    expect($settings->password_min_length)->toBe(12);
-    expect($settings->password_requires_symbols)->toBeTrue();
-    expect($settings->session_lifetime)->toBe(60);
+    expect($applicationSecuritySettings->password_min_length)->toBe(12);
+    expect($applicationSecuritySettings->password_requires_symbols)->toBeTrue();
+    expect($applicationSecuritySettings->session_lifetime)->toBe(60);
 });
 
 test('site name is required for application details', function (): void {
@@ -248,16 +248,16 @@ test('auth layout can be changed to split', function (): void {
         ->call('save')
         ->assertHasNoFormErrors();
 
-    $settings = app(ApplicationFeaturesSettings::class);
-    $settings->refresh();
+    $applicationFeaturesSettings = app(ApplicationFeaturesSettings::class);
+    $applicationFeaturesSettings->refresh();
 
-    expect($settings->auth_layout)->toBe('split');
+    expect($applicationFeaturesSettings->auth_layout)->toBe('split');
 });
 
 test('auth layout defaults to simple', function (): void {
-    $settings = app(ApplicationFeaturesSettings::class);
+    $applicationFeaturesSettings = app(ApplicationFeaturesSettings::class);
 
-    expect($settings->auth_layout)->toBe('simple');
+    expect($applicationFeaturesSettings->auth_layout)->toBe('simple');
 });
 
 test('available auth layouts are returned', function (): void {

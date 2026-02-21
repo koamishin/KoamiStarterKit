@@ -15,12 +15,12 @@ class NotificationController extends Controller
             ->latest()
             ->limit(50)
             ->get()
-            ->map(fn (DatabaseNotification $notification) => [
-                'id' => $notification->id,
-                'type' => $notification->type,
-                'data' => $notification->data,
-                'read_at' => $notification->read_at?->toISOString(),
-                'created_at' => $notification->created_at->toISOString(),
+            ->map(fn (DatabaseNotification $databaseNotification): array => [
+                'id' => $databaseNotification->id,
+                'type' => $databaseNotification->type,
+                'data' => $databaseNotification->data,
+                'read_at' => $databaseNotification->read_at?->toISOString(),
+                'created_at' => $databaseNotification->created_at->toISOString(),
             ]);
 
         $unreadCount = $request->user()->unreadNotifications()->count();

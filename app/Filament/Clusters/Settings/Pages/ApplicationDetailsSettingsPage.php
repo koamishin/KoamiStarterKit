@@ -34,18 +34,18 @@ class ApplicationDetailsSettingsPage extends Page
 
     public function mount(): void
     {
-        $settings = app(ApplicationDetailsSettings::class);
+        $applicationDetailsSettings = app(ApplicationDetailsSettings::class);
 
         $this->form->fill([
-            'site_name' => $settings->site_name,
-            'site_description' => $settings->site_description,
-            'site_logo_url' => $settings->site_logo_url,
-            'site_favicon_url' => $settings->site_favicon_url,
-            'timezone' => $settings->timezone,
-            'date_format' => $settings->date_format,
-            'time_format' => $settings->time_format,
-            'contact_email' => $settings->contact_email,
-            'support_url' => $settings->support_url,
+            'site_name' => $applicationDetailsSettings->site_name,
+            'site_description' => $applicationDetailsSettings->site_description,
+            'site_logo_url' => $applicationDetailsSettings->site_logo_url,
+            'site_favicon_url' => $applicationDetailsSettings->site_favicon_url,
+            'timezone' => $applicationDetailsSettings->timezone,
+            'date_format' => $applicationDetailsSettings->date_format,
+            'time_format' => $applicationDetailsSettings->time_format,
+            'contact_email' => $applicationDetailsSettings->contact_email,
+            'support_url' => $applicationDetailsSettings->support_url,
         ]);
     }
 
@@ -129,19 +129,19 @@ class ApplicationDetailsSettingsPage extends Page
     {
         $data = $this->form->getState();
 
-        $settings = app(ApplicationDetailsSettings::class);
+        $applicationDetailsSettings = app(ApplicationDetailsSettings::class);
 
-        $settings->site_name = $data['site_name'];
-        $settings->site_description = $data['site_description'];
-        $settings->site_logo_url = $data['site_logo_url'];
-        $settings->site_favicon_url = $data['site_favicon_url'];
-        $settings->timezone = $data['timezone'];
-        $settings->date_format = $data['date_format'];
-        $settings->time_format = $data['time_format'];
-        $settings->contact_email = $data['contact_email'];
-        $settings->support_url = $data['support_url'];
+        $applicationDetailsSettings->site_name = $data['site_name'];
+        $applicationDetailsSettings->site_description = $data['site_description'];
+        $applicationDetailsSettings->site_logo_url = $data['site_logo_url'];
+        $applicationDetailsSettings->site_favicon_url = $data['site_favicon_url'];
+        $applicationDetailsSettings->timezone = $data['timezone'];
+        $applicationDetailsSettings->date_format = $data['date_format'];
+        $applicationDetailsSettings->time_format = $data['time_format'];
+        $applicationDetailsSettings->contact_email = $data['contact_email'];
+        $applicationDetailsSettings->support_url = $data['support_url'];
 
-        $settings->save();
+        $applicationDetailsSettings->save();
 
         Notification::make()
             ->success()

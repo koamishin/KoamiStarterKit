@@ -35,18 +35,18 @@ class ApplicationSecuritySettingsPage extends Page
 
     public function mount(): void
     {
-        $settings = app(ApplicationSecuritySettings::class);
+        $applicationSecuritySettings = app(ApplicationSecuritySettings::class);
 
         $this->form->fill([
-            'password_min_length' => $settings->password_min_length,
-            'password_requires_uppercase' => $settings->password_requires_uppercase,
-            'password_requires_lowercase' => $settings->password_requires_lowercase,
-            'password_requires_numbers' => $settings->password_requires_numbers,
-            'password_requires_symbols' => $settings->password_requires_symbols,
-            'session_lifetime' => $settings->session_lifetime,
-            'single_session' => $settings->single_session,
-            'login_rate_limit' => $settings->login_rate_limit,
-            'login_rate_limit_decay' => $settings->login_rate_limit_decay,
+            'password_min_length' => $applicationSecuritySettings->password_min_length,
+            'password_requires_uppercase' => $applicationSecuritySettings->password_requires_uppercase,
+            'password_requires_lowercase' => $applicationSecuritySettings->password_requires_lowercase,
+            'password_requires_numbers' => $applicationSecuritySettings->password_requires_numbers,
+            'password_requires_symbols' => $applicationSecuritySettings->password_requires_symbols,
+            'session_lifetime' => $applicationSecuritySettings->session_lifetime,
+            'single_session' => $applicationSecuritySettings->single_session,
+            'login_rate_limit' => $applicationSecuritySettings->login_rate_limit,
+            'login_rate_limit_decay' => $applicationSecuritySettings->login_rate_limit_decay,
         ]);
     }
 
@@ -129,19 +129,19 @@ class ApplicationSecuritySettingsPage extends Page
     {
         $data = $this->form->getState();
 
-        $settings = app(ApplicationSecuritySettings::class);
+        $applicationSecuritySettings = app(ApplicationSecuritySettings::class);
 
-        $settings->password_min_length = (int) $data['password_min_length'];
-        $settings->password_requires_uppercase = $data['password_requires_uppercase'];
-        $settings->password_requires_lowercase = $data['password_requires_lowercase'];
-        $settings->password_requires_numbers = $data['password_requires_numbers'];
-        $settings->password_requires_symbols = $data['password_requires_symbols'];
-        $settings->session_lifetime = (int) $data['session_lifetime'];
-        $settings->single_session = $data['single_session'];
-        $settings->login_rate_limit = (int) $data['login_rate_limit'];
-        $settings->login_rate_limit_decay = (int) $data['login_rate_limit_decay'];
+        $applicationSecuritySettings->password_min_length = (int) $data['password_min_length'];
+        $applicationSecuritySettings->password_requires_uppercase = $data['password_requires_uppercase'];
+        $applicationSecuritySettings->password_requires_lowercase = $data['password_requires_lowercase'];
+        $applicationSecuritySettings->password_requires_numbers = $data['password_requires_numbers'];
+        $applicationSecuritySettings->password_requires_symbols = $data['password_requires_symbols'];
+        $applicationSecuritySettings->session_lifetime = (int) $data['session_lifetime'];
+        $applicationSecuritySettings->single_session = $data['single_session'];
+        $applicationSecuritySettings->login_rate_limit = (int) $data['login_rate_limit'];
+        $applicationSecuritySettings->login_rate_limit_decay = (int) $data['login_rate_limit_decay'];
 
-        $settings->save();
+        $applicationSecuritySettings->save();
 
         Notification::make()
             ->success()

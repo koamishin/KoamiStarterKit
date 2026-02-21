@@ -36,18 +36,18 @@ class ApplicationFeaturesSettingsPage extends Page
 
     public function mount(): void
     {
-        $settings = app(ApplicationFeaturesSettings::class);
+        $applicationFeaturesSettings = app(ApplicationFeaturesSettings::class);
 
         $this->form->fill([
-            'registration_enabled' => $settings->registration_enabled,
-            'email_verification_required' => $settings->email_verification_required,
-            'two_factor_authentication_enabled' => $settings->two_factor_authentication_enabled,
-            'password_reset_enabled' => $settings->password_reset_enabled,
-            'user_impersonation_enabled' => $settings->user_impersonation_enabled,
-            'default_user_role' => $settings->default_user_role,
-            'activity_log_enabled' => $settings->activity_log_enabled,
-            'notifications_enabled' => $settings->notifications_enabled,
-            'auth_layout' => $settings->auth_layout,
+            'registration_enabled' => $applicationFeaturesSettings->registration_enabled,
+            'email_verification_required' => $applicationFeaturesSettings->email_verification_required,
+            'two_factor_authentication_enabled' => $applicationFeaturesSettings->two_factor_authentication_enabled,
+            'password_reset_enabled' => $applicationFeaturesSettings->password_reset_enabled,
+            'user_impersonation_enabled' => $applicationFeaturesSettings->user_impersonation_enabled,
+            'default_user_role' => $applicationFeaturesSettings->default_user_role,
+            'activity_log_enabled' => $applicationFeaturesSettings->activity_log_enabled,
+            'notifications_enabled' => $applicationFeaturesSettings->notifications_enabled,
+            'auth_layout' => $applicationFeaturesSettings->auth_layout,
         ]);
     }
 
@@ -127,19 +127,19 @@ class ApplicationFeaturesSettingsPage extends Page
     {
         $data = $this->form->getState();
 
-        $settings = app(ApplicationFeaturesSettings::class);
+        $applicationFeaturesSettings = app(ApplicationFeaturesSettings::class);
 
-        $settings->registration_enabled = $data['registration_enabled'];
-        $settings->email_verification_required = $data['email_verification_required'];
-        $settings->two_factor_authentication_enabled = $data['two_factor_authentication_enabled'];
-        $settings->password_reset_enabled = $data['password_reset_enabled'];
-        $settings->user_impersonation_enabled = $data['user_impersonation_enabled'];
-        $settings->default_user_role = $data['default_user_role'];
-        $settings->activity_log_enabled = $data['activity_log_enabled'];
-        $settings->notifications_enabled = $data['notifications_enabled'];
-        $settings->auth_layout = $data['auth_layout'];
+        $applicationFeaturesSettings->registration_enabled = $data['registration_enabled'];
+        $applicationFeaturesSettings->email_verification_required = $data['email_verification_required'];
+        $applicationFeaturesSettings->two_factor_authentication_enabled = $data['two_factor_authentication_enabled'];
+        $applicationFeaturesSettings->password_reset_enabled = $data['password_reset_enabled'];
+        $applicationFeaturesSettings->user_impersonation_enabled = $data['user_impersonation_enabled'];
+        $applicationFeaturesSettings->default_user_role = $data['default_user_role'];
+        $applicationFeaturesSettings->activity_log_enabled = $data['activity_log_enabled'];
+        $applicationFeaturesSettings->notifications_enabled = $data['notifications_enabled'];
+        $applicationFeaturesSettings->auth_layout = $data['auth_layout'];
 
-        $settings->save();
+        $applicationFeaturesSettings->save();
 
         Notification::make()
             ->success()
