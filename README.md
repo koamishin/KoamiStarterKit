@@ -23,11 +23,32 @@
 
 ## 🚀 Why This Exists?
 
-I’m tired of repeating the same setup every time I start a Laravel project—installing frontend tools, tweaking TypeScript, wiring up linters, hunting for UI components.
+I've tried different starter kits—including the official Laravel starter kits. They're great, no doubt about it. But every time I started a new project, I found myself doing the same ritual over and over:
 
-So I built **Koamishin Starterkit**: one command, zero friction, and I’m straight into shipping features instead of fighting config files.
+- Setting up authentication and user management
+- Installing and configuring Filament for the admin panel
+- Wiring up roles and permissions
+- Adding activity logs, notifications, impersonation
+- Setting up development dependencies, linters, and CI/CD
 
-## Use it as-is, fork it, or cherry-pick the parts you like—whatever gets you coding faster.
+It wasn't a huge deal, but it added up. Hours lost on configuration instead of building actual features.
+
+**So I built Koamishin Starterkit for myself.** One command, zero friction, and I'm straight into shipping features instead of fighting config files.
+
+> **Note**: This starter kit is configured for **specific applications** rather than SaaS products. I don't primarily build SaaS applications, so the architecture and features reflect that use case. If I start working on SaaS-based projects in the future, I'll update this to support those needs.
+
+---
+
+## 🎯 Who Is This For?
+
+This starter kit is for developers who:
+
+- Want to skip the initial setup phase and get straight to building features
+- Work on custom applications rather than multi-tenant SaaS products
+- Appreciate having authentication, admin panels, and user management ready out of the box
+- Prefer a curated, opinionated setup over making endless configuration decisions
+
+Use it as-is, fork it, or cherry-pick the parts you like—whatever gets you coding faster.
 
 ## ✨ Features
 
