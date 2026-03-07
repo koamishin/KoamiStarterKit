@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\FeatureFlagsController;
 use App\Http\Controllers\Settings\FilamentAppAuthenticationController;
 use App\Http\Controllers\Settings\FilamentEmailAuthenticationController;
 use App\Http\Controllers\Settings\PasswordController;
@@ -27,6 +28,9 @@ Route::middleware(['auth'])->group(function (): void {
         Route::post('email/enable', [FilamentEmailAuthenticationController::class, 'enable'])->name('email.enable');
         Route::delete('email', [FilamentEmailAuthenticationController::class, 'disable'])->name('email.disable');
     });
+
+    Route::get('settings/features', [FeatureFlagsController::class, 'edit'])->name('features.edit');
+    Route::patch('settings/features', [FeatureFlagsController::class, 'update'])->name('features.update');
 });
 
 Route::middleware(['auth', 'verified'])->group(function (): void {

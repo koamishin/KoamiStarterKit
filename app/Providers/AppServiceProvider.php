@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Features\FeatureRegistry;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureFeatures();
     }
 
     protected function configureDefaults(): void
@@ -43,5 +45,16 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null
         );
+    }
+
+    protected function configureFeatures(): void
+    {
+        FeatureRegistry::initialize();
+
+        $featureManager = app(\Laravel\Pennant\FeatureManager::class);
+
+        foreach (FeatureRegistry::all() as $feature) {
+            $featureManager->define($feature->key, fn () => $feature->default);
+        }
     }
 }
