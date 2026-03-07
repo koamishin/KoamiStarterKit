@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { toRefs } from 'vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { ref, toRefs } from 'vue';
 import { toast } from 'vue-sonner';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -12,14 +11,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { type SharedData } from '@/types';
 import { edit, update } from '@/routes/profile';
-import { send } from '@/routes/verification';
 
 const page = usePage<SharedData>();
-const user = page.props.auth.user;
+const user = page.props.auth.user as any;
+const settingsFeatures = page.props.settingsFeatures || {};
 
 const form = useForm({
     name: user.name,
     email: user.email,
+});
+
+const photoInput = ref<HTMLInputElement | null>(null);
+const photoPreview = ref<string | null>(user.profile_photo_url || null);
+const photoForm = useForm({
+    photo: null as File | null,
 });
 
 const submit = () => {
@@ -33,9 +38,6 @@ const submit = () => {
 const resendVerification = () => {
     toast.promise(
         new Promise((resolve, reject) => {
-            const link = document.createElement('a');
-            link.href = send().url;
-
             form.post(send().url, {
                 onSuccess: () => resolve('Verification email sent'),
                 onError: () => reject('Failed to resend verification email'),
@@ -48,6 +50,57 @@ const resendVerification = () => {
             error: 'Failed to send verification link. Please try again.',
         },
     );
+};
+
+const selectNewPhoto = () => {
+    photoInput.value?.click();
+};
+
+const updatePhotoPreview = () => {
+    const file = photoInput.value?.files?.[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            photoPreview.value = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+const send = () => {
+    return { url: '/email/verification-notification' };
+};
+
+const storePhoto = () => {
+    if (photoInput.value?.files?.[0]) {
+        const formData = new FormData();
+        formData.append('photo', photoInput.value.files[0]);
+
+        photoForm.post('/settings/profile/photo', {
+            preserveScroll: true,
+            onSuccess: () => {
+                photoPreview.value = null;
+                toast.success('Profile photo updated');
+                window.location.reload();
+            },
+            onError: () => {
+                toast.error('Failed to upload photo');
+            },
+        });
+    }
+};
+
+const deletePhoto = () => {
+    photoForm.delete('/settings/profile/photo', {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Profile photo removed');
+            window.location.reload();
+        },
+        onError: () => {
+            toast.error('Failed to remove photo');
+        },
+    });
 };
 
 const breadcrumbs = [{ title: 'Profile settings', href: edit().url }];
@@ -65,11 +118,77 @@ const { mustVerifyEmail, status } = toRefs(props);
         <Head title="Profile settings" />
 
         <SettingsLayout>
-            <div class="space-y-6">
+            <div v-if="!settingsFeatures.profile" class="py-12 text-center">
+                <p class="text-muted-foreground">This page is not available.</p>
+            </div>
+
+            <div v-else class="space-y-6">
                 <Heading
                     title="Profile information"
-                    description="Update your name and email address"
+                    description="Update your profile photo and personal information"
                 />
+
+                <div class="flex items-center gap-x-6">
+                    <img
+                        v-if="photoPreview"
+                        :src="photoPreview"
+                        alt="Photo preview"
+                        class="h-24 w-24 rounded-full object-cover"
+                    />
+                    <img
+                        v-else-if="user.profile_photo_url"
+                        :src="user.profile_photo_url"
+                        alt="Current photo"
+                        class="h-24 w-24 rounded-full object-cover"
+                    />
+                    <div
+                        v-else
+                        class="flex h-24 w-24 items-center justify-center rounded-full bg-muted"
+                    >
+                        <span
+                            class="text-2xl font-medium text-muted-foreground"
+                        >
+                            {{ user.name?.charAt(0)?.toUpperCase() || 'U' }}
+                        </span>
+                    </div>
+
+                    <div class="flex gap-x-4">
+                        <button
+                            type="button"
+                            @click="selectNewPhoto"
+                            class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50"
+                        >
+                            {{
+                                user.profile_photo_url
+                                    ? 'Change photo'
+                                    : 'Upload photo'
+                            }}
+                        </button>
+                        <button
+                            v-if="user.profile_photo_url"
+                            type="button"
+                            @click="deletePhoto"
+                            class="rounded-md px-2.5 py-1.5 text-sm font-semibold text-gray-900"
+                        >
+                            Remove
+                        </button>
+                    </div>
+
+                    <input
+                        ref="photoInput"
+                        type="file"
+                        class="hidden"
+                        accept="image/*"
+                        @change="updatePhotoPreview"
+                    />
+                </div>
+
+                <div v-if="photoPreview" class="flex gap-x-3">
+                    <Button @click="storePhoto">Save Photo</Button>
+                    <Button variant="outline" @click="photoPreview = null"
+                        >Cancel</Button
+                    >
+                </div>
 
                 <form @submit.prevent="submit" class="space-y-6">
                     <div class="grid gap-2">
@@ -141,8 +260,6 @@ const { mustVerifyEmail, status } = toRefs(props);
                     </div>
                 </form>
             </div>
-
-            <DeleteUser />
         </SettingsLayout>
     </AppLayout>
 </template>

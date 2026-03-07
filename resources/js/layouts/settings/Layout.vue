@@ -1,39 +1,53 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
-import { edit as editFeatures } from '@/routes/features';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import { edit as editPassword } from '@/routes/user-password';
-import { type NavItem } from '@/types';
+import { type NavItem, type SharedData } from '@/types';
 
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: editProfile(),
-    },
-    {
-        title: 'Security',
-        href: editSecurity(),
-    },
-    {
-        title: 'Password',
-        href: editPassword(),
-    },
-    {
-        title: 'Appearance',
-        href: editAppearance(),
-    },
-    {
-        title: 'Features',
-        href: editFeatures(),
-    },
-];
+const page = usePage<SharedData>();
+const settingsFeatures = computed(() => page.props.settingsFeatures || {});
+
+const sidebarNavItems = computed<NavItem[]>(() => {
+    const items: NavItem[] = [];
+
+    if (settingsFeatures.value.profile) {
+        items.push({
+            title: 'Profile',
+            href: editProfile(),
+        });
+    }
+
+    if (settingsFeatures.value.security) {
+        items.push({
+            title: 'Security',
+            href: editSecurity(),
+        });
+    }
+
+    if (settingsFeatures.value.password) {
+        items.push({
+            title: 'Password',
+            href: editPassword(),
+        });
+    }
+
+    if (settingsFeatures.value.appearance) {
+        items.push({
+            title: 'Appearance',
+            href: editAppearance(),
+        });
+    }
+
+    return items;
+});
 
 const { isCurrentUrl } = useCurrentUrl();
 </script>

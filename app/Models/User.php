@@ -23,6 +23,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string|null $profile_photo_path
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
@@ -69,6 +70,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'name',
         'email',
         'password',
+        'profile_photo_path',
     ];
 
     /**
@@ -82,6 +84,26 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'app_authentication_recovery_codes',
         'remember_token',
     ];
+
+    /**
+     * Get the user's profile photo URL.
+     */
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        if ($this->profile_photo_path) {
+            return asset('storage/'.$this->profile_photo_path);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the disk that profile photos should be stored on.
+     */
+    protected function profilePhotoDisk(): string
+    {
+        return 'public';
+    }
 
     /**
      * Get the attributes that should be cast.

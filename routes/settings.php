@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Settings\FeatureFlagsController;
+use App\Features\FeatureRegistry;
 use App\Http\Controllers\Settings\FilamentAppAuthenticationController;
 use App\Http\Controllers\Settings\FilamentEmailAuthenticationController;
 use App\Http\Controllers\Settings\PasswordController;
@@ -14,6 +14,8 @@ Route::middleware(['auth'])->group(function (): void {
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('settings/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
+    Route::delete('settings/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
 
     Route::get('settings/security', [SecurityController::class, 'edit'])->name('security.edit');
 
@@ -28,9 +30,6 @@ Route::middleware(['auth'])->group(function (): void {
         Route::post('email/enable', [FilamentEmailAuthenticationController::class, 'enable'])->name('email.enable');
         Route::delete('email', [FilamentEmailAuthenticationController::class, 'disable'])->name('email.disable');
     });
-
-    Route::get('settings/features', [FeatureFlagsController::class, 'edit'])->name('features.edit');
-    Route::patch('settings/features', [FeatureFlagsController::class, 'update'])->name('features.update');
 });
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
@@ -42,5 +41,14 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->middleware('throttle:6,1')
         ->name('user-password.update');
 
-    Route::get('settings/appearance', fn () => Inertia::render('settings/Appearance'))->name('appearance.edit');
+    Route::get('settings/appearance', function () {
+        FeatureRegistry::initialize();
+        $user = auth()->user();
+
+        return Inertia::render('settings/Appearance', [
+            'availableFeatures' => [
+                'appearance' => FeatureRegistry::isFeatureAvailableForUser($user, 'settings_appearance'),
+            ],
+        ]);
+    })->name('appearance.edit');
 });

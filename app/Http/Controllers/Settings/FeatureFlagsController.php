@@ -20,11 +20,14 @@ class FeatureFlagsController extends Controller
         $features = [];
 
         foreach (FeatureRegistry::all() as $feature) {
+            $isAvailable = FeatureRegistry::isFeatureAvailableForUser($user, $feature->key);
+
             $features[] = [
                 'key' => $feature->key,
                 'name' => $feature->name,
                 'description' => $feature->description,
-                'value' => $featureManager->value($feature->key) === true,
+                'value' => $featureManager->value($feature->key, $user) === true,
+                'available' => $isAvailable,
             ];
         }
 
@@ -41,6 +44,11 @@ class FeatureFlagsController extends Controller
         ]);
 
         $user = $request->user();
+
+        if (! FeatureRegistry::isFeatureAvailableForUser($user, $validated['feature'])) {
+            return response()->json(['success' => false, 'message' => 'Feature not available for your role'], 403);
+        }
+
         $featureManager = app(\Laravel\Pennant\FeatureManager::class);
 
         if ($validated['active']) {

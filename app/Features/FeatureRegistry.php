@@ -3,6 +3,7 @@
 namespace App\Features;
 
 use App\Models\RoleFeature;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Fluent;
 use Spatie\Permission\Models\Role;
 
@@ -164,5 +165,71 @@ class FeatureRegistry
             'Enable access to beta features and experimental functionality',
             false
         );
+
+        static::registerSettingsFeatures();
+    }
+
+    public static function registerSettingsFeatures(): void
+    {
+        static::register(
+            'settings_profile',
+            'Profile Editing',
+            'Allow editing profile information (name, email)',
+            true
+        );
+
+        static::register(
+            'settings_appearance',
+            'Theme Customization',
+            'Allow changing theme (light/dark/system)',
+            true
+        );
+
+        static::register(
+            'settings_password',
+            'Password Changes',
+            'Allow changing account password',
+            true
+        );
+
+        static::register(
+            'settings_mfa_app',
+            'App MFA',
+            'Allow enabling app-based two-factor authentication',
+            true
+        );
+
+        static::register(
+            'settings_mfa_email',
+            'Email MFA',
+            'Allow enabling email-based two-factor authentication',
+            true
+        );
+
+        static::register(
+            'settings_account_deletion',
+            'Account Deletion',
+            'Allow deleting account',
+            false
+        );
+    }
+
+    public static function isFeatureAvailableForUser($user, string $feature): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        $userRoles = $user->roles()->pluck('roles.id');
+
+        $roleFeature = RoleFeature::whereIn('role_id', $userRoles)
+            ->where('feature', $feature)
+            ->first();
+
+        if ($roleFeature) {
+            return $roleFeature->active;
+        }
+
+        return static::get($feature)?->default ?? false;
     }
 }

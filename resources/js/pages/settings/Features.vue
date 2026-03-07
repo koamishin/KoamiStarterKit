@@ -14,6 +14,7 @@ const props = defineProps<{
         name: string;
         description: string;
         value: boolean;
+        available: boolean;
     }>;
 }>();
 
@@ -24,6 +25,13 @@ const form = useForm(
 );
 
 const toggleFeature = (key: string, active: boolean) => {
+    const feature = props.features.find((f) => f.key === key);
+    
+    if (feature && !feature.available) {
+        toast.error('This feature is not available for your role');
+        return;
+    }
+
     form.patch(
         update().url,
         {
@@ -36,10 +44,19 @@ const toggleFeature = (key: string, active: boolean) => {
                 toast.success(
                     `${props.features.find((f) => f.key === key)?.name || key} ${active ? 'enabled' : 'disabled'}`,
                 ),
-            onError: () => toast.error('Failed to update feature setting'),
+            onError: (errors) => {
+                if (errors.message) {
+                    toast.error(errors.message);
+                } else {
+                    toast.error('Failed to update feature setting');
+                }
+            },
         },
     );
 };
+
+const availableFeatures = () => props.features.filter(f => f.available);
+const unavailableFeatures = () => props.features.filter(f => !f.available);
 </script>
 
 <template>
@@ -53,9 +70,9 @@ const toggleFeature = (key: string, active: boolean) => {
                     description="Manage your feature preferences and experimental features"
                 />
 
-                <div class="grid gap-4 md:grid-cols-2">
+                <div v-if="availableFeatures().length > 0" class="grid gap-4 md:grid-cols-2">
                     <div
-                        v-for="feature in features"
+                        v-for="feature in availableFeatures()"
                         :key="feature.key"
                         class="rounded-lg border bg-card p-4 transition-all duration-200"
                         :class="[
@@ -109,6 +126,38 @@ const toggleFeature = (key: string, active: boolean) => {
                     </div>
                 </div>
 
+                <div v-if="unavailableFeatures().length > 0" class="space-y-4">
+                    <h3 class="text-sm font-medium text-muted-foreground">
+                        Unavailable Features
+                    </h3>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div
+                            v-for="feature in unavailableFeatures()"
+                            :key="feature.key"
+                            class="rounded-lg border border-border bg-card/50 p-4 opacity-60"
+                        >
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="space-y-1">
+                                    <p class="leading-none font-medium">
+                                        {{ feature.name }}
+                                    </p>
+                                    <p class="text-sm text-muted-foreground">
+                                        {{ feature.description }}
+                                    </p>
+                                    <div class="flex items-center gap-2 pt-2">
+                                        <span
+                                            class="flex h-2 w-2 rounded-full bg-muted-foreground/30"
+                                        />
+                                        <span class="text-xs font-medium text-muted-foreground">
+                                            Unavailable for your role
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="rounded-lg border bg-muted/50 p-4">
                     <div class="flex items-start gap-3">
                         <div
@@ -138,7 +187,8 @@ const toggleFeature = (key: string, active: boolean) => {
                                 features are enabled for your account. Toggle
                                 features on or off to customize your experience.
                                 Some features may require a page refresh to take
-                                effect.
+                                effect. Features marked as unavailable are
+                                controlled by your role permissions.
                             </p>
                         </div>
                     </div>

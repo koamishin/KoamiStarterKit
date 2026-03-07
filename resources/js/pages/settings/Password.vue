@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, usePage } from '@inertiajs/vue3';
 import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -9,7 +9,10 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/user-password';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type SharedData } from '@/types';
+
+const page = usePage<SharedData>();
+const settingsFeatures = page.props.settingsFeatures || {};
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -26,7 +29,11 @@ const breadcrumbItems: BreadcrumbItem[] = [
         <h1 class="sr-only">Password Settings</h1>
 
         <SettingsLayout>
-            <div class="space-y-6">
+            <div v-if="!settingsFeatures.password" class="py-12 text-center">
+                <p class="text-muted-foreground">This page is not available.</p>
+            </div>
+
+            <div v-else class="space-y-6">
                 <Heading
                     variant="small"
                     title="Update password"
@@ -92,8 +99,9 @@ const breadcrumbItems: BreadcrumbItem[] = [
                         <Button
                             :disabled="processing"
                             data-test="update-password-button"
-                            >Save password</Button
                         >
+                            Save password
+                        </Button>
 
                         <Transition
                             enter-active-class="transition ease-in-out"
