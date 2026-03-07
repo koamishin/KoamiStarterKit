@@ -48,7 +48,7 @@ class FeatureRegistry
 
     public static function isEnabledForUser(?\App\Models\User $user, string $feature): bool
     {
-        if (!$user instanceof \App\Models\User) {
+        if (! $user instanceof \App\Models\User) {
             return static::get($feature)?->default ?? false;
         }
 
