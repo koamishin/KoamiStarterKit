@@ -55,7 +55,7 @@ class FeatureFlagResource extends Resource
                     ->label('Configure Features')
                     ->icon('heroicon-o-cog-6-tooth')
                     ->slideOver()
-                    ->form(function (Role $record): array {
+                    ->form(function (Role $role): array {
                         FeatureRegistry::initialize();
 
                         $toggles = [];
@@ -70,17 +70,17 @@ class FeatureFlagResource extends Resource
 
                         return $toggles;
                     })
-                    ->fillForm(function (Role $record): array {
+                    ->fillForm(function (Role $role): array {
                         FeatureRegistry::initialize();
                         $data = [];
 
                         foreach (FeatureRegistry::keys() as $key) {
-                            $data['feature_'.$key] = FeatureRegistry::isEnabledForRole($record, $key);
+                            $data['feature_'.$key] = FeatureRegistry::isEnabledForRole($role, $key);
                         }
 
                         return $data;
                     })
-                    ->action(function (Role $record, array $data): void {
+                    ->action(function (Role $role, array $data): void {
                         FeatureRegistry::initialize();
 
                         $enabled = [];
@@ -88,7 +88,7 @@ class FeatureFlagResource extends Resource
 
                         foreach (FeatureRegistry::keys() as $key) {
                             $isEnabled = $data['feature_'.$key] ?? false;
-                            FeatureRegistry::toggleForRole($record, $key, $isEnabled);
+                            FeatureRegistry::toggleForRole($role, $key, $isEnabled);
 
                             if ($isEnabled) {
                                 $enabled[] = FeatureRegistry::get($key)?->name;
@@ -98,10 +98,10 @@ class FeatureFlagResource extends Resource
                         }
 
                         $body = [];
-                        if (! empty($enabled)) {
+                        if ($enabled !== []) {
                             $body[] = 'Enabled: '.implode(', ', $enabled);
                         }
-                        if (! empty($disabled)) {
+                        if ($disabled !== []) {
                             $body[] = 'Disabled: '.implode(', ', $disabled);
                         }
 

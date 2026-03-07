@@ -47,11 +47,11 @@ class FeatureRegistry
 
     public static function isEnabledForUser(?\App\Models\User $user, string $feature): bool
     {
-        if (! $user) {
+        if (!$user instanceof \App\Models\User) {
             return static::get($feature)?->default ?? false;
         }
 
-        $pennantValue = app(\Laravel\Pennant\FeatureManager::class)->value($feature, $user);
+        $pennantValue = app(\Laravel\Pennant\FeatureManager::class)->value($feature);
 
         if ($pennantValue !== null) {
             return $pennantValue === true;

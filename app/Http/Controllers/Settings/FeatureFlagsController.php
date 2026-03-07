@@ -12,7 +12,7 @@ class FeatureFlagsController extends Controller
 {
     public function edit(Request $request): Response
     {
-        $user = $request->user();
+        $request->user();
         $featureManager = app(\Laravel\Pennant\FeatureManager::class);
 
         FeatureRegistry::initialize();
@@ -24,7 +24,7 @@ class FeatureFlagsController extends Controller
                 'key' => $feature->key,
                 'name' => $feature->name,
                 'description' => $feature->description,
-                'value' => $featureManager->value($feature->key, $user) === true,
+                'value' => $featureManager->value($feature->key) === true,
             ];
         }
 
