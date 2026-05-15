@@ -6,8 +6,6 @@ import SettingsLayout from '@/layouts/settings/Layout.vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { edit, update } from '@/routes/features';
-
 const props = defineProps<{
     features: Array<{
         key: string;
@@ -18,7 +16,9 @@ const props = defineProps<{
     }>;
 }>();
 
-const breadcrumbs = [{ title: 'Feature settings', href: edit().url }];
+const featuresSettingsUrl = '/settings/features';
+
+const breadcrumbs = [{ title: 'Feature settings', href: featuresSettingsUrl }];
 
 const form = useForm(
     Object.fromEntries(props.features.map((f) => [f.key, f.value])),
@@ -33,7 +33,7 @@ const toggleFeature = (key: string, active: boolean) => {
     }
 
     form.patch(
-        update().url,
+        featuresSettingsUrl,
         {
             feature: key,
             active: active,
