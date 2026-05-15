@@ -20,7 +20,7 @@ class ProfileController extends Controller
     {
         FeatureRegistry::initialize();
 
-        $user = $request->user();
+        $request->user();
 
         return Inertia::render('settings/Profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
