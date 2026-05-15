@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Pennant\FeatureManager;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -51,7 +52,7 @@ class AppServiceProvider extends ServiceProvider
     {
         FeatureRegistry::initialize();
 
-        $featureManager = app(\Laravel\Pennant\FeatureManager::class);
+        $featureManager = app(FeatureManager::class);
 
         foreach (FeatureRegistry::all() as $feature) {
             $featureManager->define($feature->key, fn () => $feature->default);

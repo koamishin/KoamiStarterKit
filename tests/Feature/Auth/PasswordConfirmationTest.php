@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Inertia\Testing\AssertableInertia;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('confirm password screen can be rendered', function (): void {
@@ -10,7 +11,7 @@ test('confirm password screen can be rendered', function (): void {
 
     $response->assertOk();
 
-    $response->assertInertia(fn (Assert $assert): \Inertia\Testing\AssertableInertia => $assert
+    $response->assertInertia(fn (Assert $assert): AssertableInertia => $assert
         ->component('auth/ConfirmPassword')
     );
 });

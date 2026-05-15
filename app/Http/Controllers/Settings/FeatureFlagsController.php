@@ -7,13 +7,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Pennant\FeatureManager;
 
 class FeatureFlagsController extends Controller
 {
     public function edit(Request $request): Response
     {
         $request->user();
-        $featureManager = app(\Laravel\Pennant\FeatureManager::class);
+        $featureManager = app(FeatureManager::class);
 
         FeatureRegistry::initialize();
 
@@ -49,7 +50,7 @@ class FeatureFlagsController extends Controller
             return response()->json(['success' => false, 'message' => 'Feature not available for your role'], 403);
         }
 
-        $featureManager = app(\Laravel\Pennant\FeatureManager::class);
+        $featureManager = app(FeatureManager::class);
 
         if ($validated['active']) {
             $featureManager->activateFor($user, $validated['feature']);

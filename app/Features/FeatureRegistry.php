@@ -3,8 +3,10 @@
 namespace App\Features;
 
 use App\Models\RoleFeature;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Fluent;
+use Laravel\Pennant\FeatureManager;
 use Spatie\Permission\Models\Role;
 
 class FeatureRegistry
@@ -46,13 +48,13 @@ class FeatureRegistry
         return $options;
     }
 
-    public static function isEnabledForUser(?\App\Models\User $user, string $feature): bool
+    public static function isEnabledForUser(?User $user, string $feature): bool
     {
-        if (! $user instanceof \App\Models\User) {
+        if (! $user instanceof User) {
             return static::get($feature)?->default ?? false;
         }
 
-        $pennantValue = app(\Laravel\Pennant\FeatureManager::class)->value($feature);
+        $pennantValue = app(FeatureManager::class)->value($feature);
 
         if ($pennantValue !== null) {
             return $pennantValue === true;
@@ -71,9 +73,9 @@ class FeatureRegistry
         return static::get($feature)?->default ?? false;
     }
 
-    public static function toggleForUser(\App\Models\User $user, string $feature, bool $active): void
+    public static function toggleForUser(User $user, string $feature, bool $active): void
     {
-        $featureManager = app(\Laravel\Pennant\FeatureManager::class);
+        $featureManager = app(FeatureManager::class);
 
         if ($active) {
             $featureManager->activateFor($user, $feature);
@@ -112,9 +114,9 @@ class FeatureRegistry
 
     public static function rolloutForAllUsers(string $feature, bool $active): int
     {
-        $featureManager = app(\Laravel\Pennant\FeatureManager::class);
+        $featureManager = app(FeatureManager::class);
 
-        $users = \App\Models\User::whereHas('roles')->get();
+        $users = User::whereHas('roles')->get();
         $count = 0;
 
         foreach ($users as $user) {

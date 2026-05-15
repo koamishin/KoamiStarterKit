@@ -4,6 +4,7 @@ use App\Models\User;
 use Filament\Auth\MultiFactor\Email\Notifications\VerifyEmailAuthentication;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Notification;
+use Inertia\Testing\AssertableInertia;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('profile settings page includes filament mfa configuration', function (): void {
@@ -11,7 +12,7 @@ test('profile settings page includes filament mfa configuration', function (): v
 
     $this->actingAs($user)
         ->get(route('security.edit'))
-        ->assertInertia(fn (Assert $assert): \Inertia\Testing\AssertableInertia => $assert
+        ->assertInertia(fn (Assert $assert): AssertableInertia => $assert
             ->component('settings/Security')
             ->has('filamentMfa.providers')
             ->has('filamentMfa.state')

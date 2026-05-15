@@ -14,6 +14,7 @@ use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Spatie\Permission\Models\Role;
 
 /**
  * @property-read Schema $form
@@ -152,6 +153,6 @@ class ApplicationFeaturesSettingsPage extends Page
      */
     protected function getRoleOptions(): array
     {
-        return \Spatie\Permission\Models\Role::pluck('name', 'name')->toArray();
+        return Role::pluck('name', 'name')->toArray();
     }
 }

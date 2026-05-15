@@ -1,5 +1,7 @@
 <?php
 
+use App\Console\Commands\SetupStarterKit;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
 use function Pest\Laravel\artisan;
@@ -13,12 +15,12 @@ test('setup starter kit command exists', function (): void {
 test('setup starter kit validates github username format', function (): void {
     // GitHub username validation happens in the text() prompt
     // This test verifies the command has proper validation
-    $command = new \App\Console\Commands\SetupStarterKit;
-    expect($command)->toBeInstanceOf(\Illuminate\Console\Command::class);
+    $command = new SetupStarterKit;
+    expect($command)->toBeInstanceOf(Command::class);
 });
 
 test('setup starter kit command has correct signature and description', function (): void {
-    $command = new \App\Console\Commands\SetupStarterKit;
+    $command = new SetupStarterKit;
 
     expect($command->getName())->toBe('setup:starter-kit')
         ->and($command->getDescription())->toContain('KoamiStarterKit');

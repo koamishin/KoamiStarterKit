@@ -3,10 +3,13 @@
 namespace Database\Seeders;
 
 use App\Enums\RoleEnums;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -26,7 +29,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
     public function run(): void
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = $this->discoverPermissionsFromPolicies();
         $this->createPermissions($permissions);
@@ -102,21 +105,21 @@ class RolesAndPermissionsSeeder extends Seeder
 
     protected function createDefaultUsers(array $roles): void
     {
-        $admin = \App\Models\User::firstOrCreate(
+        $admin = User::firstOrCreate(
             ['email' => 'admin@admin.com'],
             [
                 'name' => 'Admin User',
-                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ]
         );
         $admin->assignRole($roles[RoleEnums::SUPER_ADMIN->value]);
 
-        $user = \App\Models\User::firstOrCreate(
+        $user = User::firstOrCreate(
             ['email' => 'user@user.com'],
             [
                 'name' => 'Regular User',
-                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ]
         );

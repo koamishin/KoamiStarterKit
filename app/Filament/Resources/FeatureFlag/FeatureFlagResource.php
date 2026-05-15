@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\FeatureFlag;
 
 use App\Features\FeatureRegistry;
+use App\Filament\Resources\FeatureFlag\Pages\ListFeatureFlags;
 use App\Models\Role;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -173,7 +174,7 @@ class FeatureFlagResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => \App\Filament\Resources\FeatureFlag\Pages\ListFeatureFlags::route('/'),
+            'index' => ListFeatureFlags::route('/'),
         ];
     }
 }
