@@ -162,7 +162,7 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
             org.opencontainers.image.title=KoamiStarterKit
-            org.opencontainers.image.description=KoamiStarterKit - A modern Laravel 12 starter kit with Vue 3, Inertia.js, Tailwind CSS, Fortify authentication, and Wayfinder routing. Production-ready with Octane, comprehensive testing setup with Pest, and automated CI/CD workflows.
+            org.opencontainers.image.description=KoamiStarterKit - A modern Laravel 13 starter kit with Vue 3, Inertia.js, Tailwind CSS, Fortify authentication, and Wayfinder routing. Production-ready with Octane, comprehensive testing setup with Pest, and automated CI/CD workflows.
             org.opencontainers.image.vendor=Koami
 
       - name: Build and push Docker image

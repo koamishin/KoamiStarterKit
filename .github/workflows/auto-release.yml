@@ -198,7 +198,7 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
             org.opencontainers.image.title=KoamiStarterKit
-            org.opencontainers.image.description=Modern Laravel 12 starter kit with Vue 3, Inertia.js, and Tailwind CSS
+            org.opencontainers.image.description=Modern Laravel 13 starter kit with Vue 3, Inertia.js, and Tailwind CSS
             org.opencontainers.image.vendor=Koamishin
 
       - name: Build and push Docker image

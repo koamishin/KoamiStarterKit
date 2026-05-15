@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\RoleFeature;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 test('profile page is displayed', function (): void {
     $user = User::factory()->create();
@@ -52,6 +54,15 @@ test('email verification status is unchanged when the email address is unchanged
 
 test('user can delete their account', function (): void {
     $user = User::factory()->create();
+    $role = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+
+    $user->assignRole($role);
+
+    RoleFeature::create([
+        'role_id' => $role->id,
+        'feature' => 'settings_account_deletion',
+        'active' => true,
+    ]);
 
     $response = $this
         ->actingAs($user)
