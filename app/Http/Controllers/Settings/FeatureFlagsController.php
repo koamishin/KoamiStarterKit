@@ -27,7 +27,7 @@ class FeatureFlagsController extends Controller
                 'key' => $feature->key,
                 'name' => $feature->name,
                 'description' => $feature->description,
-                'value' => $featureManager->value($feature->key, $user) === true,
+                'value' => $featureManager->value($feature->key) === true,
                 'available' => $isAvailable,
             ];
         }
