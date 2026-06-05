@@ -146,7 +146,7 @@ class SetupStarterKit extends Command
                     default: $githubUsername,
                     required: true,
                     validate: fn ($value): ?string => match (true) {
-                        ! preg_match('/^[a-zA-Z0-9_]([a-zA-Z0-9_-]*[a-zA-Z0-9_])?$/', (string) $value) => 'Docker Hub usernames may only contain alphanumeric characters, underscores, and hyphens.',
+                        ! preg_match('/^\w([a-zA-Z0-9_-]*\w)?$/', (string) $value) => 'Docker Hub usernames may only contain alphanumeric characters, underscores, and hyphens.',
                         strlen((string) $value) > 30 => 'Docker Hub usernames cannot exceed 30 characters.',
                         default => null
                     },
@@ -266,7 +266,7 @@ class SetupStarterKit extends Command
         $gitInitialized = $this->initializeGitRepository($githubUsername, $packageName);
 
         // Update composer.json
-        $composerUpdated = $this->updateComposerJson($githubUsername, $packageName, $authorName, $authorEmail);
+        $this->updateComposerJson($githubUsername, $packageName, $authorName, $authorEmail);
 
         // Create starter kit config
         $this->createStarterKitConfig($useDocker, $dockerRegistry, $dockerImageName, $registryType, $dockerHubAuthor, $usePackagist, $dockerUpdateStrategy);
@@ -348,12 +348,12 @@ class SetupStarterKit extends Command
         }
 
         $gitResult = spin(
-            message: 'Initializing Git repository...',
             callback: function () use (&$output, &$returnCode): bool {
                 exec('git init 2>&1', $output, $returnCode);
 
                 return $returnCode === 0;
-            }
+            },
+            message: 'Initializing Git repository...'
         );
 
         if (! $gitResult) {
@@ -382,12 +382,12 @@ class SetupStarterKit extends Command
             );
 
             spin(
-                message: "Adding remote origin: {$remoteUrl}",
                 callback: function () use ($remoteUrl): bool {
                     exec("git remote add origin {$remoteUrl} 2>&1", output: $addOutput, result_code: $addReturnCode);
 
                     return $addReturnCode === 0;
-                }
+                },
+                message: "Adding remote origin: {$remoteUrl}"
             );
 
             info("✓ Added remote origin → {$remoteUrl}");
@@ -414,12 +414,12 @@ class SetupStarterKit extends Command
         }
 
         $stageResult = spin(
-            message: 'Staging all files...',
             callback: function () use (&$addReturnCode): bool {
                 exec('git add -A 2>&1', output: $addOutput, result_code: $addReturnCode);
 
                 return $addReturnCode === 0;
-            }
+            },
+            message: 'Staging all files...'
         );
 
         if (! $stageResult) {
@@ -434,12 +434,12 @@ class SetupStarterKit extends Command
             'and production-ready CI/CD workflows.';
 
         $commitResult = spin(
-            message: 'Creating initial commit...',
             callback: function () use ($commitMessage, &$commitReturnCode): bool {
                 exec('git commit -m '.escapeshellarg($commitMessage).' 2>&1', output: $commitOutput, result_code: $commitReturnCode);
 
                 return $commitReturnCode === 0;
-            }
+            },
+            message: 'Creating initial commit...'
         );
 
         if ($commitResult) {
@@ -456,7 +456,6 @@ class SetupStarterKit extends Command
     protected function updateComposerJson(string $githubUsername, string $packageName, string $authorName, string $authorEmail): bool
     {
         return spin(
-            message: 'Updating composer.json...',
             callback: function () use ($githubUsername, $packageName, $authorName, $authorEmail): bool {
                 $composerPath = base_path('composer.json');
 
@@ -487,8 +486,9 @@ class SetupStarterKit extends Command
                 File::put($composerPath, json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
 
                 return true;
-            }
-        ) ? (info('✓ Updated composer.json') || true) : false;
+            },
+            message: 'Updating composer.json...'
+        ) && (info('✓ Updated composer.json') || true);
     }
 
     /**
@@ -497,7 +497,6 @@ class SetupStarterKit extends Command
     protected function createStarterKitConfig(bool $dockerEnabled, string $registry, string $imageName, string $registryType, string $dockerHubAuthor, bool $packagistEnabled, string $dockerUpdateStrategy): void
     {
         spin(
-            message: 'Creating .starter-kit.json...',
             callback: function () use ($dockerEnabled, $registry, $imageName, $registryType, $dockerHubAuthor, $packagistEnabled, $dockerUpdateStrategy): bool {
                 $config = [
                     'docker_enabled' => $dockerEnabled,
@@ -516,7 +515,8 @@ class SetupStarterKit extends Command
                 File::put(base_path('.starter-kit.json'), json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
 
                 return true;
-            }
+            },
+            message: 'Creating .starter-kit.json...'
         );
 
         info('✓ Created .starter-kit.json configuration');
@@ -614,7 +614,7 @@ class SetupStarterKit extends Command
         if ($strategy === null) {
             // Remove DOCKER_UPDATE_STRATEGY if Docker is not enabled
             if (preg_match('/DOCKER_UPDATE_STRATEGY: .+/', $content)) {
-                $content = preg_replace('/  DOCKER_UPDATE_STRATEGY: [^\n]*\n/', '', $content);
+                return preg_replace('/  DOCKER_UPDATE_STRATEGY: [^\n]*\n/', '', $content);
             }
 
             return $content;
