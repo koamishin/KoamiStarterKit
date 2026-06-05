@@ -1,21 +1,22 @@
 {
     "agents": [
-        "opencode",
-        "gemini"
+        "opencode"
     ],
+    "cloud": false,
     "guidelines": true,
-    "herd_mcp": false,
     "mcp": true,
+    "nightwatch": false,
     "packages": [
-        "laravel/fortify"
+        "filament/filament"
     ],
     "sail": false,
     "skills": [
+        "fortify-development",
+        "laravel-best-practices",
         "pennant-development",
         "wayfinder-development",
         "pest-testing",
         "inertia-vue-development",
-        "tailwindcss-development",
-        "developing-with-fortify"
+        "tailwindcss-development"
     ]
 }
