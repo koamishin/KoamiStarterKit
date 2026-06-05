@@ -89,8 +89,7 @@ cd my-app
 Or use laravel new command:
 
 ```bash
-laravel new my-app --using=starter-kit=koamishin/koamistarterkit
-
+laravel new my-app --using=koamishin/koamistarterkit
 ```
 
 ### ⚙️ Setup & Configuration
