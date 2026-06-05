@@ -22,11 +22,6 @@ on:
         required: true
         default: false
         type: boolean
-      update_version_file:
-        description: 'Update and commit version.json'
-        required: true
-        default: true
-        type: boolean
       extra_notes:
         description: 'Extra release notes (optional)'
         required: false
@@ -57,7 +52,6 @@ jobs:
       publish_latest: ${{ steps.prepare.outputs.publish_latest }}
       draft: ${{ steps.prepare.outputs.draft }}
       prerelease: ${{ steps.prepare.outputs.prerelease }}
-      update_version_file: ${{ steps.prepare.outputs.update_version_file }}
       extra_notes: ${{ steps.prepare.outputs.extra_notes }}
 
     steps:
@@ -106,8 +100,6 @@ jobs:
           echo "publish_latest=${{ inputs.publish_latest }}" >> "$GITHUB_OUTPUT"
           echo "draft=${{ inputs.draft }}" >> "$GITHUB_OUTPUT"
           echo "prerelease=${{ inputs.prerelease }}" >> "$GITHUB_OUTPUT"
-          echo "update_version_file=${{ inputs.update_version_file }}" >> "$GITHUB_OUTPUT"
-
           {
             echo 'extra_notes<<EOF'
             echo "${{ inputs.extra_notes }}"
@@ -456,7 +448,7 @@ jobs:
   update-version:
     runs-on: ubuntu-latest
     needs: [prepare, build-and-push, create-release]
-    if: always() && (needs.build-and-push.result == 'success' || needs.build-and-push.result == 'skipped') && (needs.create-release.result == 'success' || needs.create-release.result == 'skipped') && needs.prepare.outputs.update_version_file == 'true'
+    if: always() && (needs.build-and-push.result == 'success' || needs.build-and-push.result == 'skipped') && (needs.create-release.result == 'success' || needs.create-release.result == 'skipped')
 
     steps:
       - name: Checkout repository
@@ -464,7 +456,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Update version.json
+      - name: Update version.json and composer.json
         shell: bash
         run: |
           set -euo pipefail
@@ -480,6 +472,7 @@ jobs:
           # Pull latest changes to avoid conflicts
           git pull origin ${GITHUB_REF_NAME}
 
+          # Update version.json
           cat > version.json << EOF
           {
             "version": "${VERSION}",
@@ -501,9 +494,13 @@ jobs:
           }
           EOF
 
+          # Update composer.json version
+          jq --arg v "${VERSION}" '.version = $v' composer.json > composer.json.tmp
+          mv composer.json.tmp composer.json
+
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add version.json
+          git add version.json composer.json
           git diff --staged --quiet || (git commit -m "chore: update version to ${VERSION} [skip ci]" && git push)
 
   notify:
@@ -524,7 +521,10 @@ jobs:
       - name: Notify Packagist
         if: ${{ env.PACKAGIST_ENABLED == 'true' && env.PACKAGIST_TOKEN != '' && env.PACKAGIST_USERNAME != '' }}
         run: |
-          curl -XPOST -u "${{ env.PACKAGIST_USERNAME }}:${{ env.PACKAGIST_TOKEN }}" https://packagist.org/api/update-package?username=${{ env.PACKAGIST_USERNAME }} -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'
+          curl -XPOST \
+            -H 'Content-Type: application/json' \
+            "https://packagist.org/api/github?username=${{ env.PACKAGIST_USERNAME }}&apiToken=${{ env.PACKAGIST_TOKEN }}" \
+            -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'
 
       - name: Send Discord notification
         if: ${{ env.DISCORD_WEBHOOK_URL != '' }}
