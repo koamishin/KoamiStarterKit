@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\intro;
+use function Laravel\Prompts\note;
 use function Laravel\Prompts\outro;
 use function Laravel\Prompts\select;
+use function Laravel\Prompts\spin;
+use function Laravel\Prompts\table;
 use function Laravel\Prompts\text;
 use function Laravel\Prompts\warning;
 
@@ -17,15 +23,11 @@ class SetupStarterKit extends Command
 {
     /**
      * The name and signature of the console command.
-     *
-     * @var string
      */
     protected $signature = 'setup:starter-kit';
 
     /**
      * The console command description.
-     *
-     * @var string
      */
     protected $description = 'Initialize your Laravel application from KoamiStarterKit with your project settings';
 
@@ -34,101 +36,121 @@ class SetupStarterKit extends Command
      */
     public function handle(): int
     {
-        intro('🚀 KoamiStarterKit Setup');
+        intro('🚀 Welcome to KoamiStarterKit Setup');
 
-        info('This command will initialize your application with your project settings.');
-        info('It will update composer.json, workflow files, and Docker configuration.');
-        info('Perfect for creating Laravel applications (not composer packages).');
+        note(
+            "This wizard will personalize your application by:\n".
+            '  • Updating composer.json with your project details'."\n".
+            '  • Configuring Docker CI/CD workflows for container builds'."\n".
+            '  • Setting up GitHub Actions for automated releases'."\n".
+            '  • Initializing a Git repository with a meaningful first commit'
+        );
 
-        if (! confirm('Do you want to continue?', default: true)) {
-            warning('Setup cancelled.');
+        info('KoamiStarterKit is designed for building Laravel applications (not Composer packages).');
+        info('It comes with Vue 3, Inertia.js, Tailwind CSS, Fortify auth, and production-ready CI/CD.');
+
+        if (! confirm('Ready to begin?', default: true)) {
+            warning('Setup cancelled. You can run this command again anytime.');
 
             return self::SUCCESS;
         }
 
-        // Collect user information
+        // ──────────────────────────────────────────────
+        // Step 1: Collect basic project information
+        // ──────────────────────────────────────────────
+
+        info('── Step 1 of 6: Project Identity');
+
         $githubUsername = text(
-            label: 'GitHub Username/Organization',
-            placeholder: 'e.g., yourusername',
+            label: 'GitHub Username or Organization',
+            placeholder: 'e.g., your-org',
             required: true,
             validate: fn ($value): ?string => match (true) {
-                ! preg_match('/^[a-zA-Z0-9-]+$/', (string) $value) => 'GitHub username can only contain alphanumeric characters and hyphens.',
+                ! preg_match('/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/', (string) $value) => 'GitHub username may only contain alphanumeric characters and hyphens, and cannot start or end with a hyphen.',
+                strlen((string) $value) > 39 => 'GitHub usernames cannot exceed 39 characters.',
                 default => null
             },
-            hint: 'Used for composer vendor name and GitHub repository URL'
+            hint: 'This sets your Composer vendor name, repository URL, and Docker image namespace.'
         );
 
         $packageName = text(
-            label: 'Application Name (lowercase, no spaces)',
+            label: 'Application Name (lowercase, hyphens only)',
             placeholder: 'e.g., my-awesome-app',
             default: 'my-app',
             required: true,
             validate: fn ($value): ?string => match (true) {
-                ! preg_match('/^[a-z0-9-]+$/', (string) $value) => 'Application name must be lowercase with hyphens only.',
+                ! preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/', (string) $value) => 'Application name must be lowercase with only hyphens, and cannot start or end with a hyphen.',
                 default => null
             },
-            hint: 'Used for composer package name, Docker image name, and GitHub repository name'
+            hint: 'Used for the Composer package name, Docker image name, and GitHub repository name.'
         );
 
         $authorName = text(
             label: 'Author Name',
-            placeholder: 'e.g., John Doe',
+            placeholder: 'e.g., Jane Doe',
             required: true,
-            hint: 'Your name will be added to composer.json authors'
+            hint: 'Added to composer.json as the package author.'
         );
 
         $authorEmail = text(
             label: 'Author Email',
-            placeholder: 'e.g., john@example.com',
+            placeholder: 'e.g., jane@example.com',
             required: true,
             validate: fn ($value): ?string => match (true) {
                 ! filter_var($value, FILTER_VALIDATE_EMAIL) => 'Please enter a valid email address.',
                 default => null
             },
-            hint: 'Your email will be added to composer.json authors'
+            hint: 'Added to composer.json as the author email.'
+        );
+
+        // ──────────────────────────────────────────────
+        // Step 2: Docker configuration
+        // ──────────────────────────────────────────────
+
+        info('── Step 2 of 6: Docker Setup');
+
+        note(
+            "Docker CI/CD automates building and publishing your application's container image.\n".
+            'When enabled, every push to your main branch (or a manual trigger) will build a new Docker image.'
         );
 
         $useDocker = confirm(
-            label: 'Do you want to set up Docker for your application?',
+            label: 'Enable Docker CI/CD for this application?',
             default: false,
-            hint: 'Configure Docker CI/CD for building and publishing container images'
-        );
-
-        $usePackagist = confirm(
-            label: 'Do you want to enable automated Packagist updates?',
-            default: false,
-            hint: 'Only needed if you plan to publish your project as a composer package'
+            hint: 'Recommended if you deploy with containers or Kubernetes.'
         );
 
         $dockerRegistry = 'docker.io';
         $dockerImageName = strtolower($githubUsername.'/'.$packageName);
         $dockerHubAuthor = '';
         $registryType = 'dockerhub';
+        $dockerUpdateStrategy = 'rolling';
 
         if ($useDocker) {
             $registryType = select(
-                label: 'Which Docker registry do you want to use?',
+                label: 'Which Docker registry would you like to use?',
                 options: [
-                    'ghcr' => 'GitHub Container Registry (ghcr.io) - Recommended for GitHub users',
-                    'dockerhub' => 'Docker Hub (docker.io) - Public registry',
+                    'ghcr' => 'GitHub Container Registry (ghcr.io) — zero-config with GitHub Actions, recommended ⭐',
+                    'dockerhub' => 'Docker Hub (docker.io) — public registry with broad ecosystem support',
                 ],
                 default: 'ghcr',
-                hint: 'GHCR integrates seamlessly with GitHub Actions; Docker Hub is widely used'
+                hint: 'GHCR uses your GitHub token automatically — no extra secrets required.'
             );
 
             if ($registryType === 'dockerhub') {
                 $dockerRegistry = 'docker.io';
 
                 $dockerHubAuthor = text(
-                    label: 'Docker Hub Username/Organization',
-                    placeholder: 'e.g., yourdockerhubusername',
+                    label: 'Docker Hub Username or Organization',
+                    placeholder: 'e.g., yourdockeruser',
                     default: $githubUsername,
                     required: true,
                     validate: fn ($value): ?string => match (true) {
-                        ! preg_match('/^[a-zA-Z0-9_-]+$/', (string) $value) => 'Docker Hub username can only contain alphanumeric characters, underscores, and hyphens.',
+                        ! preg_match('/^[a-zA-Z0-9_]([a-zA-Z0-9_-]*[a-zA-Z0-9_])?$/', (string) $value) => 'Docker Hub usernames may only contain alphanumeric characters, underscores, and hyphens.',
+                        strlen((string) $value) > 30 => 'Docker Hub usernames cannot exceed 30 characters.',
                         default => null
                     },
-                    hint: 'Your Docker Hub username or organization name'
+                    hint: 'Your Docker Hub username or organization name.'
                 );
 
                 $dockerImageName = text(
@@ -136,56 +158,121 @@ class SetupStarterKit extends Command
                     placeholder: 'e.g., dockerhubuser/image-name',
                     default: strtolower($dockerHubAuthor.'/'.$packageName),
                     required: true,
-                    hint: 'Full image name including username/organization'
+                    hint: 'Full image name including your Docker Hub username or org.'
                 );
             } else {
                 $dockerRegistry = 'ghcr.io';
 
                 $dockerImageName = text(
                     label: 'Docker Image Name',
-                    placeholder: 'e.g., github-username/image-name',
+                    placeholder: 'e.g., github-org/image-name',
                     default: strtolower($githubUsername.'/'.$packageName),
                     required: true,
-                    hint: 'For GHCR, this should match your GitHub username/org'
+                    hint: 'For GHCR, this typically matches your GitHub username or org.'
+                );
+            }
+
+            // ──────────────────────────────────────────────
+            // Step 2b: Docker update strategy
+            // ──────────────────────────────────────────────
+
+            note(
+                "How would you like new Docker images to be released?\n\n".
+                '  🚀 Rolling releases — A new Docker image is built and published automatically on every push to the main branch. Ideal for continuous delivery workflows where you always want the latest code running. The auto-release workflow handles this for you.'."\n\n".
+                '  📦 Manual releases — Docker images are only built when you manually trigger a release via the GitHub Actions "Manual Official Release" workflow. This gives you full control over when a new version ships, perfect for scheduled or gated releases.'
+            );
+
+            $dockerUpdateStrategy = select(
+                label: 'Docker image update strategy',
+                options: [
+                    'rolling' => 'Rolling releases — auto-build on every push to main 🚀',
+                    'manual' => 'Manual releases — build only on explicit release trigger 📦',
+                ],
+                default: 'rolling',
+                hint: 'Rolling is great for rapid iteration; manual gives you release control.'
+            );
+
+            if ($dockerUpdateStrategy === 'manual') {
+                note(
+                    'With manual releases, Docker images will not be built on every push.'."\n".
+                    'Instead, use the "Manual Official Release" workflow from the Actions tab in GitHub.'."\n".
+                    'The docker-latest workflow is also available to push the latest tag on demand.'
                 );
             }
         }
 
-        // Show summary
-        $this->newLine();
-        info('📋 Configuration Summary:');
-        $this->table(
-            ['Setting', 'Value'],
-            [
-                ['Application Name', $packageName],
-                ['Composer Package', $githubUsername.'/'.$packageName],
-                ['Author Name', $authorName],
-                ['Author Email', $authorEmail],
-                ['GitHub Repository', "https://github.com/{$githubUsername}/".ucfirst($packageName)],
-                ['Docker Registry', $useDocker ? $dockerRegistry : 'Not configured'],
-                ['Packagist Updates', $usePackagist ? 'Enabled' : 'Disabled'],
-                ['Docker Hub Author', $useDocker && $registryType === 'dockerhub' ? $dockerHubAuthor : 'N/A'],
-                ['Docker Image', $useDocker ? $dockerImageName : 'Not configured'],
-            ]
+        // ──────────────────────────────────────────────
+        // Step 3: Packagist integration
+        // ──────────────────────────────────────────────
+
+        info('── Step 3 of 6: Packagist Integration');
+
+        note(
+            'Packagist is the main Composer package repository. Enable this only if you plan to distribute your project as a reusable Composer package.'."\n".
+            'For most applications, you can safely skip this.'
         );
 
-        if (! confirm('Apply these changes?', default: true)) {
-            warning('Setup cancelled.');
+        $usePackagist = confirm(
+            label: 'Enable automated Packagist updates?',
+            default: false,
+            hint: 'Only needed if you publish this project as a Composer package on packagist.org.'
+        );
+
+        // ──────────────────────────────────────────────
+        // Step 4: Review summary
+        // ──────────────────────────────────────────────
+
+        info('── Step 4 of 6: Review Configuration');
+
+        $summaryRows = [
+            ['Application Name', $packageName],
+            ['Composer Package', $githubUsername.'/'.$packageName],
+            ['Author', "{$authorName} <{$authorEmail}>"],
+            ['GitHub Repository', "https://github.com/{$githubUsername}/{$packageName}"],
+        ];
+
+        if ($useDocker) {
+            $summaryRows[] = ['Docker Registry', $registryType === 'ghcr' ? 'ghcr.io (GitHub Container Registry)' : 'docker.io (Docker Hub)'];
+            $summaryRows[] = ['Docker Image', $dockerImageName];
+            $summaryRows[] = ['Docker Update Strategy', $dockerUpdateStrategy === 'rolling' ? 'Rolling (auto-build on push)' : 'Manual (release on trigger only)'];
+
+            if ($registryType === 'dockerhub') {
+                $summaryRows[] = ['Docker Hub User', $dockerHubAuthor];
+            }
+        } else {
+            $summaryRows[] = ['Docker', 'Not configured'];
+        }
+
+        $summaryRows[] = ['Packagist Updates', $usePackagist ? 'Enabled' : 'Disabled'];
+
+        table(
+            headers: ['Setting', 'Value'],
+            rows: $summaryRows,
+        );
+
+        if (! confirm('Apply these settings?', default: true, hint: 'This will update composer.json, workflow files, and create configuration files.')) {
+            warning('Setup cancelled — no changes were made.');
 
             return self::SUCCESS;
         }
+
+        // ──────────────────────────────────────────────
+        // Step 5: Apply changes
+        // ──────────────────────────────────────────────
+
+        info('── Step 5 of 6: Applying Changes');
 
         // Check and initialize git repository if needed
         $gitInitialized = $this->initializeGitRepository($githubUsername, $packageName);
 
         // Update composer.json
-        $this->updateComposerJson($githubUsername, $packageName, $authorName, $authorEmail);
+        $composerUpdated = $this->updateComposerJson($githubUsername, $packageName, $authorName, $authorEmail);
 
         // Create starter kit config
-        $this->createStarterKitConfig($useDocker, $dockerRegistry, $dockerImageName, $registryType, $dockerHubAuthor, $usePackagist);
+        $this->createStarterKitConfig($useDocker, $dockerRegistry, $dockerImageName, $registryType, $dockerHubAuthor, $usePackagist, $dockerUpdateStrategy);
 
         // Update workflow files
-        $this->updateAllWorkflowFiles($useDocker, $dockerRegistry, $dockerImageName, $registryType, $usePackagist);
+        $this->updateAllWorkflowFiles($useDocker, $dockerRegistry, $dockerImageName, $registryType, $usePackagist, $dockerUpdateStrategy);
 
         // Display required environment variables
         $this->displayRequiredSecrets($useDocker, $registryType);
@@ -195,14 +282,38 @@ class SetupStarterKit extends Command
             $this->createInitialCommit($packageName);
         }
 
-        outro('✅ KoamiStarterKit setup complete!');
+        // ──────────────────────────────────────────────
+        // Step 6: Done
+        // ──────────────────────────────────────────────
 
-        info('Next steps:');
-        info('  1. Review the updated files');
-        info('  2. Configure GitHub Secrets (if using workflows)');
-        info('  3. Run: composer install && npm install');
-        info('  4. Run: php artisan migrate');
-        info('  5. Run: composer run dev');
+        info('── Step 6 of 6: Setup Complete');
+
+        outro('✅ KoamiStarterKit setup finished successfully!');
+
+        note(
+            "Next steps to get started:\n".
+            '  1️⃣  Review the updated files (composer.json, .github/workflows/*.yml, .starter-kit.json)'."\n".
+            '  2️⃣  Set up GitHub Secrets: Settings → Secrets and variables → Actions'."\n".
+            '  3️⃣  Run: composer install && npm install'."\n".
+            '  4️⃣  Run: php artisan migrate'."\n".
+            '  5️⃣  Run: composer run dev to start the development server'
+        );
+
+        if ($gitInitialized) {
+            note(
+                "Your Git repository is ready! To push your first commit:\n".
+                '  git push -u origin main'
+            );
+        }
+
+        if ($useDocker && $dockerUpdateStrategy === 'manual') {
+            note(
+                "Since you chose manual Docker releases, remember:\n".
+                '  • Go to the Actions tab → "Manual Official Release" to publish a new Docker image.'."\n".
+                '  • The auto-release workflow will still create GitHub releases, but skip the Docker build.'."\n".
+                '  • You can change this later by editing DOCKER_UPDATE_STRATEGY in the workflow files.'
+            );
+        }
 
         return self::SUCCESS;
     }
@@ -215,56 +326,71 @@ class SetupStarterKit extends Command
         $gitDir = base_path('.git');
 
         if (is_dir($gitDir)) {
-            info('✓ Git repository already initialized');
+            info('✓ Git repository already initialized — skipping.');
 
             return false;
         }
 
+        note(
+            'No Git repository was detected. Initializing one is strongly recommended for version control and tracking your changes over time.'
+        );
+
         $initializeGit = confirm(
-            label: 'No Git repository found. Initialize one?',
+            label: 'Initialize a new Git repository?',
             default: true,
-            hint: 'Recommended for version control and tracking your application changes'
+            hint: 'Recommended. You can always remove the .git folder later.'
         );
 
         if (! $initializeGit) {
-            warning('⚠ Git repository not initialized. Consider initializing manually with: git init');
+            warning('⚠ Skipped Git initialization. Run "git init" manually when ready.');
 
             return false;
         }
 
-        // Initialize git repository
-        exec('git init', $output, $returnCode);
+        $gitResult = spin(
+            message: 'Initializing Git repository...',
+            callback: function () use (&$output, &$returnCode): bool {
+                exec('git init 2>&1', $output, $returnCode);
 
-        if ($returnCode !== 0) {
-            warning('⚠ Failed to initialize git repository. Please run: git init');
+                return $returnCode === 0;
+            }
+        );
+
+        if (! $gitResult) {
+            error('Failed to initialize Git repository. Please run "git init" manually.');
 
             return false;
         }
 
-        info('✓ Initialized empty Git repository');
+        info('✓ Initialized an empty Git repository in '.base_path().'/.git/');
 
         // Prompt for remote URL
         $addRemote = confirm(
-            label: 'Add GitHub remote repository?',
+            label: 'Add a GitHub remote origin?',
             default: true,
-            hint: 'This will add your GitHub repository as the origin remote'
+            hint: 'Links your local repository to GitHub so you can push and pull changes.'
         );
 
         if ($addRemote) {
+            $defaultUrl = "https://github.com/{$githubUsername}/{$packageName}.git";
+
             $remoteUrl = text(
-                label: 'GitHub Repository URL',
-                placeholder: "e.g., https://github.com/{$githubUsername}/{$packageName}.git",
-                default: "https://github.com/{$githubUsername}/{$packageName}.git",
-                hint: 'You can use HTTPS or SSH URL (e.g., git@github.com:user/repo.git)'
+                label: 'Remote Repository URL',
+                placeholder: 'e.g., '.$defaultUrl,
+                default: $defaultUrl,
+                hint: 'You can use HTTPS (recommended) or SSH: git@github.com:user/repo.git'
             );
 
-            exec("git remote add origin {$remoteUrl}", $remoteOutput, $remoteReturnCode);
+            spin(
+                message: "Adding remote origin: {$remoteUrl}",
+                callback: function () use ($remoteUrl): bool {
+                    exec("git remote add origin {$remoteUrl} 2>&1", output: $addOutput, result_code: $addReturnCode);
 
-            if ($remoteReturnCode === 0) {
-                info("✓ Added remote origin: {$remoteUrl}");
-            } else {
-                warning('⚠ Failed to add remote. You can add it manually with: git remote add origin <url>');
-            }
+                    return $addReturnCode === 0;
+                }
+            );
+
+            info("✓ Added remote origin → {$remoteUrl}");
         }
 
         return true;
@@ -276,89 +402,122 @@ class SetupStarterKit extends Command
     protected function createInitialCommit(string $packageName): void
     {
         $createCommit = confirm(
-            label: 'Create initial commit?',
+            label: 'Create an initial commit with all current files?',
             default: true,
-            hint: 'This will stage all files and create an initial commit'
+            hint: 'Stages everything and creates a single "Initial commit" with a friendly message.'
         );
 
         if (! $createCommit) {
-            info('ℹ️  You can create your initial commit manually later.');
+            info('ℹ Skipped. You can create your first commit manually whenever you are ready.');
 
             return;
         }
 
-        // Stage all files
-        exec('git add -A', $addOutput, $addReturnCode);
+        $stageResult = spin(
+            message: 'Staging all files...',
+            callback: function () use (&$addReturnCode): bool {
+                exec('git add -A 2>&1', output: $addOutput, result_code: $addReturnCode);
 
-        if ($addReturnCode !== 0) {
-            warning('⚠ Failed to stage files. Please run: git add -A');
+                return $addReturnCode === 0;
+            }
+        );
+
+        if (! $stageResult) {
+            error('Failed to stage files. Please run "git add -A" manually.');
 
             return;
         }
 
-        // Create initial commit with elegant message
         $commitMessage = "🎉 Initial commit: Initialize {$packageName}\n\n".
-            "Initialized from KoamiStarterKit - A modern Laravel 12 starter kit\n".
+            "Initialized from KoamiStarterKit — a modern Laravel starter kit\n".
             "with Vue 3, Inertia.js, Tailwind CSS, Fortify authentication,\n".
             'and production-ready CI/CD workflows.';
 
-        exec('git commit -m '.escapeshellarg($commitMessage), $commitOutput, $commitReturnCode);
+        $commitResult = spin(
+            message: 'Creating initial commit...',
+            callback: function () use ($commitMessage, &$commitReturnCode): bool {
+                exec('git commit -m '.escapeshellarg($commitMessage).' 2>&1', output: $commitOutput, result_code: $commitReturnCode);
 
-        if ($commitReturnCode === 0) {
+                return $commitReturnCode === 0;
+            }
+        );
+
+        if ($commitResult) {
             info('✓ Created initial commit');
-            info('  Commit message:');
-            $this->line("  \"🎉 Initial commit: Initialize {$packageName}\"");
+            info("  \"🎉 Initial commit: Initialize {$packageName}\"");
         } else {
-            warning('⚠ Failed to create initial commit. Please run: git commit -m "Initial commit"');
+            error('Failed to create the initial commit. Run "git commit -m \"Initial commit\"" manually.');
         }
     }
 
     /**
      * Update composer.json with user information.
      */
-    protected function updateComposerJson(string $githubUsername, string $packageName, string $authorName, string $authorEmail): void
+    protected function updateComposerJson(string $githubUsername, string $packageName, string $authorName, string $authorEmail): bool
     {
-        $composerPath = base_path('composer.json');
-        $composer = json_decode(File::get($composerPath), true);
+        return spin(
+            message: 'Updating composer.json...',
+            callback: function () use ($githubUsername, $packageName, $authorName, $authorEmail): bool {
+                $composerPath = base_path('composer.json');
 
-        // Update package information
-        $composer['name'] = strtolower($githubUsername.'/'.$packageName);
-        $composer['description'] = 'KoamiStarterKit - A modern Laravel 12 starter kit with Vue 3, Inertia.js, Tailwind CSS, Fortify authentication, and Wayfinder routing. Production-ready with Octane, comprehensive testing setup with Pest, and automated CI/CD workflows.';
-        $composer['homepage'] = "https://github.com/{$githubUsername}/".ucfirst($packageName);
+                if (! File::exists($composerPath)) {
+                    error('composer.json not found at '.$composerPath);
 
-        // Update authors
-        $composer['authors'] = [
-            [
-                'name' => $authorName,
-                'email' => $authorEmail,
-            ],
-        ];
+                    return false;
+                }
 
-        // Write back to file
-        File::put($composerPath, json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
+                $composer = json_decode(File::get($composerPath), true);
 
-        info('✓ Updated composer.json');
+                if ($composer === null) {
+                    error('Failed to parse composer.json — it may contain invalid JSON.');
+
+                    return false;
+                }
+
+                $composer['name'] = strtolower($githubUsername.'/'.$packageName);
+                $composer['description'] = 'KoamiStarterKit - A modern Laravel starter kit with Vue 3, Inertia.js, Tailwind CSS, Fortify authentication, and Wayfinder routing. Production-ready with Octane, comprehensive testing setup with Pest, and automated CI/CD workflows.';
+                $composer['homepage'] = "https://github.com/{$githubUsername}/{$packageName}";
+                $composer['authors'] = [
+                    [
+                        'name' => $authorName,
+                        'email' => $authorEmail,
+                    ],
+                ];
+
+                File::put($composerPath, json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
+
+                return true;
+            }
+        ) ? (info('✓ Updated composer.json') || true) : false;
     }
 
     /**
      * Create starter kit configuration file.
      */
-    protected function createStarterKitConfig(bool $dockerEnabled, string $registry, string $imageName, string $registryType, string $dockerHubAuthor, bool $packagistEnabled): void
+    protected function createStarterKitConfig(bool $dockerEnabled, string $registry, string $imageName, string $registryType, string $dockerHubAuthor, bool $packagistEnabled, string $dockerUpdateStrategy): void
     {
-        $config = [
-            'docker_enabled' => $dockerEnabled,
-            'packagist_enabled' => $packagistEnabled,
-            'docker_registry' => $registry,
-            'docker_registry_type' => $registryType,
-            'docker_image_name' => $imageName,
-            'configured_at' => now()->toIso8601String(),
-        ];
+        spin(
+            message: 'Creating .starter-kit.json...',
+            callback: function () use ($dockerEnabled, $registry, $imageName, $registryType, $dockerHubAuthor, $packagistEnabled, $dockerUpdateStrategy): bool {
+                $config = [
+                    'docker_enabled' => $dockerEnabled,
+                    'docker_update_strategy' => $dockerEnabled ? $dockerUpdateStrategy : null,
+                    'packagist_enabled' => $packagistEnabled,
+                    'docker_registry' => $registry,
+                    'docker_registry_type' => $registryType,
+                    'docker_image_name' => $imageName,
+                    'configured_at' => now()->toIso8601String(),
+                ];
 
-        if ($registryType === 'dockerhub' && $dockerHubAuthor !== '') {
-            $config['docker_hub_author'] = $dockerHubAuthor;
-        }
+                if ($registryType === 'dockerhub' && $dockerHubAuthor !== '') {
+                    $config['docker_hub_author'] = $dockerHubAuthor;
+                }
 
-        File::put(base_path('.starter-kit.json'), json_encode($config, JSON_PRETTY_PRINT)."\n");
+                File::put(base_path('.starter-kit.json'), json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
+
+                return true;
+            }
+        );
 
         info('✓ Created .starter-kit.json configuration');
     }
@@ -366,7 +525,7 @@ class SetupStarterKit extends Command
     /**
      * Update all GitHub workflow files with Docker settings.
      */
-    protected function updateAllWorkflowFiles(bool $dockerEnabled, string $registry, string $imageName, string $registryType, bool $packagistEnabled): void
+    protected function updateAllWorkflowFiles(bool $dockerEnabled, string $registry, string $imageName, string $registryType, bool $packagistEnabled, string $dockerUpdateStrategy): void
     {
         $workflowDir = base_path('.github/workflows');
         $workflowFiles = ['auto-release.yml', 'docker-latest.yml', 'manual-official-release.yml'];
@@ -399,7 +558,10 @@ class SetupStarterKit extends Command
             }
 
             // Update DOCKER_ENABLED environment variable
-            $content = $this->updateDockerEnabledVar($content, $dockerEnabled);
+            $content = $this->updateDockerEnabledVar($content, $dockerEnabled, $dockerUpdateStrategy, $workflowFile);
+
+            // Update DOCKER_UPDATE_STRATEGY environment variable
+            $content = $this->updateDockerUpdateStrategyVar($content, $dockerEnabled ? $dockerUpdateStrategy : null);
 
             // Update PACKAGIST_ENABLED environment variable
             $content = $this->updatePackagistEnabledVar($content, $packagistEnabled);
@@ -413,9 +575,16 @@ class SetupStarterKit extends Command
     /**
      * Update or add DOCKER_ENABLED environment variable.
      */
-    protected function updateDockerEnabledVar(string $content, bool $enabled): string
+    protected function updateDockerEnabledVar(string $content, bool $enabled, string $dockerUpdateStrategy, string $workflowFile): string
     {
-        $enabledStr = $enabled ? 'true' : 'false';
+        // For auto-release.yml with manual strategy, disable Docker in this workflow
+        $effectiveEnabled = $enabled;
+
+        if ($workflowFile === 'auto-release.yml' && $dockerUpdateStrategy === 'manual') {
+            $effectiveEnabled = false;
+        }
+
+        $enabledStr = $effectiveEnabled ? 'true' : 'false';
 
         // Check if DOCKER_ENABLED already exists
         if (preg_match('/DOCKER_ENABLED: (true|false)/', $content)) {
@@ -435,6 +604,39 @@ class SetupStarterKit extends Command
             $content,
             1
         );
+    }
+
+    /**
+     * Update or add DOCKER_UPDATE_STRATEGY environment variable.
+     */
+    protected function updateDockerUpdateStrategyVar(string $content, ?string $strategy): string
+    {
+        if ($strategy === null) {
+            // Remove DOCKER_UPDATE_STRATEGY if Docker is not enabled
+            if (preg_match('/DOCKER_UPDATE_STRATEGY: .+/', $content)) {
+                $content = preg_replace('/  DOCKER_UPDATE_STRATEGY: [^\n]*\n/', '', $content);
+            }
+
+            return $content;
+        }
+
+        // Check if DOCKER_UPDATE_STRATEGY already exists
+        if (preg_match('/DOCKER_UPDATE_STRATEGY: (rolling|manual)/', $content)) {
+            return preg_replace(
+                '/DOCKER_UPDATE_STRATEGY: (rolling|manual)/',
+                "DOCKER_UPDATE_STRATEGY: {$strategy}",
+                $content
+            );
+        }
+
+        // If not, inject it right after DOCKER_ENABLED
+        if (preg_match('/DOCKER_ENABLED: (true|false).*\n/', $content, $matches)) {
+            $replacement = $matches[0]."  DOCKER_UPDATE_STRATEGY: {$strategy}  # rolling=auto-build on push, manual=release on explicit trigger\n";
+
+            return str_replace($matches[0], $replacement, $content);
+        }
+
+        return $content;
     }
 
     /**
@@ -493,6 +695,7 @@ class SetupStarterKit extends Command
                 (string) $content
             );
         }
+
         // Ensure Docker Hub credentials are set
         $content = preg_replace(
             '/username: \$\{\{ github\.actor \}\}/',
@@ -513,52 +716,51 @@ class SetupStarterKit extends Command
     protected function displayRequiredSecrets(bool $useDocker, string $registryType = 'dockerhub'): void
     {
         $this->newLine();
-        info('🔐 Required GitHub Secrets:');
+        info('🔐 GitHub Secrets to Configure');
+
+        note(
+            'GitHub Secrets are stored in your repository and used by GitHub Actions to authenticate with external services.'."\n".
+            'Go to: Settings → Secrets and variables → Actions → New repository secret'
+        );
 
         $secrets = [];
 
         if ($useDocker) {
             if ($registryType === 'dockerhub') {
-                $secrets[] = ['DOCKER_USERNAME', 'Your Docker Hub username', 'Required for Docker image publishing'];
-                $secrets[] = ['DOCKER_PASSWORD', 'Your Docker Hub access token', 'Create at: https://hub.docker.com/settings/security'];
+                $secrets[] = ['DOCKER_USERNAME', 'Your Docker Hub username', 'Required for pushing Docker images'];
+                $secrets[] = ['DOCKER_PASSWORD', 'Docker Hub access token (not password)', 'Create at: https://hub.docker.com/settings/security'];
             } else {
-                info('ℹ️  GitHub Container Registry uses GITHUB_TOKEN automatically - no additional secrets needed for Docker!');
+                info('ℹ GitHub Container Registry uses the built-in GITHUB_TOKEN — no additional secrets needed for Docker authentication.');
                 $this->newLine();
             }
         }
 
-        $secrets[] = ['DISCORD_WEBHOOK_URL', 'Discord webhook for notifications', 'Optional - for Discord release notifications'];
-        $secrets[] = ['PACKAGIST_USERNAME', 'Packagist username', 'Optional - for automated Packagist updates'];
-        $secrets[] = ['PACKAGIST_TOKEN', 'Packagist API token', 'Optional - for automated Packagist updates'];
+        $secrets[] = ['DISCORD_WEBHOOK_URL', 'Discord webhook for release notifications', 'Optional — for automated Discord announcements'];
+        $secrets[] = ['PACKAGIST_USERNAME', 'Packagist.org username', 'Optional — for automated Packagist package updates'];
+        $secrets[] = ['PACKAGIST_TOKEN', 'Packagist API token', 'Optional — for automated Packagist package updates'];
 
-        $this->table(
-            ['Secret Name', 'Description', 'Notes'],
-            $secrets
+        table(
+            headers: ['Secret Name', 'Description', 'Notes'],
+            rows: $secrets,
         );
-
-        info('To add GitHub Secrets:');
-        info('  1. Go to your repository on GitHub');
-        info('  2. Navigate to: Settings → Secrets and variables → Actions');
-        info('  3. Click "New repository secret"');
-        info('  4. Add each secret listed above');
 
         $this->newLine();
-        info('📝 Recommended Environment Variables (.env):');
+        info('📝 Recommended .env Variables');
 
-        $envVars = [
-            ['APP_NAME', 'Your application name'],
-            ['APP_URL', 'Your application URL'],
-            ['DB_CONNECTION', 'Database connection (sqlite, mysql, pgsql)'],
-            ['MAIL_MAILER', 'Mail service (log, smtp, mailgun, etc.)'],
-            ['CACHE_STORE', 'Cache driver (file, redis, database)'],
-            ['QUEUE_CONNECTION', 'Queue driver (sync, database, redis)'],
-        ];
-
-        $this->table(
-            ['Variable', 'Description'],
-            $envVars
+        note(
+            'Review and update your .env file with the variables below. These control how your application behaves in production.'
         );
 
-        info('Review and update your .env file based on your requirements.');
+        table(
+            headers: ['Variable', 'Purpose'],
+            rows: [
+                ['APP_NAME', 'The display name of your application'],
+                ['APP_URL', 'The full URL where your application is served'],
+                ['DB_CONNECTION', 'Database driver (sqlite, mysql, pgsql)'],
+                ['MAIL_MAILER', 'Mail transport (log, smtp, mailgun, resend, etc.)'],
+                ['CACHE_STORE', 'Cache backend (file, redis, database)'],
+                ['QUEUE_CONNECTION', 'Queue driver (sync, database, redis)'],
+            ],
+        );
     }
 }
