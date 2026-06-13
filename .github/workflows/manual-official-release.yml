@@ -360,22 +360,6 @@ jobs:
               return `- ${item.title} (#${item.number}) (${login})`;
             };
 
-            const categoryOrder = Object.keys(categories);
-            let anyItems = false;
-            for (const key of categoryOrder) {
-              const prGroup = categories[key];
-              if (!prGroup.length) {
-                continue;
-              }
-
-              anyItems = true;
-              lines.push(`### ${key}`);
-              for (const pr of prGroup) {
-                lines.push(prLine(pr));
-              }
-              lines.push('');
-            }
-
             // Categorize non-PR commits by conventional commit prefix
             if (nonPrCommits.length) {
               const commitToCategory = [
@@ -398,10 +382,16 @@ jobs:
 
               for (const c of nonPrCommits) {
                 const subject = c.subject;
-                const match = subject.match(/^(\w+)(?:\([^)]*\))?:\s*/);
+                const match = subject.match(/^(\w+)(?:\([^)]*\))?(!?):\s*/);
                 const prefix = match ? match[1].toLowerCase() : '';
-                const entry = commitToCategory.find(([p]) => p === prefix);
-                const categoryKey = entry ? entry[1] : '📦 Other';
+                const hasBang = match ? match[2] === '!' : false;
+                let categoryKey = '📦 Other';
+                if (hasBang) {
+                  categoryKey = '💥 Breaking Changes';
+                } else {
+                  const entry = commitToCategory.find(([p]) => p === prefix);
+                  if (entry) categoryKey = entry[1];
+                }
 
                 categories[categoryKey].push({
                   _isCommit: true,
@@ -409,6 +399,22 @@ jobs:
                   sha: c.sha,
                 });
               }
+            }
+
+            const categoryOrder = Object.keys(categories);
+            let anyItems = false;
+            for (const key of categoryOrder) {
+              const prGroup = categories[key];
+              if (!prGroup.length) {
+                continue;
+              }
+
+              anyItems = true;
+              lines.push(`### ${key}`);
+              for (const pr of prGroup) {
+                lines.push(prLine(pr));
+              }
+              lines.push('');
             }
 
             if (!anyItems) {
