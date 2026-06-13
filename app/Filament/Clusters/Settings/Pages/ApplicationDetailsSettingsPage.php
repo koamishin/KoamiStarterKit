@@ -257,7 +257,7 @@ class ApplicationDetailsSettingsPage extends Page
 
         ksort($grouped);
 
-        foreach ($grouped as $region => $zones) {
+        foreach (array_keys($grouped) as $region) {
             asort($grouped[$region]);
         }
 
@@ -316,7 +316,7 @@ class ApplicationDetailsSettingsPage extends Page
 
     protected function formatDatePreview(?string $format): ?string
     {
-        if (empty($format)) {
+        if (in_array($format, [null, '', '0'], true)) {
             return null;
         }
 
@@ -329,7 +329,7 @@ class ApplicationDetailsSettingsPage extends Page
 
     protected function formatTimePreview(?string $format): ?string
     {
-        if (empty($format)) {
+        if (in_array($format, [null, '', '0'], true)) {
             return null;
         }
 

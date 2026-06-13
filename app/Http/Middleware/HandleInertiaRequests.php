@@ -41,11 +41,11 @@ class HandleInertiaRequests extends Middleware
         $socialLoginSettings = app(SocialLoginSettings::class);
 
         $socialProviders = collect(SocialLoginProvider::cases())
-            ->filter(fn (SocialLoginProvider $provider): bool => $socialLoginSettings->isProviderEnabled($provider))
-            ->map(fn (SocialLoginProvider $provider): array => [
-                'slug' => $provider->value,
-                'label' => $provider->label(),
-                'url' => route('auth.social.redirect', ['provider' => $provider->value]),
+            ->filter(fn (SocialLoginProvider $socialLoginProvider): bool => $socialLoginSettings->isProviderEnabled($socialLoginProvider))
+            ->map(fn (SocialLoginProvider $socialLoginProvider): array => [
+                'slug' => $socialLoginProvider->value,
+                'label' => $socialLoginProvider->label(),
+                'url' => route('auth.social.redirect', ['provider' => $socialLoginProvider->value]),
             ])
             ->values()
             ->all();

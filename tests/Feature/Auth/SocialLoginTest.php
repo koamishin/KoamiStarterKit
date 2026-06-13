@@ -17,19 +17,19 @@ beforeEach(function (): void {
 
     config()->set('services.github.client_id', 'test-id');
     config()->set('services.github.client_secret', 'test-secret');
-    config()->set('services.google.client_id', null);
-    config()->set('services.google.client_secret', null);
-    config()->set('services.facebook.client_id', null);
-    config()->set('services.facebook.client_secret', null);
+    config()->set('services.google.client_id');
+    config()->set('services.google.client_secret');
+    config()->set('services.facebook.client_id');
+    config()->set('services.facebook.client_secret');
 });
 
 function enableGithub(): void
 {
-    $settings = app(SocialLoginSettings::class);
-    $settings->github_enabled = true;
-    $settings->github_client_id = 'test-id';
-    $settings->github_client_secret = 'test-secret';
-    $settings->save();
+    $socialLoginSettings = app(SocialLoginSettings::class);
+    $socialLoginSettings->github_enabled = true;
+    $socialLoginSettings->github_client_id = 'test-id';
+    $socialLoginSettings->github_client_secret = 'test-secret';
+    $socialLoginSettings->save();
     app()->forgetInstance(SocialLoginSettings::class);
 }
 
@@ -137,9 +137,9 @@ test('callback refuses to link to existing unverified user', function (): void {
 });
 
 test('redirect to a disabled provider returns an error', function (): void {
-    $settings = app(SocialLoginSettings::class);
-    $settings->github_enabled = false;
-    $settings->save();
+    $socialLoginSettings = app(SocialLoginSettings::class);
+    $socialLoginSettings->github_enabled = false;
+    $socialLoginSettings->save();
     app()->forgetInstance(SocialLoginSettings::class);
 
     $response = $this->get(route('auth.social.redirect', ['provider' => 'github']));
@@ -149,9 +149,9 @@ test('redirect to a disabled provider returns an error', function (): void {
 });
 
 test('callback for a disabled provider returns an error', function (): void {
-    $settings = app(SocialLoginSettings::class);
-    $settings->github_enabled = false;
-    $settings->save();
+    $socialLoginSettings = app(SocialLoginSettings::class);
+    $socialLoginSettings->github_enabled = false;
+    $socialLoginSettings->save();
     app()->forgetInstance(SocialLoginSettings::class);
 
     $response = $this->get(route('auth.social.callback', ['provider' => 'github']));
@@ -173,11 +173,11 @@ test('redirect for an unknown provider returns 404', function (): void {
 test('handleInertiaRequests only exposes enabled providers', function (): void {
     enableGithub();
 
-    $settings = app(SocialLoginSettings::class);
-    $settings->google_enabled = true;
-    $settings->google_client_id = 'g-id';
-    $settings->google_client_secret = 'g-secret';
-    $settings->save();
+    $socialLoginSettings = app(SocialLoginSettings::class);
+    $socialLoginSettings->google_enabled = true;
+    $socialLoginSettings->google_client_id = 'g-id';
+    $socialLoginSettings->google_client_secret = 'g-secret';
+    $socialLoginSettings->save();
     app()->forgetInstance(SocialLoginSettings::class);
 
     $response = $this->get(route('login'));

@@ -31,7 +31,7 @@ class SocialAuthController extends Controller
     {
         $providerEnum = SocialLoginProvider::tryFromSlug($provider);
 
-        if ($providerEnum === null) {
+        if (!$providerEnum instanceof \App\Enums\SocialLoginProvider) {
             abort(404);
         }
 
@@ -63,7 +63,7 @@ class SocialAuthController extends Controller
     {
         $providerEnum = SocialLoginProvider::tryFromSlug($provider);
 
-        if ($providerEnum === null) {
+        if (!$providerEnum instanceof \App\Enums\SocialLoginProvider) {
             abort(404);
         }
 
@@ -136,9 +136,9 @@ class SocialAuthController extends Controller
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
-    private function buildDriver(SocialLoginProvider $provider): ProviderContract
+    private function buildDriver(SocialLoginProvider $socialLoginProvider): ProviderContract
     {
-        return Socialite::driver($provider->value);
+        return Socialite::driver($socialLoginProvider->value);
     }
 
     private function createUserFromSocial(\Laravel\Socialite\Contracts\User $socialUser): User
@@ -161,12 +161,12 @@ class SocialAuthController extends Controller
         return $user;
     }
 
-    private function upsertSocialAccount(User $user, SocialLoginProvider $provider, \Laravel\Socialite\Contracts\User $socialUser): SocialAccount
+    private function upsertSocialAccount(User $user, SocialLoginProvider $socialLoginProvider, \Laravel\Socialite\Contracts\User $socialUser): SocialAccount
     {
         return SocialAccount::query()->updateOrCreate(
             [
                 'user_id' => $user->id,
-                'provider' => $provider->value,
+                'provider' => $socialLoginProvider->value,
             ],
             [
                 'provider_id' => $socialUser->getId(),

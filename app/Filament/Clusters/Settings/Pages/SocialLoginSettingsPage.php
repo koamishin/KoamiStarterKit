@@ -45,30 +45,30 @@ class SocialLoginSettingsPage extends Page
 
     public function mount(): void
     {
-        $settings = app(SocialLoginSettings::class);
+        $socialLoginSettings = app(SocialLoginSettings::class);
 
         $this->providerStatuses = collect(SocialLoginProvider::cases())
-            ->map(fn (SocialLoginProvider $provider): array => [
-                'slug' => $provider->value,
-                'label' => $provider->label(),
-                'using_env' => $settings->isUsingEnv($provider),
-                'enabled' => $settings->isProviderEnabled($provider),
+            ->map(fn (SocialLoginProvider $socialLoginProvider): array => [
+                'slug' => $socialLoginProvider->value,
+                'label' => $socialLoginProvider->label(),
+                'using_env' => $socialLoginSettings->isUsingEnv($socialLoginProvider),
+                'enabled' => $socialLoginSettings->isProviderEnabled($socialLoginProvider),
             ])
             ->all();
 
         $this->form->fill([
-            'github_client_id' => $settings->github_client_id,
-            'github_client_secret' => $settings->github_client_secret,
-            'github_redirect_uri' => $settings->github_redirect_uri,
-            'github_enabled' => $settings->github_enabled,
-            'google_client_id' => $settings->google_client_id,
-            'google_client_secret' => $settings->google_client_secret,
-            'google_redirect_uri' => $settings->google_redirect_uri,
-            'google_enabled' => $settings->google_enabled,
-            'facebook_client_id' => $settings->facebook_client_id,
-            'facebook_client_secret' => $settings->facebook_client_secret,
-            'facebook_redirect_uri' => $settings->facebook_redirect_uri,
-            'facebook_enabled' => $settings->facebook_enabled,
+            'github_client_id' => $socialLoginSettings->github_client_id,
+            'github_client_secret' => $socialLoginSettings->github_client_secret,
+            'github_redirect_uri' => $socialLoginSettings->github_redirect_uri,
+            'github_enabled' => $socialLoginSettings->github_enabled,
+            'google_client_id' => $socialLoginSettings->google_client_id,
+            'google_client_secret' => $socialLoginSettings->google_client_secret,
+            'google_redirect_uri' => $socialLoginSettings->google_redirect_uri,
+            'google_enabled' => $socialLoginSettings->google_enabled,
+            'facebook_client_id' => $socialLoginSettings->facebook_client_id,
+            'facebook_client_secret' => $socialLoginSettings->facebook_client_secret,
+            'facebook_redirect_uri' => $socialLoginSettings->facebook_redirect_uri,
+            'facebook_enabled' => $socialLoginSettings->facebook_enabled,
         ]);
     }
 
@@ -105,24 +105,24 @@ class SocialLoginSettingsPage extends Page
     {
         $data = $this->form->getState();
 
-        $settings = app(SocialLoginSettings::class);
+        $socialLoginSettings = app(SocialLoginSettings::class);
 
-        $settings->github_client_id = $data['github_client_id'] ?? null ?: null;
-        $settings->github_client_secret = $data['github_client_secret'] ?? null ?: null;
-        $settings->github_redirect_uri = $data['github_redirect_uri'] ?? null ?: null;
-        $settings->github_enabled = (bool) ($data['github_enabled'] ?? false);
+        $socialLoginSettings->github_client_id = $data['github_client_id'] ?? null ?: null;
+        $socialLoginSettings->github_client_secret = $data['github_client_secret'] ?? null ?: null;
+        $socialLoginSettings->github_redirect_uri = $data['github_redirect_uri'] ?? null ?: null;
+        $socialLoginSettings->github_enabled = (bool) ($data['github_enabled'] ?? false);
 
-        $settings->google_client_id = $data['google_client_id'] ?? null ?: null;
-        $settings->google_client_secret = $data['google_client_secret'] ?? null ?: null;
-        $settings->google_redirect_uri = $data['google_redirect_uri'] ?? null ?: null;
-        $settings->google_enabled = (bool) ($data['google_enabled'] ?? false);
+        $socialLoginSettings->google_client_id = $data['google_client_id'] ?? null ?: null;
+        $socialLoginSettings->google_client_secret = $data['google_client_secret'] ?? null ?: null;
+        $socialLoginSettings->google_redirect_uri = $data['google_redirect_uri'] ?? null ?: null;
+        $socialLoginSettings->google_enabled = (bool) ($data['google_enabled'] ?? false);
 
-        $settings->facebook_client_id = $data['facebook_client_id'] ?? null ?: null;
-        $settings->facebook_client_secret = $data['facebook_client_secret'] ?? null ?: null;
-        $settings->facebook_redirect_uri = $data['facebook_redirect_uri'] ?? null ?: null;
-        $settings->facebook_enabled = (bool) ($data['facebook_enabled'] ?? false);
+        $socialLoginSettings->facebook_client_id = $data['facebook_client_id'] ?? null ?: null;
+        $socialLoginSettings->facebook_client_secret = $data['facebook_client_secret'] ?? null ?: null;
+        $socialLoginSettings->facebook_redirect_uri = $data['facebook_redirect_uri'] ?? null ?: null;
+        $socialLoginSettings->facebook_enabled = (bool) ($data['facebook_enabled'] ?? false);
 
-        $settings->save();
+        $socialLoginSettings->save();
 
         $this->refreshProviderStatuses();
 
@@ -132,16 +132,16 @@ class SocialLoginSettingsPage extends Page
             ->send();
     }
 
-    private function providerCard(SocialLoginProvider $provider): Section
+    private function providerCard(SocialLoginProvider $socialLoginProvider): Section
     {
-        $slug = $provider->value;
+        $slug = $socialLoginProvider->value;
         $defaultRedirect = url("/auth/{$slug}/callback");
-        $isUsingEnv = $this->isProviderUsingEnv($provider);
+        $isUsingEnv = $this->isProviderUsingEnv($socialLoginProvider);
 
         return Section::make()
-            ->heading($provider->label())
-            ->description($provider->description())
-            ->icon($provider->heroicon())
+            ->heading($socialLoginProvider->label())
+            ->description($socialLoginProvider->description())
+            ->icon($socialLoginProvider->heroicon())
             ->compact()
             ->schema([
                 Toggle::make("{$slug}_enabled")
@@ -182,11 +182,11 @@ class SocialLoginSettingsPage extends Page
             ->columns(1);
     }
 
-    private function isProviderUsingEnv(SocialLoginProvider $provider): bool
+    private function isProviderUsingEnv(SocialLoginProvider $socialLoginProvider): bool
     {
-        foreach ($this->providerStatuses as $status) {
-            if ($status['slug'] === $provider->value) {
-                return (bool) $status['using_env'];
+        foreach ($this->providerStatuses as $providerStatus) {
+            if ($providerStatus['slug'] === $socialLoginProvider->value) {
+                return (bool) $providerStatus['using_env'];
             }
         }
 
@@ -195,14 +195,14 @@ class SocialLoginSettingsPage extends Page
 
     private function refreshProviderStatuses(): void
     {
-        $settings = app(SocialLoginSettings::class);
+        $socialLoginSettings = app(SocialLoginSettings::class);
 
         $this->providerStatuses = collect(SocialLoginProvider::cases())
-            ->map(fn (SocialLoginProvider $provider): array => [
-                'slug' => $provider->value,
-                'label' => $provider->label(),
-                'using_env' => $settings->isUsingEnv($provider),
-                'enabled' => $settings->isProviderEnabled($provider),
+            ->map(fn (SocialLoginProvider $socialLoginProvider): array => [
+                'slug' => $socialLoginProvider->value,
+                'label' => $socialLoginProvider->label(),
+                'using_env' => $socialLoginSettings->isUsingEnv($socialLoginProvider),
+                'enabled' => $socialLoginSettings->isProviderEnabled($socialLoginProvider),
             ])
             ->all();
     }

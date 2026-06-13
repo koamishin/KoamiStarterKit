@@ -11,19 +11,19 @@ beforeEach(function (): void {
 });
 
 test('provider is disabled by default', function (): void {
-    $settings = app(SocialLoginSettings::class);
+    $socialLoginSettings = app(SocialLoginSettings::class);
 
     foreach (SocialLoginProvider::cases() as $provider) {
-        expect($settings->isProviderEnabled($provider))->toBeFalse();
+        expect($socialLoginSettings->isProviderEnabled($provider))->toBeFalse();
     }
 });
 
 test('provider is enabled when spatie toggle and credentials are set', function (): void {
-    $settings = app(SocialLoginSettings::class);
-    $settings->github_enabled = true;
-    $settings->github_client_id = 'spatie-id';
-    $settings->github_client_secret = 'spatie-secret';
-    $settings->save();
+    $socialLoginSettings = app(SocialLoginSettings::class);
+    $socialLoginSettings->github_enabled = true;
+    $socialLoginSettings->github_client_id = 'spatie-id';
+    $socialLoginSettings->github_client_secret = 'spatie-secret';
+    $socialLoginSettings->save();
 
     app()->forgetInstance(SocialLoginSettings::class);
 
@@ -33,11 +33,11 @@ test('provider is enabled when spatie toggle and credentials are set', function 
 });
 
 test('provider is disabled when toggle is true but credentials are missing', function (): void {
-    $settings = app(SocialLoginSettings::class);
-    $settings->github_enabled = true;
-    $settings->github_client_id = null;
-    $settings->github_client_secret = null;
-    $settings->save();
+    $socialLoginSettings = app(SocialLoginSettings::class);
+    $socialLoginSettings->github_enabled = true;
+    $socialLoginSettings->github_client_id = null;
+    $socialLoginSettings->github_client_secret = null;
+    $socialLoginSettings->save();
 
     app()->forgetInstance(SocialLoginSettings::class);
 
@@ -50,11 +50,11 @@ test('env credentials win over spatie credentials', function (): void {
     config()->set('services.github.client_id', 'env-id');
     config()->set('services.github.client_secret', 'env-secret');
 
-    $settings = app(SocialLoginSettings::class);
-    $settings->github_enabled = true;
-    $settings->github_client_id = 'spatie-id';
-    $settings->github_client_secret = 'spatie-secret';
-    $settings->save();
+    $socialLoginSettings = app(SocialLoginSettings::class);
+    $socialLoginSettings->github_enabled = true;
+    $socialLoginSettings->github_client_id = 'spatie-id';
+    $socialLoginSettings->github_client_secret = 'spatie-secret';
+    $socialLoginSettings->save();
 
     app()->forgetInstance(SocialLoginSettings::class);
 
@@ -68,14 +68,14 @@ test('env credentials win over spatie credentials', function (): void {
 });
 
 test('spatie credentials are used when env is empty', function (): void {
-    config()->set('services.google.client_id', null);
-    config()->set('services.google.client_secret', null);
+    config()->set('services.google.client_id');
+    config()->set('services.google.client_secret');
 
-    $settings = app(SocialLoginSettings::class);
-    $settings->google_enabled = true;
-    $settings->google_client_id = 'spatie-google-id';
-    $settings->google_client_secret = 'spatie-google-secret';
-    $settings->save();
+    $socialLoginSettings = app(SocialLoginSettings::class);
+    $socialLoginSettings->google_enabled = true;
+    $socialLoginSettings->google_client_id = 'spatie-google-id';
+    $socialLoginSettings->google_client_secret = 'spatie-google-secret';
+    $socialLoginSettings->save();
 
     app()->forgetInstance(SocialLoginSettings::class);
 
@@ -89,20 +89,20 @@ test('spatie credentials are used when env is empty', function (): void {
 });
 
 test('resolve credentials returns null when nothing is configured', function (): void {
-    config()->set('services.facebook.client_id', null);
-    config()->set('services.facebook.client_secret', null);
+    config()->set('services.facebook.client_id');
+    config()->set('services.facebook.client_secret');
 
-    $settings = app(SocialLoginSettings::class);
+    $socialLoginSettings = app(SocialLoginSettings::class);
 
-    expect($settings->resolveCredentials(SocialLoginProvider::Facebook))->toBeNull();
+    expect($socialLoginSettings->resolveCredentials(SocialLoginProvider::Facebook))->toBeNull();
 });
 
 test('isUsingEnv reports env presence', function (): void {
     config()->set('services.github.client_id', 'env-id');
     config()->set('services.github.client_secret', 'env-secret');
 
-    $settings = app(SocialLoginSettings::class);
+    $socialLoginSettings = app(SocialLoginSettings::class);
 
-    expect($settings->isUsingEnv(SocialLoginProvider::Github))->toBeTrue();
-    expect($settings->isUsingEnv(SocialLoginProvider::Google))->toBeFalse();
+    expect($socialLoginSettings->isUsingEnv(SocialLoginProvider::Github))->toBeTrue();
+    expect($socialLoginSettings->isUsingEnv(SocialLoginProvider::Google))->toBeFalse();
 });

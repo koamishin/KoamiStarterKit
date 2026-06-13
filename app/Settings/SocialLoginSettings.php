@@ -59,9 +59,9 @@ class SocialLoginSettings extends Settings
         ];
     }
 
-    public function isProviderEnabled(SocialLoginProvider $provider): bool
+    public function isProviderEnabled(SocialLoginProvider $socialLoginProvider): bool
     {
-        $enabled = match ($provider) {
+        $enabled = match ($socialLoginProvider) {
             SocialLoginProvider::Github => $this->github_enabled,
             SocialLoginProvider::Google => $this->google_enabled,
             SocialLoginProvider::Facebook => $this->facebook_enabled,
@@ -71,7 +71,7 @@ class SocialLoginSettings extends Settings
             return false;
         }
 
-        return $this->resolveCredentials($provider) !== null;
+        return $this->resolveCredentials($socialLoginProvider) !== null;
     }
 
     /**
@@ -79,11 +79,11 @@ class SocialLoginSettings extends Settings
      *
      * @return array{client_id: string, client_secret: string, redirect: string}|null
      */
-    public function resolveCredentials(SocialLoginProvider $provider): ?array
+    public function resolveCredentials(SocialLoginProvider $socialLoginProvider): ?array
     {
-        $envClientId = config("services.{$provider->value}.client_id");
-        $envClientSecret = config("services.{$provider->value}.client_secret");
-        $envRedirect = config("services.{$provider->value}.redirect");
+        $envClientId = config("services.{$socialLoginProvider->value}.client_id");
+        $envClientSecret = config("services.{$socialLoginProvider->value}.client_secret");
+        $envRedirect = config("services.{$socialLoginProvider->value}.redirect");
 
         if (filled($envClientId) && filled($envClientSecret)) {
             return [
@@ -91,23 +91,23 @@ class SocialLoginSettings extends Settings
                 'client_secret' => (string) $envClientSecret,
                 'redirect' => filled($envRedirect)
                     ? (string) $envRedirect
-                    : url($provider->defaultRedirectPath()),
+                    : url($socialLoginProvider->defaultRedirectPath()),
             ];
         }
 
-        $clientId = match ($provider) {
+        $clientId = match ($socialLoginProvider) {
             SocialLoginProvider::Github => $this->github_client_id,
             SocialLoginProvider::Google => $this->google_client_id,
             SocialLoginProvider::Facebook => $this->facebook_client_id,
         };
 
-        $clientSecret = match ($provider) {
+        $clientSecret = match ($socialLoginProvider) {
             SocialLoginProvider::Github => $this->github_client_secret,
             SocialLoginProvider::Google => $this->google_client_secret,
             SocialLoginProvider::Facebook => $this->facebook_client_secret,
         };
 
-        $redirect = match ($provider) {
+        $redirect = match ($socialLoginProvider) {
             SocialLoginProvider::Github => $this->github_redirect_uri,
             SocialLoginProvider::Google => $this->google_redirect_uri,
             SocialLoginProvider::Facebook => $this->facebook_redirect_uri,
@@ -118,16 +118,16 @@ class SocialLoginSettings extends Settings
         }
 
         return [
-            'client_id' => (string) $clientId,
-            'client_secret' => (string) $clientSecret,
-            'redirect' => filled($redirect) ? (string) $redirect : url($provider->defaultRedirectPath()),
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+            'redirect' => filled($redirect) ? $redirect : url($socialLoginProvider->defaultRedirectPath()),
         ];
     }
 
-    public function isUsingEnv(SocialLoginProvider $provider): bool
+    public function isUsingEnv(SocialLoginProvider $socialLoginProvider): bool
     {
-        $clientId = config("services.{$provider->value}.client_id");
-        $clientSecret = config("services.{$provider->value}.client_secret");
+        $clientId = config("services.{$socialLoginProvider->value}.client_id");
+        $clientSecret = config("services.{$socialLoginProvider->value}.client_secret");
 
         return filled($clientId) && filled($clientSecret);
     }

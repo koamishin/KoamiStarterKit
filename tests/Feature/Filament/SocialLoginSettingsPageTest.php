@@ -62,20 +62,20 @@ test('social login settings can be saved', function (): void {
         ->call('save')
         ->assertHasNoFormErrors();
 
-    $settings = app(SocialLoginSettings::class);
-    $settings->refresh();
+    $socialLoginSettings = app(SocialLoginSettings::class);
+    $socialLoginSettings->refresh();
 
-    expect($settings->github_enabled)->toBeTrue();
-    expect($settings->github_client_id)->toBe('gh-id');
-    expect($settings->github_client_secret)->toBe('gh-secret');
-    expect($settings->google_enabled)->toBeFalse();
+    expect($socialLoginSettings->github_enabled)->toBeTrue();
+    expect($socialLoginSettings->github_client_id)->toBe('gh-id');
+    expect($socialLoginSettings->github_client_secret)->toBe('gh-secret');
+    expect($socialLoginSettings->google_enabled)->toBeFalse();
 });
 
 test('env override state is exposed on the page', function (): void {
     config()->set('services.github.client_id', 'env-id');
     config()->set('services.github.client_secret', 'env-secret');
-    config()->set('services.google.client_id', null);
-    config()->set('services.google.client_secret', null);
+    config()->set('services.google.client_id');
+    config()->set('services.google.client_secret');
 
     $user = User::factory()->create();
     $user->assignRole('super_admin');
