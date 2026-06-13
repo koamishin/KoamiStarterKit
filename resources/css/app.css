@@ -4,6 +4,10 @@
 
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=ui-serif&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=ui-monospace&display=swap');
+
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
@@ -14,6 +18,7 @@
 
 @import './themes/rose.css';
 @import './themes/sage-garden.css';
+@import './themes/claude.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
