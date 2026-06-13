@@ -39,6 +39,7 @@ return [
 
         'page_paths' => [
             resource_path('js/pages'),
+            ...glob(base_path('Modules/*/resources/js/pages')),
         ],
 
         'page_extensions' => [

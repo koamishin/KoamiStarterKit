@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\SocialLoginProvider;
 use App\Features\FeatureRegistry;
 use App\Settings\ApplicationFeaturesSettings;
+use App\Settings\SocialLoginSettings;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,6 +38,18 @@ class HandleInertiaRequests extends Middleware
             ];
         }
 
+        $socialLoginSettings = app(SocialLoginSettings::class);
+
+        $socialProviders = collect(SocialLoginProvider::cases())
+            ->filter(fn (SocialLoginProvider $provider): bool => $socialLoginSettings->isProviderEnabled($provider))
+            ->map(fn (SocialLoginProvider $provider): array => [
+                'slug' => $provider->value,
+                'label' => $provider->label(),
+                'url' => route('auth.social.redirect', ['provider' => $provider->value]),
+            ])
+            ->values()
+            ->all();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -46,6 +60,7 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'authLayout' => app(ApplicationFeaturesSettings::class)->auth_layout,
             'settingsFeatures' => $settingsFeatures,
+            'socialProviders' => $socialProviders,
         ];
     }
 }

@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Features\FeatureRegistry;
 use Carbon\CarbonImmutable;
+use Filament\Panel;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Pennant\FeatureManager;
+use Nwidart\Modules\Facades\Module;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->registerFilamentPlugins();
     }
 
     /**
@@ -57,5 +59,22 @@ class AppServiceProvider extends ServiceProvider
         foreach (FeatureRegistry::all() as $feature) {
             $featureManager->define($feature->key, fn () => $feature->default);
         }
+    }
+
+    protected function registerFilamentPlugins(): void
+    {
+        Panel::configureUsing(function (Panel $panel): void {
+            if ($panel->getId() !== 'admin') {
+                return;
+            }
+
+            foreach (Module::allEnabled() as $module) {
+                $plugin = sprintf('Modules\\%s\\%sPlugin', $module->getStudlyName(), $module->getStudlyName());
+
+                if (class_exists($plugin) && method_exists($plugin, 'make')) {
+                    $panel->plugin($plugin::make());
+                }
+            }
+        });
     }
 }

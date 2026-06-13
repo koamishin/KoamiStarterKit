@@ -7,17 +7,28 @@ import { renderToString } from 'vue/server-renderer';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+const appPages = import.meta.glob<DefineComponent>('./pages/**/*.vue');
+const modulePages = import.meta.glob<DefineComponent>(
+    '../../Modules/*/resources/js/pages/**/*.vue',
+);
+const pages = { ...appPages, ...modulePages };
+
+const resolvePage = (name: string) => {
+    const appPath = `./pages/${name}.vue`;
+    const modulePath = Object.keys(modulePages).find((path) =>
+        path.endsWith(`/resources/js/pages/${name}.vue`),
+    );
+
+    return resolvePageComponent(modulePath ?? appPath, pages);
+};
+
 createServer(
     (page) =>
         createInertiaApp({
             page,
             render: renderToString,
             title: (title) => (title ? `${title} - ${appName}` : appName),
-            resolve: (name) =>
-                resolvePageComponent(
-                    `./pages/${name}.vue`,
-                    import.meta.glob<DefineComponent>('./pages/**/*.vue'),
-                ),
+            resolve: resolvePage,
             setup: ({ App, props, plugin }) =>
                 createSSRApp({ render: () => h(App, props) }).use(plugin),
         }),

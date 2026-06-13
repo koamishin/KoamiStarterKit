@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\SocialLoginProvider;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\ImpersonateController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
@@ -24,5 +26,15 @@ Route::middleware('web')->group(function (): void {
     Route::get('impersonate/take-redirect', [ImpersonateController::class, 'takeRedirect'])->name('impersonate.take-redirect');
     Route::get('impersonate/leave-redirect', [ImpersonateController::class, 'leaveRedirect'])->name('impersonate.leave-redirect');
 });
+
+$socialProviders = implode('|', SocialLoginProvider::values());
+
+Route::get('auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
+    ->where('provider', $socialProviders)
+    ->name('auth.social.redirect');
+
+Route::get('auth/{provider}/callback', [SocialAuthController::class, 'callback'])
+    ->where('provider', $socialProviders)
+    ->name('auth.social.callback');
 
 require __DIR__.'/settings.php';

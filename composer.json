@@ -40,8 +40,11 @@
     "laravel/framework": "^13.0",
     "laravel/octane": "^2.13",
     "laravel/pennant": "^1.20",
+    "laravel/socialite": "^5.27",
     "laravel/tinker": "^3.0",
     "laravel/wayfinder": "^0.1.9",
+    "nwidart/laravel-modules": "^13.0",
+    "robertboes/blade-selfhst-icons": "^0.3.2",
     "robertboes/filament-passkeys": "^0.1.0",
     "spatie/laravel-activitylog": "^4.10",
     "spatie/laravel-permission": "^6.24",
@@ -67,19 +70,27 @@
       "App\\": "app/",
       "Database\\Factories\\": "database/factories/",
       "Database\\Seeders\\": "database/seeders/"
-    }
+    },
+    "classmap": [
+      "Modules/"
+    ]
   },
   "autoload-dev": {
     "psr-4": {
       "Tests\\": "tests/"
-    }
+    },
+    "classmap": [
+      "Modules/"
+    ]
   },
   "scripts": {
     "setup": [
       "composer install",
       "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
       "@php artisan key:generate",
+      "@php artisan module:enable Blog --no-interaction",
       "@php artisan migrate --force",
+      "@php artisan module:migrate --force --no-interaction",
       "npm install",
       "npm run build",
       "@php artisan shield:generate --panel=1 --all --no-interaction"
@@ -136,7 +147,9 @@
     "post-create-project-cmd": [
       "@php artisan key:generate --ansi",
       "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+      "@php artisan module:enable Blog --ansi --no-interaction",
       "@php artisan migrate --graceful --ansi",
+      "@php artisan module:migrate --force --ansi --no-interaction",
       "@php artisan storage:link --ansi",
       "@php artisan setup:starter-kit --ansi",
       "npm install --silent",
@@ -157,7 +170,8 @@
     "sort-packages": true,
     "allow-plugins": {
       "pestphp/pest-plugin": true,
-      "php-http/discovery": true
+      "php-http/discovery": true,
+      "wikimedia/composer-merge-plugin": true
     }
   },
   "minimum-stability": "stable",

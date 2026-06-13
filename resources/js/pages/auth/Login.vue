@@ -2,6 +2,7 @@
 import { Form, Head, usePage } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import SignInWithPasskeyButton from '@/components/SignInWithPasskeyButton.vue';
+import SocialLoginButtons from '@/components/SocialLoginButtons.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -37,6 +38,13 @@ const passkeysEnabled = (page.props.settingsFeatures?.passkeys ??
             class="mb-4 text-center text-sm font-medium text-green-600"
         >
             {{ status }}
+        </div>
+
+        <div
+            v-if="$page.props.errors?.social"
+            class="mb-4 text-center text-sm font-medium text-destructive"
+        >
+            {{ $page.props.errors.social }}
         </div>
 
         <Form
@@ -114,5 +122,7 @@ const passkeysEnabled = (page.props.settingsFeatures?.passkeys ??
         </Form>
 
         <SignInWithPasskeyButton v-if="passkeysEnabled" />
+
+        <SocialLoginButtons />
     </AuthBase>
 </template>
