@@ -16,6 +16,10 @@ class ApplicationDetailsSettings extends Settings
 
     public ?string $site_favicon_url = null;
 
+    public ?string $site_logo_path = null;
+
+    public ?string $site_favicon_path = null;
+
     public string $timezone;
 
     public string $date_format;
@@ -25,6 +29,8 @@ class ApplicationDetailsSettings extends Settings
     public ?string $contact_email = null;
 
     public ?string $support_url = null;
+
+    public ?string $support_phone = null;
 
     public static function group(): string
     {
@@ -41,11 +47,14 @@ class ApplicationDetailsSettings extends Settings
             'site_description' => 'A modern Laravel application starter kit',
             'site_logo_url' => null,
             'site_favicon_url' => null,
+            'site_logo_path' => null,
+            'site_favicon_path' => null,
             'timezone' => config('app.timezone', 'UTC'),
             'date_format' => 'Y-m-d',
             'time_format' => 'H:i:s',
             'contact_email' => null,
             'support_url' => null,
+            'support_phone' => null,
         ];
     }
 }

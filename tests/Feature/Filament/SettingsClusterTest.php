@@ -123,8 +123,8 @@ test('application details settings can be saved', function (): void {
             'site_name' => 'Updated Site Name',
             'site_description' => 'Updated Description',
             'timezone' => 'America/New_York',
-            'date_format' => 'd/m/Y',
-            'time_format' => 'H:i',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i:s',
         ])
         ->call('save')
         ->assertHasNoFormErrors();
