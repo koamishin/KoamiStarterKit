@@ -54,15 +54,17 @@ Use it as-is, fork it, or cherry-pick the parts you like—whatever gets you cod
 
 **Battery-included, but not bloated.** Everything you need to ship.
 
-- **🔐 Complete Authentication**: Powered by **Fortify**. Login, Registration, 2FA, Email Verification, and Profile Management ready to go.
+- **🔐 Complete Authentication**: Powered by **Fortify**. Login, Registration, 2FA, Email Verification, Passkeys, and Profile Management ready to go.
+- **🔑 Social Login**: Login with **GitHub**, **Google**, or **Facebook** via Laravel Socialite. Configure credentials through the admin panel (stored in DB or `.env`).
+- **📦 Modular Architecture**: Built on **nwidart/laravel-modules** — extend with self-contained modules that register their own routes, Filament resources, and Inertia pages.
 - **👥 Roles & Permissions**: Built-in **Spatie Permissions**. Manage **Admins** (Filament access) and **Users** (Inertia access) out of the box.
-- **⚙️ System Settings**: Powerful settings management with **spatie/laravel-settings**. Configure application details, features, and security through a beautiful Filament interface.
+- **⚙️ System Settings**: Powerful settings management with **spatie/laravel-settings**. Configure application details, features, social login, and security through a beautiful Filament interface.
 - **🎨 Auth Layout Switcher**: Choose between 3 beautiful authentication layouts (Simple, Card, Split) directly from the admin settings panel.
-- **⌨️ User Activity Logs** Included with Activity Logs filament plugin to monitor user activites on the application
+- **⌨️ User Activity Logs** Included with Activity Logs filament plugin to monitor user activities on the application
 - **🕵️‍♂️ User Impersonation**: Admins can easily impersonate users to troubleshoot issues, with a visible banner and quick "Leave" action.
 - **🔔 Database Notifications**: Built-in notification system with a bell icon in the sidebar header. Shows unread count, dropdown list, and mark as read functionality.
 - **🎛️ Admin Panel**: Pre-configured **Filament** admin dashboard with User Management.
-- **🎨 40+ UI Components**: Beautiful, accessible components from **Shadcn Vue**, plus dark mode and multiple layouts.
+- **🎨 40+ UI Components**: Beautiful, accessible components from **Shadcn Vue**, plus dark mode and multiple themes (Default, Rose, Ocean, Sage Garden, Claude).
 - **🛠️ Type-Safe Routing**: **Wayfinder** ensures your frontend knows your backend routes. No more broken links.
 - **⚡ High Performance**: **Laravel Octane** + **Inertia.js v2** + **Vite** for instant page loads.
 - **🚢 Production Ready**: **Docker** support, **GitHub Actions** CI/CD, and strict code quality tools (Pint, PHPStan, Rector) pre-configured.
@@ -188,7 +190,7 @@ This starter kit includes a comprehensive settings management system powered by 
 
 ### Settings Sections
 
-The settings are organized into three logical sections accessible from the admin panel at `/admin/settings`:
+The settings are organized into logical sections accessible from the admin panel at `/admin/settings`:
 
 <details>
 <summary><strong>Application Details</strong></summary>
@@ -224,6 +226,19 @@ Configure security policies:
 
 </details>
 
+<details>
+<summary><strong>Social Login</strong></summary>
+
+Configure OAuth providers for social authentication:
+
+- **GitHub**: Enable/disable, client ID, client secret, redirect URI
+- **Google**: Enable/disable, client ID, client secret, redirect URI
+- **Facebook**: Enable/disable, client ID, client secret, redirect URI
+
+Each provider shows whether it's using environment variables or database-stored credentials.
+
+</details>
+
 ### Auth Layout Switcher
 
 Choose from three beautiful authentication layouts directly from the settings panel:
@@ -235,6 +250,74 @@ Choose from three beautiful authentication layouts directly from the settings pa
 | **Split**  | Side-by-side layout with branding panel      |
 
 The layout selection is instant and applies to all authentication pages (login, register, password reset).
+
+### Social Login
+
+Social login is managed through the **Social Login** settings page in the admin panel (`/admin/settings`). Supports GitHub, Google, and Facebook.
+
+#### Configuration
+
+Credentials can be set in two ways, with `.env` taking precedence:
+
+1. **Environment variables** (recommended for production):
+```env
+GITHUB_CLIENT_ID=your-id
+GITHUB_CLIENT_SECRET=your-secret
+GOOGLE_CLIENT_ID=your-id
+GOOGLE_CLIENT_SECRET=your-secret
+FACEBOOK_CLIENT_ID=your-id
+FACEBOOK_CLIENT_SECRET=your-secret
+```
+
+2. **Database settings** (via the Filament admin panel) — stored in the `social_login` settings group. Falls back to these when `.env` values are empty.
+
+#### Linking Behavior
+
+| Scenario | Behavior |
+|---|---|
+| New provider ID | Creates a new user and social account. Email is auto-verified. |
+| Existing social account | Logs in the linked user, updates profile data. |
+| Matching verified email | Auto-links the social account to the existing verified user. |
+| Matching unverified email | Returns 409 — user must verify their email first. |
+| Disabled provider | Redirects to login with an error message. |
+
+#### Code
+
+```php
+use App\Enums\SocialLoginProvider;
+use App\Settings\SocialLoginSettings;
+
+$settings = app(SocialLoginSettings::class);
+
+// Check if a provider is enabled
+if ($settings->isProviderEnabled(SocialLoginProvider::Github)) {
+    // Show GitHub login button
+}
+
+// Resolve credentials (env wins over stored settings)
+$creds = $settings->resolveCredentials(SocialLoginProvider::Google);
+```
+
+---
+
+### Passkeys (WebAuthn)
+
+Passkey authentication is available on both the **admin panel** (Filament) and the **frontend** (Inertia login page). Users can register passkeys from their profile settings.
+
+Passkeys are device-bound ("phone-as-passkey" style) and use the browser's native WebAuthn API. Login with a passkey requires only biometrics or device PIN — no password needed.
+
+#### Frontend Usage
+
+The passkey sign-in button appears automatically on the login page when the feature is enabled. Users can manage passkeys from their security settings.
+
+#### Configuration
+
+```env
+# Config is handled via the admin Application Features settings page
+# and the config/passkeys.php file
+```
+
+---
 
 ### Accessing Settings in Code
 
@@ -253,6 +336,44 @@ if ($settings->registration_enabled) {
 $settings->auth_layout = 'card';
 $settings->save();
 ```
+
+---
+
+## 📦 Modular Architecture (nwidart/laravel-modules)
+
+This starter kit supports a modular architecture via **nwidart/laravel-modules**. Modules live in the `Modules/` directory and are self-contained units with their own models, controllers, routes, Filament resources, frontend pages, and tests.
+
+### Included Module: Blog
+
+A fully-functional blog module is included as a reference implementation. It demonstrates:
+
+- **Filament Resource** — CRUD for blog posts in the admin panel
+- **Inertia Page** — Public blog post listing at `/blog`
+- **Module Routes** — Registered automatically when the module is enabled
+- **Module Tests** — Feature, unit, and Filament tests packaged with the module
+
+### Creating a New Module
+
+```bash
+php artisan module:make MyModule
+```
+
+This scaffolds a new module in `Modules/MyModule/` with providers, routing, and configuration files. The module's Inertia pages are auto-discovered (place them in `resources/js/pages/`) and Filament resources are registered via a plugin class:
+
+```php
+class MyModulePlugin implements Plugin
+{
+    public function register(Panel $panel): void
+    {
+        $panel->discoverResources(
+            in: __DIR__.'/Filament/Resources',
+            for: 'Modules\\MyModule\\Filament\\Resources',
+        );
+    }
+}
+```
+
+Modules are enabled/disabled in `modules_statuses.json` and via `php artisan module:enable` / `php artisan module:disable`.
 
 ---
 
