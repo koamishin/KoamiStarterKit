@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, usePage } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
+import SignInWithPasskeyButton from '@/components/SignInWithPasskeyButton.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,12 +12,17 @@ import AuthBase from '@/layouts/AuthLayout.vue';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
+import type { SharedData } from '@/types';
 
 defineProps<{
     status?: string;
     canResetPassword: boolean;
     canRegister: boolean;
 }>();
+
+const page = usePage<SharedData>();
+const passkeysEnabled = (page.props.settingsFeatures?.passkeys ??
+    true) as boolean;
 </script>
 
 <template>
@@ -106,5 +112,7 @@ defineProps<{
                 <TextLink :href="register()" :tabindex="5">Sign up</TextLink>
             </div>
         </Form>
+
+        <SignInWithPasskeyButton v-if="passkeysEnabled" />
     </AuthBase>
 </template>

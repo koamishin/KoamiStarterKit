@@ -209,6 +209,13 @@ class FeatureRegistry
         );
 
         static::register(
+            'settings_passkeys',
+            'Passkeys',
+            'Allow registering and signing in with passkeys (WebAuthn)',
+            true
+        );
+
+        static::register(
             'settings_account_deletion',
             'Account Deletion',
             'Allow deleting account',

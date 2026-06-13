@@ -20,11 +20,22 @@ class ProfileController extends Controller
     {
         FeatureRegistry::initialize();
 
-        $request->user();
+        $user = $request->user();
+
+        $passkeys = $user?->relationLoaded('passkeys')
+            ? $user->passkeys
+            : $user?->passkeys()->orderByDesc('last_used_at')->orderByDesc('id')->get() ?? collect();
 
         return Inertia::render('settings/Profile', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'passkeys' => $passkeys->map(fn ($passkey): array => [
+                'id' => (string) $passkey->getKey(),
+                'name' => $passkey->name,
+                'authenticator' => $passkey->authenticator,
+                'last_used_at' => optional($passkey->last_used_at)->toIso8601String(),
+                'created_at' => optional($passkey->created_at)->toIso8601String(),
+            ])->all(),
         ]);
     }
 

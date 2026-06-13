@@ -32,6 +32,7 @@ class HandleInertiaRequests extends Middleware
                 'security' => FeatureRegistry::isFeatureAvailableForUser($user, 'settings_mfa_app') || FeatureRegistry::isFeatureAvailableForUser($user, 'settings_mfa_email'),
                 'password' => FeatureRegistry::isFeatureAvailableForUser($user, 'settings_password'),
                 'appearance' => FeatureRegistry::isFeatureAvailableForUser($user, 'settings_appearance'),
+                'passkeys' => FeatureRegistry::isFeatureAvailableForUser($user, 'settings_passkeys'),
             ];
         }
 

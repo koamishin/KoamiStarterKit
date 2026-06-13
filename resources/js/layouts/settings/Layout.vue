@@ -39,6 +39,13 @@ const sidebarNavItems = computed<NavItem[]>(() => {
         });
     }
 
+    if (settingsFeatures.value.passkeys) {
+        items.push({
+            title: 'Passkeys',
+            href: editProfile(),
+        });
+    }
+
     if (settingsFeatures.value.appearance) {
         items.push({
             title: 'Appearance',
