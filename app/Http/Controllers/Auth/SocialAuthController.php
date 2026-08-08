@@ -31,7 +31,7 @@ class SocialAuthController extends Controller
     {
         $providerEnum = SocialLoginProvider::tryFromSlug($provider);
 
-        if (!$providerEnum instanceof \App\Enums\SocialLoginProvider) {
+        if (! $providerEnum instanceof SocialLoginProvider) {
             abort(404);
         }
 
@@ -63,7 +63,7 @@ class SocialAuthController extends Controller
     {
         $providerEnum = SocialLoginProvider::tryFromSlug($provider);
 
-        if (!$providerEnum instanceof \App\Enums\SocialLoginProvider) {
+        if (! $providerEnum instanceof SocialLoginProvider) {
             abort(404);
         }
 
