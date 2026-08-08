@@ -7,17 +7,21 @@
     "mcp": true,
     "nightwatch": false,
     "packages": [
-        "filament/filament"
+        "filament/filament",
+        "pestphp/pest-plugin-agent"
     ],
     "sail": false,
     "skills": [
+        "infer-conventions",
         "fortify-development",
         "laravel-best-practices",
         "octane-development",
         "pennant-development",
+        "socialite-development",
         "wayfinder-development",
         "pest-testing",
         "inertia-vue-development",
-        "tailwindcss-development"
+        "tailwindcss-development",
+        "pest-plugin-agent"
     ]
 }
