@@ -68,6 +68,8 @@ export default defineConfig({
             'modules_statuses.json',
             '.starter-kit.json',
             'opencode.json',
+            'boost.json',
+            '.ai/**',
             '.agent/**',
             '.agents/**',
             '.augment/**',
