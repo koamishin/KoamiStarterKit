@@ -68,14 +68,21 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
     };
 
     const fetchRecoveryCodes = async (): Promise<void> => {
-        // This function might need to be updated to use postJson if the route is a POST
-        // For now, assuming it is a GET, but based on the controller it is a POST
-        // I will leave it as is for now, as it is not the main issue
         try {
             clearErrors();
-            // recoveryCodesList.value = await fetchJson<string[]>(
-            //     recoveryCodes.url(),
-            // );
+            const response = await fetch('/user/two-factor-recovery-codes', {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch: ${response.status}`);
+            }
+
+            const data = await response.json();
+            recoveryCodesList.value = Array.isArray(data) ? data : [];
         } catch {
             errors.value.push('Failed to fetch recovery codes');
             recoveryCodesList.value = [];

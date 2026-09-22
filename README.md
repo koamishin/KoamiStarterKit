@@ -108,6 +108,35 @@ This interactive tool will:
 - 🐳 **Configure Docker** settings (Docker Hub vs GHCR).
 - 🤖 **Update GitHub Actions** workflows to use your repository and registry.
 
+> **Fresh install?** `composer create-project` runs the wizard once with safe
+> defaults so it never blocks. Re-run `php artisan setup:starter-kit`
+> afterwards to personalize — it's safe to re-run anytime.
+
+Every question also has a CLI flag for unattended/scripted setups:
+
+```bash
+php artisan setup:starter-kit \
+  --github=my-org \
+  --name=my-app \
+  --author="Jane Doe" \
+  --email=jane@example.com \
+  --docker \
+  --registry=ghcr \
+  --strategy=rolling \
+  --no-packagist \
+  --install \
+  --create-repo \
+  --push \
+  --force
+```
+
+The wizard can also **create the GitHub repository for you** — via the `gh`
+CLI when you're signed in (`gh auth login`), or a personal access token
+(`--github-token`, or `GH_TOKEN`/`GITHUB_TOKEN` env). Otherwise it prints a
+one-click manual fallback link. `--push` uploads the initial commit.
+
+Run `php artisan setup:starter-kit --help` for all options.
+
 ### Development
 
 Start the development server with one simple command:

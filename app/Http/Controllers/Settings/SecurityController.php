@@ -4,17 +4,21 @@ namespace App\Http\Controllers\Settings;
 
 use App\Features\FeatureRegistry;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\PasswordUpdateRequest;
+use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Facades\Filament;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Fortify\Features;
 
 class SecurityController extends Controller
 {
-    public function edit(Request $request): Response
+    public function edit(TwoFactorAuthenticationRequest $request): Response
     {
         FeatureRegistry::initialize();
 
@@ -30,7 +34,7 @@ class SecurityController extends Controller
         $mfaAppAvailable = FeatureRegistry::isFeatureAvailableForUser($user, 'settings_mfa_app');
         $mfaEmailAvailable = FeatureRegistry::isFeatureAvailableForUser($user, 'settings_mfa_email');
 
-        return Inertia::render('settings/Security', [
+        $props = [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'emailVerified' => $user instanceof MustVerifyEmail ? $user->hasVerifiedEmail() : true,
             'availableFeatures' => [
@@ -50,6 +54,61 @@ class SecurityController extends Controller
                     'appRecoveryCodes' => $appProvider instanceof AppAuthentication && $appProvider->isRecoverable(),
                 ],
             ],
+            /* @chisel-2fa */
+            'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
+            /* @end-chisel-2fa */
+            /* @chisel-passkeys */
+            'canManagePasskeys' => Features::canManagePasskeys(),
+            'passkeys' => Features::canManagePasskeys()
+                ? $request->user()
+                    ->passkeys()
+                    ->latest()
+                    ->get()
+                    ->map(fn ($passkey): array => [
+                        'id' => (string) $passkey->getKey(),
+                        'name' => $passkey->name,
+                        'authenticator' => $passkey->authenticator,
+                        'last_used_at' => optional($passkey->last_used_at)->toIso8601String(),
+                        'created_at' => optional($passkey->created_at)->toIso8601String(),
+                    ])
+                    ->values()
+                    ->all()
+                : [],
+            /* @end-chisel-passkeys */
+            'passwordRules' => Password::defaults()->toPasswordRulesString(),
+        ];
+
+        /* @chisel-2fa */
+        if (Features::canManageTwoFactorAuthentication()) {
+            $request->ensureStateIsValid();
+
+            $props['twoFactorEnabled'] = $request->user()->hasEnabledTwoFactorAuthentication();
+            $props['requiresConfirmation'] = Features::optionEnabled(Features::twoFactorAuthentication(), 'confirm');
+        }
+        /* @end-chisel-2fa */
+
+        return Inertia::render('settings/Security', $props);
+    }
+
+    /**
+     * Update the user's password.
+     */
+    public function update(PasswordUpdateRequest $request): RedirectResponse
+    {
+        FeatureRegistry::initialize();
+
+        $user = $request->user();
+
+        if (! FeatureRegistry::isFeatureAvailableForUser($user, 'settings_password')) {
+            return back()->with('error', 'Password changes are not available for your role');
+        }
+
+        $user->update([
+            'password' => $request->password,
         ]);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Password updated.')]);
+
+        return back();
     }
 }

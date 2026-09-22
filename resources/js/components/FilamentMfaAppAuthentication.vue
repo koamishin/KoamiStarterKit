@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useClipboard } from '@vueuse/core';
 import { toast } from 'vue-sonner';
-import { Copy } from 'lucide-vue-next';
+import { Copy } from '@lucide/vue';
 import AlertError from '@/components/AlertError.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';

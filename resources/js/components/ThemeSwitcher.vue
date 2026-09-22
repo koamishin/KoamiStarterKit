@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { themes, type ColorTheme } from '@/conf/themes';
 import { useColorTheme } from '@/composables/useColorTheme';
-import { Check } from 'lucide-vue-next';
+import { Check } from '@lucide/vue';
 import { cn } from '@/lib/utils';
 
 const { colorTheme, updateColorTheme } = useColorTheme();

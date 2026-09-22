@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import KoamishinLogo from '@/components/KoamishinLogo.vue';
+import { dashboard, login, register } from '@/routes';
 
 defineProps<{
     canRegister?: boolean;
@@ -81,15 +82,15 @@ const features = [
                 <nav v-if="canRegister" class="flex items-center gap-4">
                     <template v-if="$page.props.auth.user">
                         <Button as-child variant="ghost" size="sm">
-                            <Link :href="route('dashboard')">Dashboard</Link>
+                            <Link :href="dashboard()">Dashboard</Link>
                         </Button>
                     </template>
                     <template v-else>
                         <Button as-child variant="ghost" size="sm">
-                            <Link :href="route('login')">Log in</Link>
+                            <Link :href="login()">Log in</Link>
                         </Button>
                         <Button as-child size="sm">
-                            <Link :href="route('register')">Register</Link>
+                            <Link :href="register()">Register</Link>
                         </Button>
                     </template>
                 </nav>

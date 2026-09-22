@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { Passkeys, UserCancelledError } from '@laravel/passkeys';
-import { Fingerprint } from 'lucide-vue-next';
+import { Fingerprint } from '@lucide/vue';
 import { onMounted, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';

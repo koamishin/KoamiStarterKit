@@ -13,14 +13,18 @@ use Filament\Auth\MultiFactor\Email\Concerns\InteractsWithEmailAuthentication;
 use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Lab404\Impersonate\Models\Impersonate;
-use Laravel\Passkeys\Contracts\PasskeyUser;
-use Laravel\Passkeys\PasskeyAuthenticatable;
+use Laravel\Fortify\Contracts\PasskeyUser;
+use Laravel\Fortify\PasskeyAuthenticatable;
+/* @chisel-2fa */
+use Laravel\Fortify\TwoFactorAuthenticatable;
+/* @end-chisel-2fa */
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
@@ -36,7 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication, PasskeyUser
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication, MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Impersonate, Notifiable;
@@ -46,6 +50,10 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     use InteractsWithEmailAuthentication;
     use LogsActivity;
     use PasskeyAuthenticatable;
+
+    /* @chisel-2fa */
+    use TwoFactorAuthenticatable;
+    /* @end-chisel-2fa */
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -87,6 +95,10 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
      */
     protected $hidden = [
         'password',
+        /* @chisel-2fa */
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        /* @end-chisel-2fa */
         'app_authentication_secret',
         'app_authentication_recovery_codes',
         'remember_token',
@@ -123,6 +135,9 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'email_verified_at' => 'datetime',
             'has_email_authentication' => 'boolean',
             'password' => 'hashed',
+            /* @chisel-2fa */
+            'two_factor_confirmed_at' => 'datetime',
+            /* @end-chisel-2fa */
         ];
     }
 

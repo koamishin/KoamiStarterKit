@@ -9,7 +9,6 @@ import { toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
-import { edit as editPassword } from '@/routes/user-password';
 import { type NavItem, type SharedData } from '@/types';
 
 const page = usePage<SharedData>();
@@ -29,20 +28,6 @@ const sidebarNavItems = computed<NavItem[]>(() => {
         items.push({
             title: 'Security',
             href: editSecurity(),
-        });
-    }
-
-    if (settingsFeatures.value.password) {
-        items.push({
-            title: 'Password',
-            href: editPassword(),
-        });
-    }
-
-    if (settingsFeatures.value.passkeys) {
-        items.push({
-            title: 'Passkeys',
-            href: editProfile(),
         });
     }
 

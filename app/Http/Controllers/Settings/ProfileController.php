@@ -22,20 +22,9 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        $passkeys = $user?->relationLoaded('passkeys')
-            ? $user->passkeys
-            : $user?->passkeys()->orderByDesc('last_used_at')->orderByDesc('id')->get() ?? collect();
-
         return Inertia::render('settings/Profile', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
-            'passkeys' => $passkeys->map(fn ($passkey): array => [
-                'id' => (string) $passkey->getKey(),
-                'name' => $passkey->name,
-                'authenticator' => $passkey->authenticator,
-                'last_used_at' => optional($passkey->last_used_at)->toIso8601String(),
-                'created_at' => optional($passkey->created_at)->toIso8601String(),
-            ])->all(),
         ]);
     }
 
@@ -54,6 +43,8 @@ class ProfileController extends Controller
         }
 
         $profileUpdateRequest->user()->save();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
 
         return to_route('profile.edit');
     }
@@ -78,6 +69,8 @@ class ProfileController extends Controller
 
         $user->update(['profile_photo_path' => $path]);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile photo updated.')]);
+
         return to_route('profile.edit');
     }
 
@@ -92,6 +85,8 @@ class ProfileController extends Controller
         if ($user->profile_photo_path) {
             Storage::disk('public')->delete($user->profile_photo_path);
             $user->update(['profile_photo_path' => null]);
+
+            Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile photo removed.')]);
         }
 
         return to_route('profile.edit');

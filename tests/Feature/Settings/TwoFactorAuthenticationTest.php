@@ -11,6 +11,7 @@ test('profile settings page includes filament mfa configuration', function (): v
     $user = User::factory()->create();
 
     $this->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
         ->get(route('security.edit'))
         ->assertInertia(fn (Assert $assert): AssertableInertia => $assert
             ->component('settings/Security')

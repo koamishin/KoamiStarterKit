@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use Database\Factories\PasskeyFactory;
 
-test('profile page exposes the user passkeys to the front end', function (): void {
+test('security page exposes the user passkeys to the front end', function (): void {
     $user = User::factory()->create();
 
     $factory = new PasskeyFactory;
@@ -21,7 +21,8 @@ test('profile page exposes the user passkeys to the front end', function (): voi
     ]);
 
     $response = $this->actingAs($user)
-        ->get(route('profile.edit'))
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->get(route('security.edit'))
         ->assertOk();
 
     $passkeys = $response->original->getData()['page']['props']['passkeys'];
@@ -36,14 +37,26 @@ test('profile page exposes the user passkeys to the front end', function (): voi
         ->and($byName['iPhone 15']['last_used_at'])->toBeNull();
 });
 
-test('profile page returns an empty passkeys list when the user has none', function (): void {
+test('security page returns an empty passkeys list when the user has none', function (): void {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->get(route('security.edit'))
+        ->assertOk();
+
+    $passkeys = $response->original->getData()['page']['props']['passkeys'];
+
+    expect($passkeys)->toBe([]);
+});
+
+test('profile page does not expose passkeys', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)
         ->get(route('profile.edit'))
         ->assertOk();
 
-    $passkeys = $response->original->getData()['page']['props']['passkeys'];
-
-    expect($passkeys)->toBe([]);
+    expect($response->original->getData()['page']['props'])
+        ->not->toHaveKey('passkeys');
 });

@@ -7,7 +7,7 @@ import {
     Passkeys,
     UserCancelledError,
 } from '@laravel/passkeys';
-import { KeyRound, Loader2, Plus, ShieldX, Trash2 } from 'lucide-vue-next';
+import { KeyRound, Loader2, Plus, ShieldX, Trash2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import AlertError from '@/components/AlertError.vue';
 import InputError from '@/components/InputError.vue';

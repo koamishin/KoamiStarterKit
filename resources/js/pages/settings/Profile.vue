@@ -4,7 +4,6 @@ import { ref, toRefs } from 'vue';
 import { toast } from 'vue-sonner';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
-import PasskeyManager from '@/components/PasskeyManager.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -109,13 +108,6 @@ const breadcrumbs = [{ title: 'Profile settings', href: edit().url }];
 const props = defineProps<{
     mustVerifyEmail: boolean;
     status?: string;
-    passkeys?: Array<{
-        id: string;
-        name: string;
-        authenticator: string | null;
-        last_used_at: string | null;
-        created_at: string | null;
-    }>;
 }>();
 
 const { mustVerifyEmail, status } = toRefs(props);
@@ -267,11 +259,6 @@ const { mustVerifyEmail, status } = toRefs(props);
                         </Transition>
                     </div>
                 </form>
-
-                <PasskeyManager
-                    v-if="settingsFeatures.passkeys"
-                    :passkeys="passkeys ?? []"
-                />
             </div>
         </SettingsLayout>
     </AppLayout>

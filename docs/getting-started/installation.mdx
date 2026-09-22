@@ -52,6 +52,32 @@ We have a custom Artisan command to personalize the kit for you:
 php artisan setup:starter-kit
 ```
 
+> `composer create-project` and `laravel new` already run this wizard once in
+> unattended mode (safe defaults, no prompts) as part of their post-install
+> hooks. Re-running it interactively is how you personalize the project —
+> it is idempotent and safe to run as many times as you like.
+
+For scripted or CI setups, every prompt has a matching option:
+
+```bash
+php artisan setup:starter-kit \
+  --github=my-org \
+  --name=my-app \
+  --author="Jane Doe" \
+  --email=jane@example.com \
+  --docker \
+  --create-repo \
+  --push \
+  --force
+```
+
+The wizard can create the GitHub repository for you automatically: it uses
+the `gh` CLI when you're signed in (`gh auth login`), falls back to the
+GitHub API with `--github-token` (or `GH_TOKEN` / `GITHUB_TOKEN`), and
+otherwise prints a one-click manual link. `--push` uploads the initial commit.
+
+Run `php artisan setup:starter-kit --help` for the full option list.
+
 ---
 
 ## Method 2: Composer Create-Project

@@ -21,7 +21,7 @@ test('users can authenticate using the login screen', function (): void {
     $response->assertRedirect(route('dashboard', absolute: false));
 });
 
-test('users with legacy fortify two factor columns can still authenticate', function (): void {
+test('users with legacy fortify two factor columns are challenged', function (): void {
     $user = User::factory()->create();
 
     $user->forceFill([
@@ -35,8 +35,8 @@ test('users with legacy fortify two factor columns can still authenticate', func
         'password' => 'password',
     ]);
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $this->assertGuest();
+    $response->assertRedirect(route('two-factor.login'));
 });
 
 test('users can not authenticate with invalid password', function (): void {
