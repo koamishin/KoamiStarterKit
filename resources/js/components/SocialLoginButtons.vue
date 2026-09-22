@@ -11,7 +11,9 @@ type SocialProvider = {
 
 const page = usePage<{ socialProviders?: SocialProvider[] }>();
 
-const providers = computed<SocialProvider[]>(() => page.props.socialProviders ?? []);
+const providers = computed<SocialProvider[]>(
+    () => page.props.socialProviders ?? [],
+);
 </script>
 
 <template>
@@ -38,11 +40,7 @@ const providers = computed<SocialProvider[]>(() => page.props.socialProviders ??
                 class="block"
                 :data-test="`social-login-${provider.slug}`"
             >
-                <Button
-                    type="button"
-                    variant="outline"
-                    class="w-full"
-                >
+                <Button type="button" variant="outline" class="w-full">
                     <template v-if="provider.slug === 'github'">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

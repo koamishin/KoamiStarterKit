@@ -251,7 +251,7 @@ class ApplicationDetailsSettingsPage extends Page
 
         foreach (\DateTimeZone::listIdentifiers(\DateTimeZone::ALL) as $timezone) {
             $parts = explode('/', $timezone, 2);
-            $region = $parts[0] ?? 'Other';
+            $region = $parts[0] !== '' ? $parts[0] : 'Other';
             $grouped[$region][$timezone] = str_replace('_', ' ', $timezone);
         }
 

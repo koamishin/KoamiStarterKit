@@ -6,6 +6,7 @@ use App\Models\RoleFeature;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Fluent;
+use Laravel\Pennant\Feature;
 use Laravel\Pennant\FeatureManager;
 use Spatie\Permission\Models\Role;
 
@@ -75,12 +76,10 @@ class FeatureRegistry
 
     public static function toggleForUser(User $user, string $feature, bool $active): void
     {
-        $featureManager = app(FeatureManager::class);
-
         if ($active) {
-            $featureManager->activateFor($user, $feature);
+            Feature::for($user)->activate($feature);
         } else {
-            $featureManager->deactivateFor($user, $feature);
+            Feature::for($user)->deactivate($feature);
         }
     }
 
@@ -114,16 +113,14 @@ class FeatureRegistry
 
     public static function rolloutForAllUsers(string $feature, bool $active): int
     {
-        $featureManager = app(FeatureManager::class);
-
         $users = User::whereHas('roles')->get();
         $count = 0;
 
         foreach ($users as $user) {
             if ($active) {
-                $featureManager->activateFor($user, $feature);
+                Feature::for($user)->activate($feature);
             } else {
-                $featureManager->deactivateFor($user, $feature);
+                Feature::for($user)->deactivate($feature);
             }
             $count++;
         }

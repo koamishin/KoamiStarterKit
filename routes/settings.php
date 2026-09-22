@@ -9,6 +9,7 @@ use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
 /* @end-chisel-password-confirmation */
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -51,7 +52,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     Route::get('settings/appearance', function () {
         FeatureRegistry::initialize();
-        $user = auth()->user();
+        $user = Auth::user();
 
         return Inertia::render('settings/Appearance', [
             'availableFeatures' => [
@@ -62,10 +63,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 });
 
 /* @chisel-passkeys */
-Route::get('.well-known/passkey-endpoints', function () {
-    return response()->json([
-        'enroll' => route('security.edit'),
-        'manage' => route('security.edit'),
-    ]);
-})->name('well-known.passkeys');
+Route::get('.well-known/passkey-endpoints', fn () => response()->json([
+    'enroll' => route('security.edit'),
+    'manage' => route('security.edit'),
+]))->name('well-known.passkeys');
 /* @end-chisel-passkeys */

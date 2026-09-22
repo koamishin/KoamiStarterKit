@@ -153,7 +153,7 @@ class SetupStarterKit extends Command
         $repoReady = false;
         $committed = false;
 
-        if (! $this->option('no-git') && (is_dir((string) base_path().'/.git') || $gitInitialized)) {
+        if (! $this->option('no-git') && (is_dir(base_path().'/.git') || $gitInitialized)) {
             $this->syncGitRemote($identity['github'], $identity['slug']);
 
             if ($createRepo) {
@@ -369,7 +369,7 @@ class SetupStarterKit extends Command
             }
         }
 
-        $candidate = Str::slug(basename((string) base_path()));
+        $candidate = Str::slug(basename(base_path()));
 
         if (self::isValidAppSlug($candidate)) {
             return $candidate;
@@ -537,7 +537,7 @@ class SetupStarterKit extends Command
      */
     protected function ensureGitRepository(?string $basePath = null): bool
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
 
         if ($this->option('no-git')) {
             return false;
@@ -593,7 +593,7 @@ class SetupStarterKit extends Command
      */
     protected function syncGitRemote(string $github, string $slug, ?string $basePath = null): void
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
 
         if ($this->option('no-git') || ! is_dir($basePath.'/.git') || ! $this->gitIsAvailable($basePath)) {
             return;
@@ -654,7 +654,7 @@ class SetupStarterKit extends Command
      */
     protected function createInitialCommit(string $slug, string $author, string $email, ?string $basePath = null): bool
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
 
         if ($this->option('no-git') || $this->option('no-commit')) {
             return false;
@@ -736,7 +736,7 @@ class SetupStarterKit extends Command
      */
     protected function maybeCreateGithubRepository(string $github, string $slug, string $visibility, string $description, ?string $basePath = null): bool
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
 
         if ($this->ghIsAvailable($basePath) && $this->ghIsAuthenticated($basePath)) {
             if ($this->ghRepoExists($github, $slug, $basePath)) {
@@ -947,7 +947,7 @@ class SetupStarterKit extends Command
      */
     protected function maybePushToOrigin(string $github, string $slug, bool $repoReady, bool $committed, ?string $basePath = null): void
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
 
         if ($this->option('no-git') || $this->option('no-push')) {
             return;
@@ -1000,7 +1000,7 @@ class SetupStarterKit extends Command
      */
     protected function updateComposerJson(string $github, string $slug, string $author, string $email, string $description, ?string $basePath = null): bool
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
         $composerPath = $basePath.'/composer.json';
 
         if (! File::exists($composerPath)) {
@@ -1037,7 +1037,7 @@ class SetupStarterKit extends Command
      */
     protected function updatePackageJson(string $slug, ?string $basePath = null): void
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
         $packagePath = $basePath.'/package.json';
 
         if (! File::exists($packagePath)) {
@@ -1063,7 +1063,7 @@ class SetupStarterKit extends Command
      */
     protected function updateEnvAppName(string $slug, ?string $basePath = null): void
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
         $envPath = File::exists($basePath.'/.env') ? $basePath.'/.env' : $basePath.'/.env.example';
 
         if (! File::exists($envPath)) {
@@ -1090,7 +1090,7 @@ class SetupStarterKit extends Command
      */
     protected function createStarterKitConfig(array $docker, ?string $basePath = null): void
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
 
         $config = [
             'docker_enabled' => $docker['enabled'],
@@ -1119,7 +1119,7 @@ class SetupStarterKit extends Command
      */
     protected function updateAllWorkflowFiles(array $docker, ?string $basePath = null): void
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
         $workflowDir = $basePath.'/.github/workflows';
         $workflowFiles = ['auto-release.yml', 'docker-latest.yml', 'manual-official-release.yml'];
 
@@ -1161,9 +1161,8 @@ class SetupStarterKit extends Command
 
         $content = $this->updateDockerEnabledVar($content, $docker['enabled'], $docker['strategy'], $workflowFile);
         $content = $this->updateDockerUpdateStrategyVar($content, $docker['enabled'] ? $docker['strategy'] : null);
-        $content = $this->removePackagistLeftovers($content);
 
-        return $content;
+        return $this->removePackagistLeftovers($content);
     }
 
     /**
@@ -1259,13 +1258,11 @@ class SetupStarterKit extends Command
             $content
         );
 
-        $content = str_replace(
+        return str_replace(
             'log summary, ping Packagist, and send a Discord notification',
             'log summary and send a Discord notification',
             $content
         );
-
-        return $content;
     }
 
     /**
@@ -1305,7 +1302,7 @@ class SetupStarterKit extends Command
      */
     protected function runLocalInstall(?string $basePath = null): void
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
 
         $this->newLine();
         $this->components->info('Running local install steps...');
@@ -1391,7 +1388,7 @@ class SetupStarterKit extends Command
      */
     protected function readComposerJson(?string $basePath = null): array
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
         $composerPath = $basePath.'/composer.json';
 
         if (! File::exists($composerPath)) {
@@ -1410,7 +1407,7 @@ class SetupStarterKit extends Command
      */
     protected function readStarterKitConfig(?string $basePath = null): array
     {
-        $basePath ??= (string) base_path();
+        $basePath ??= base_path();
         $configPath = $basePath.'/.starter-kit.json';
 
         if (! File::exists($configPath)) {
@@ -1443,7 +1440,7 @@ class SetupStarterKit extends Command
      */
     protected function gitIsAvailable(?string $basePath = null): bool
     {
-        [$ok] = $this->runGit(['--version'], $basePath ?? (string) base_path());
+        [$ok] = $this->runGit(['--version'], $basePath ?? base_path());
 
         return $ok;
     }
@@ -1494,7 +1491,7 @@ class SetupStarterKit extends Command
      */
     protected function ghIsAvailable(?string $basePath = null): bool
     {
-        [$ok] = $this->runGh(['--version'], $basePath ?? (string) base_path());
+        [$ok] = $this->runGh(['--version'], $basePath ?? base_path());
 
         return $ok;
     }
@@ -1504,7 +1501,7 @@ class SetupStarterKit extends Command
      */
     protected function ghIsAuthenticated(?string $basePath = null): bool
     {
-        [$ok] = $this->runGh(['auth', 'status'], $basePath ?? (string) base_path());
+        [$ok] = $this->runGh(['auth', 'status'], $basePath ?? base_path());
 
         return $ok;
     }

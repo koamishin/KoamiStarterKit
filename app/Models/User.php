@@ -129,6 +129,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
      *
      * @return array<string, string>
      */
+    #[\Override]
     protected function casts(): array
     {
         return [

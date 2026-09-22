@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\Notifications\VerifyEmailAuthentication;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Notification;
@@ -33,7 +34,11 @@ test('app mfa can be set up and enabled', function (): void {
 
     filament()->setCurrentPanel('admin');
     $panel = Filament::getPanel('admin');
-    $provider = $panel->getMultiFactorAuthenticationProviders()['app'];
+    $provider = $panel->getMultiFactorAuthenticationProviders()['app'] ?? null;
+
+    if (! $provider instanceof AppAuthentication) {
+        throw new RuntimeException('App authentication provider is not registered.');
+    }
 
     $code = $provider->getCurrentCode($user, $payload['secret']);
 
@@ -57,7 +62,11 @@ test('app mfa can be disabled', function (): void {
 
     filament()->setCurrentPanel('admin');
     $panel = Filament::getPanel('admin');
-    $provider = $panel->getMultiFactorAuthenticationProviders()['app'];
+    $provider = $panel->getMultiFactorAuthenticationProviders()['app'] ?? null;
+
+    if (! $provider instanceof AppAuthentication) {
+        throw new RuntimeException('App authentication provider is not registered.');
+    }
 
     $code = $provider->getCurrentCode($user, $payload['secret']);
 

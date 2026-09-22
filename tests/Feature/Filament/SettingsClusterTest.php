@@ -9,6 +9,7 @@ use App\Settings\ApplicationDetailsSettings;
 use App\Settings\ApplicationFeaturesSettings;
 use App\Settings\ApplicationSecuritySettings;
 use Filament\Facades\Filament;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function (): void {

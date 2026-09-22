@@ -26,7 +26,7 @@ const form = useForm(
 
 const toggleFeature = (key: string, active: boolean) => {
     const feature = props.features.find((f) => f.key === key);
-    
+
     if (feature && !feature.available) {
         toast.error('This feature is not available for your role');
         return;
@@ -55,8 +55,8 @@ const toggleFeature = (key: string, active: boolean) => {
     );
 };
 
-const availableFeatures = () => props.features.filter(f => f.available);
-const unavailableFeatures = () => props.features.filter(f => !f.available);
+const availableFeatures = () => props.features.filter((f) => f.available);
+const unavailableFeatures = () => props.features.filter((f) => !f.available);
 </script>
 
 <template>
@@ -70,7 +70,10 @@ const unavailableFeatures = () => props.features.filter(f => !f.available);
                     description="Manage your feature preferences and experimental features"
                 />
 
-                <div v-if="availableFeatures().length > 0" class="grid gap-4 md:grid-cols-2">
+                <div
+                    v-if="availableFeatures().length > 0"
+                    class="grid gap-4 md:grid-cols-2"
+                >
                     <div
                         v-for="feature in availableFeatures()"
                         :key="feature.key"
@@ -148,7 +151,9 @@ const unavailableFeatures = () => props.features.filter(f => !f.available);
                                         <span
                                             class="flex h-2 w-2 rounded-full bg-muted-foreground/30"
                                         />
-                                        <span class="text-xs font-medium text-muted-foreground">
+                                        <span
+                                            class="text-xs font-medium text-muted-foreground"
+                                        >
                                             Unavailable for your role
                                         </span>
                                     </div>

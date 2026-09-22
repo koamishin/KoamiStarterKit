@@ -7,7 +7,7 @@ use App\Http\Requests\Settings\FilamentAppAuthenticationEnableRequest;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
 use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
-use Filament\Facades\Filament;
+use Filament\PanelRegistry;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,7 +22,7 @@ class FilamentAppAuthenticationController extends Controller
 
         $user = $request->user();
 
-        if (! $user instanceof HasAppAuthentication) {
+        if ((! $user instanceof Authenticatable) || (! $user instanceof HasAppAuthentication)) {
             abort(500);
         }
 
@@ -136,9 +136,9 @@ class FilamentAppAuthenticationController extends Controller
     {
         filament()->setCurrentPanel('admin');
 
-        $panel = Filament::getPanel('admin');
+        $panel = app(PanelRegistry::class)->get('admin');
 
-        if (! $panel) {
+        if ($panel === null) {
             abort(404);
         }
 

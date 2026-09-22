@@ -79,9 +79,13 @@ const openSetup = async () => {
 
     try {
         if (!svg.value || !secret.value) {
-            await http.post(enableRoute.url(), {}, {
-                headers: { Accept: 'application/json' },
-            });
+            await http.post(
+                enableRoute.url(),
+                {},
+                {
+                    headers: { Accept: 'application/json' },
+                },
+            );
 
             const [qrResponse, secretResponse] = await Promise.all([
                 http.get<{ svg: string }>(qrCodeRoute.url(), {
@@ -166,9 +170,7 @@ const disable = async () => {
         recoveryCodes.value = [];
         toast.success('Two-factor authentication disabled');
     } catch (error: any) {
-        toast.error(
-            error.response?.data?.message ?? 'Failed to disable 2FA',
-        );
+        toast.error(error.response?.data?.message ?? 'Failed to disable 2FA');
     } finally {
         loading.value = false;
     }
@@ -180,9 +182,7 @@ const loadRecoveryCodes = async () => {
             '/user/two-factor-recovery-codes',
             { headers: { Accept: 'application/json' } },
         );
-        recoveryCodes.value = Array.isArray(response.data)
-            ? response.data
-            : [];
+        recoveryCodes.value = Array.isArray(response.data) ? response.data : [];
     } catch {
         recoveryCodes.value = [];
     }
@@ -216,11 +216,7 @@ const recoveryCodesText = computed(() => recoveryCodes.value.join('\n'));
         </CardContent>
 
         <CardFooter class="flex flex-wrap items-center gap-2">
-            <Button
-                v-if="!isEnabled"
-                :disabled="loading"
-                @click="openSetup"
-            >
+            <Button v-if="!isEnabled" :disabled="loading" @click="openSetup">
                 <Spinner v-if="loading" class="mr-2" />
                 Enable 2FA
             </Button>
@@ -259,7 +255,9 @@ const recoveryCodesText = computed(() => recoveryCodes.value.join('\n'));
                     <div
                         class="relative overflow-hidden rounded-full border border-border bg-muted p-2.5"
                     >
-                        <ScanLine class="relative z-20 size-6 text-foreground" />
+                        <ScanLine
+                            class="relative z-20 size-6 text-foreground"
+                        />
                     </div>
                 </div>
                 <DialogTitle>
@@ -425,10 +423,7 @@ const recoveryCodesText = computed(() => recoveryCodes.value.join('\n'));
             </div>
 
             <DialogFooter>
-                <Button
-                    type="button"
-                    @click="showRecoveryCodesDialog = false"
-                >
+                <Button type="button" @click="showRecoveryCodesDialog = false">
                     Close
                 </Button>
             </DialogFooter>

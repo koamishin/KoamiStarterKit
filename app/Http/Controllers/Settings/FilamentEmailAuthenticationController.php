@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\FilamentEmailAuthenticationEnableRequest;
 use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
-use Filament\Facades\Filament;
+use Filament\PanelRegistry;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\JsonResponse;
@@ -90,9 +90,9 @@ class FilamentEmailAuthenticationController extends Controller
     {
         filament()->setCurrentPanel('admin');
 
-        $panel = Filament::getPanel('admin');
+        $panel = app(PanelRegistry::class)->get('admin');
 
-        if (! $panel) {
+        if ($panel === null) {
             abort(404);
         }
 

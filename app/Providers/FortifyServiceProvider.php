@@ -22,6 +22,7 @@ class FortifyServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
+    #[\Override]
     public function register(): void
     {
         //
@@ -98,9 +99,7 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureRateLimiting(): void
     {
         /* @chisel-2fa */
-        RateLimiter::for('two-factor', function (Request $request) {
-            return Limit::perMinute(5)->by($request->session()->get('login.id'));
-        });
+        RateLimiter::for('two-factor', fn (Request $request) => Limit::perMinute(5)->by($request->session()->get('login.id')));
         /* @end-chisel-2fa */
 
         RateLimiter::for('login', function (Request $request) {
@@ -110,11 +109,9 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         /* @chisel-passkeys */
-        RateLimiter::for('passkeys', function (Request $request) {
-            return Limit::perMinute(10)->by(
-                ($request->input('credential.id') ?: $request->session()->getId()).'|'.$request->ip(),
-            );
-        });
+        RateLimiter::for('passkeys', fn (Request $request) => Limit::perMinute(10)->by(
+            ($request->input('credential.id') ?: $request->session()->getId()).'|'.$request->ip(),
+        ));
         /* @end-chisel-passkeys */
     }
 }

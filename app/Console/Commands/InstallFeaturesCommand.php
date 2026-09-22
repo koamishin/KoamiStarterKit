@@ -46,7 +46,7 @@ class InstallFeaturesCommand extends Command
 
         $answers = $script
             ->collectAnswers()
-            ->onQuestion(fn (Question $question) => multiselect(
+            ->onQuestion(fn (Question $question): array => multiselect(
                 label: $question->label,
                 options: $question->options,
                 default: $question->default ?? [],

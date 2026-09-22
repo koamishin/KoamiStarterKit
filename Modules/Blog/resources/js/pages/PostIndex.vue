@@ -17,7 +17,10 @@ defineProps<{
     <Head title="Posts" />
     <div class="mx-auto max-w-3xl px-4 py-8">
         <h1 class="mb-6 text-2xl font-semibold">Posts</h1>
-        <ul v-if="posts.length" class="divide-y divide-gray-200 rounded-md border border-gray-200 bg-white">
+        <ul
+            v-if="posts.length"
+            class="divide-y divide-gray-200 rounded-md border border-gray-200 bg-white"
+        >
             <li
                 v-for="post in posts"
                 :key="post.id"

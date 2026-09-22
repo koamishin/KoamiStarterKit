@@ -30,7 +30,6 @@ function makeSetupCommand(): SetupStarterKit
 
     // Mirror the components wiring that Command::run() performs.
     $components = new ReflectionProperty(SetupStarterKit::class, 'components');
-    $components->setAccessible(true);
     $components->setValue($command, app(Factory::class, ['output' => $output]));
 
     return $command;
@@ -43,13 +42,13 @@ function makeSetupCommand(): SetupStarterKit
  */
 function makeSetupCommandWithOptions(array $options, bool $interactive = false): SetupStarterKit
 {
-    $command = makeSetupCommand();
+    $setupStarterKit = makeSetupCommand();
     $input = new ArrayInput($options);
-    $input->bind($command->getDefinition());
+    $input->bind($setupStarterKit->getDefinition());
     $input->setInteractive($interactive);
-    $command->setInput($input);
+    $setupStarterKit->setInput($input);
 
-    return $command;
+    return $setupStarterKit;
 }
 
 /**
@@ -57,12 +56,11 @@ function makeSetupCommandWithOptions(array $options, bool $interactive = false):
  *
  * @param  array<int, mixed>  $args
  */
-function invokeSetupMethod(SetupStarterKit $command, string $method, array $args = []): mixed
+function invokeSetupMethod(SetupStarterKit $setupStarterKit, string $method, array $args = []): mixed
 {
-    $reflection = new ReflectionMethod($command, $method);
-    $reflection->setAccessible(true);
+    $reflection = new ReflectionMethod($setupStarterKit, $method);
 
-    return $reflection->invokeArgs($command, $args);
+    return $reflection->invokeArgs($setupStarterKit, $args);
 }
 
 /**
@@ -161,10 +159,10 @@ test('setup starter kit command has correct signature and description', function
 
 test('setup starter kit exposes scriptable options', function (): void {
     $command = new SetupStarterKit;
-    $definition = $command->getDefinition();
+    $inputDefinition = $command->getDefinition();
 
     foreach (['github', 'name', 'author', 'email', 'description', 'docker', 'no-docker', 'registry', 'docker-username', 'strategy', 'install', 'no-install', 'no-git', 'no-commit', 'force', 'create-repo', 'no-create-repo', 'visibility', 'github-token', 'push', 'no-push'] as $option) {
-        expect($definition->hasOption($option))->toBeTrue("missing --{$option} option");
+        expect($inputDefinition->hasOption($option))->toBeTrue("missing --{$option} option");
     }
 });
 
@@ -226,38 +224,38 @@ test('github owner extraction from remote urls', function (): void {
 // ─── Option resolution ───────────────────────────────────────────────────
 
 test('github user resolves from option', function (): void {
-    $command = makeSetupCommandWithOptions(['--github' => 'acme-corp']);
+    $setupStarterKit = makeSetupCommandWithOptions(['--github' => 'acme-corp']);
 
-    expect(invokeSetupMethod($command, 'resolveGithubUser', [false]))->toBe('acme-corp');
+    expect(invokeSetupMethod($setupStarterKit, 'resolveGithubUser', [false]))->toBe('acme-corp');
 });
 
 test('github user rejects invalid option value', function (): void {
-    $command = makeSetupCommandWithOptions(['--github' => '-nope']);
+    $setupStarterKit = makeSetupCommandWithOptions(['--github' => '-nope']);
 
-    expect(invokeSetupMethod($command, 'resolveGithubUser', [false]))->toBeNull();
+    expect(invokeSetupMethod($setupStarterKit, 'resolveGithubUser', [false]))->toBeNull();
 });
 
 test('app slug resolves from option and lowercases', function (): void {
-    $command = makeSetupCommandWithOptions(['--name' => 'my-app']);
+    $setupStarterKit = makeSetupCommandWithOptions(['--name' => 'my-app']);
 
-    expect(invokeSetupMethod($command, 'resolveAppSlug', [false]))->toBe('my-app');
+    expect(invokeSetupMethod($setupStarterKit, 'resolveAppSlug', [false]))->toBe('my-app');
 });
 
 test('app slug rejects invalid option value', function (): void {
-    $command = makeSetupCommandWithOptions(['--name' => 'My App!']);
+    $setupStarterKit = makeSetupCommandWithOptions(['--name' => 'My App!']);
 
-    expect(invokeSetupMethod($command, 'resolveAppSlug', [false]))->toBeNull();
+    expect(invokeSetupMethod($setupStarterKit, 'resolveAppSlug', [false]))->toBeNull();
 });
 
 test('docker settings resolve from options without prompting', function (): void {
-    $command = makeSetupCommandWithOptions([
+    $setupStarterKit = makeSetupCommandWithOptions([
         '--docker' => true,
         '--registry' => 'dockerhub',
         '--docker-username' => 'acme',
         '--strategy' => 'manual',
     ]);
 
-    $docker = invokeSetupMethod($command, 'resolveDockerSettings', ['acme-corp', 'my-app']);
+    $docker = invokeSetupMethod($setupStarterKit, 'resolveDockerSettings', ['acme-corp', 'my-app']);
 
     expect($docker['enabled'])->toBeTrue()
         ->and($docker['registry'])->toBe('docker.io')
@@ -267,9 +265,9 @@ test('docker settings resolve from options without prompting', function (): void
 });
 
 test('docker disabled via option keeps previous choices untouched', function (): void {
-    $command = makeSetupCommandWithOptions(['--no-docker' => true]);
+    $setupStarterKit = makeSetupCommandWithOptions(['--no-docker' => true]);
 
-    $docker = invokeSetupMethod($command, 'resolveDockerSettings', ['acme-corp', 'my-app']);
+    $docker = invokeSetupMethod($setupStarterKit, 'resolveDockerSettings', ['acme-corp', 'my-app']);
 
     expect($docker['enabled'])->toBeFalse();
 });
@@ -396,7 +394,7 @@ test('starter kit config clears strategy when docker disabled', function (): voi
 // ─── Workflow file rewriting ─────────────────────────────────────────────
 
 test('workflow rewrite keeps ghcr image dynamic and preserves comments', function (): void {
-    $command = makeSetupCommand();
+    $setupStarterKit = makeSetupCommand();
     $docker = [
         'enabled' => true,
         'registry' => 'ghcr.io',
@@ -406,7 +404,7 @@ test('workflow rewrite keeps ghcr image dynamic and preserves comments', functio
         'strategy' => 'rolling',
     ];
 
-    $result = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker);
+    $result = $setupStarterKit->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker);
 
     expect($result)->toContain('REGISTRY: ghcr.io')
         ->and($result)->toContain('IMAGE_NAME: ${{ github.repository }}')
@@ -420,7 +418,7 @@ test('workflow rewrite keeps ghcr image dynamic and preserves comments', functio
 });
 
 test('workflow rewrite pins image name for docker hub', function (): void {
-    $command = makeSetupCommand();
+    $setupStarterKit = makeSetupCommand();
     $docker = [
         'enabled' => true,
         'registry' => 'docker.io',
@@ -430,7 +428,7 @@ test('workflow rewrite pins image name for docker hub', function (): void {
         'strategy' => 'rolling',
     ];
 
-    $result = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker);
+    $result = $setupStarterKit->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker);
 
     expect($result)->toContain('REGISTRY: docker.io')
         ->and($result)->toContain('IMAGE_NAME: acme/my-app')
@@ -439,7 +437,7 @@ test('workflow rewrite pins image name for docker hub', function (): void {
 });
 
 test('manual strategy disables docker in auto-release workflow only', function (): void {
-    $command = makeSetupCommand();
+    $setupStarterKit = makeSetupCommand();
     $docker = [
         'enabled' => true,
         'registry' => 'ghcr.io',
@@ -449,8 +447,8 @@ test('manual strategy disables docker in auto-release workflow only', function (
         'strategy' => 'manual',
     ];
 
-    $autoRelease = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker);
-    $manualRelease = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'manual-official-release.yml', $docker);
+    $autoRelease = $setupStarterKit->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker);
+    $manualRelease = $setupStarterKit->applyWorkflowReplacements(starterKitWorkflowFixture(), 'manual-official-release.yml', $docker);
 
     expect($autoRelease)->toContain('DOCKER_ENABLED: false')
         ->and($autoRelease)->toContain('DOCKER_UPDATE_STRATEGY: manual')
@@ -458,7 +456,7 @@ test('manual strategy disables docker in auto-release workflow only', function (
 });
 
 test('disabled docker removes update strategy line', function (): void {
-    $command = makeSetupCommand();
+    $setupStarterKit = makeSetupCommand();
     $docker = [
         'enabled' => false,
         'registry' => 'ghcr.io',
@@ -470,14 +468,14 @@ test('disabled docker removes update strategy line', function (): void {
 
     $content = starterKitWorkflowFixture()."\n  DOCKER_UPDATE_STRATEGY: rolling\n";
 
-    $result = $command->applyWorkflowReplacements($content, 'auto-release.yml', $docker);
+    $result = $setupStarterKit->applyWorkflowReplacements($content, 'auto-release.yml', $docker);
 
     expect($result)->toContain('DOCKER_ENABLED: false')
         ->and($result)->not->toContain('DOCKER_UPDATE_STRATEGY');
 });
 
 test('packagist leftovers are stripped from legacy workflow content', function (): void {
-    $command = makeSetupCommand();
+    $setupStarterKit = makeSetupCommand();
 
     $content = <<<'YAML'
         env:
@@ -501,7 +499,7 @@ test('packagist leftovers are stripped from legacy workflow content', function (
                 run: echo "notify"
         YAML;
 
-    $result = $command->removePackagistLeftovers($content);
+    $result = $setupStarterKit->removePackagistLeftovers($content);
 
     expect($result)->not->toContain('PACKAGIST')
         ->and($result)->not->toContain('Notify Packagist')
@@ -513,11 +511,11 @@ test('packagist leftovers are stripped from legacy workflow content', function (
 });
 
 test('packagist removal is idempotent on clean content', function (): void {
-    $command = makeSetupCommand();
+    $setupStarterKit = makeSetupCommand();
 
     $content = "env:\n  DOCKER_ENABLED: true\n  REGISTRY: ghcr.io\n";
 
-    expect($command->removePackagistLeftovers($content))->toBe($content);
+    expect($setupStarterKit->removePackagistLeftovers($content))->toBe($content);
 });
 
 test('workflow files are updated on disk in sandbox', function (): void {
@@ -619,7 +617,7 @@ test('git init and stale remote replacement work in sandbox', function (): void 
     } finally {
         removeStarterKitSandbox($dir);
     }
-})->skip(fn () => ! gitIsAvailableForTests(), 'git is not available');
+})->skip(fn (): bool => ! gitIsAvailableForTests(), 'git is not available');
 
 // ─── GitHub repository creation ──────────────────────────────────────────
 
@@ -691,11 +689,11 @@ test('repository is created through the api', function (): void {
         'https://api.github.com/user/repos' => Http::response(['full_name' => 'acme-corp/my-app'], 201),
     ]);
 
-    $command = makeSetupCommandWithOptions([]);
+    $setupStarterKit = makeSetupCommandWithOptions([]);
 
-    expect(invokeSetupMethod($command, 'createRepoViaApi', ['acme-corp', 'my-app', 'public', 'My app.', 'test-token']))->toBeTrue();
+    expect(invokeSetupMethod($setupStarterKit, 'createRepoViaApi', ['acme-corp', 'my-app', 'public', 'My app.', 'test-token']))->toBeTrue();
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://api.github.com/user/repos'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api.github.com/user/repos'
         && $request['name'] === 'my-app'
         && $request['private'] === false
         && $request['auto_init'] === false);
@@ -710,9 +708,9 @@ test('repository creation treats already-exists as success', function (): void {
         ], 422),
     ]);
 
-    $command = makeSetupCommandWithOptions([]);
+    $setupStarterKit = makeSetupCommandWithOptions([]);
 
-    expect(invokeSetupMethod($command, 'createRepoViaApi', ['acme-corp', 'my-app', 'public', 'My app.', 'test-token']))->toBeTrue();
+    expect(invokeSetupMethod($setupStarterKit, 'createRepoViaApi', ['acme-corp', 'my-app', 'public', 'My app.', 'test-token']))->toBeTrue();
 });
 
 test('repository creation fails on rejected token', function (): void {
@@ -720,9 +718,9 @@ test('repository creation fails on rejected token', function (): void {
         'https://api.github.com/user' => Http::response(['message' => 'Bad credentials'], 401),
     ]);
 
-    $command = makeSetupCommandWithOptions([]);
+    $setupStarterKit = makeSetupCommandWithOptions([]);
 
-    expect(invokeSetupMethod($command, 'createRepoViaApi', ['acme-corp', 'my-app', 'public', 'My app.', 'bad-token']))->toBeFalse();
+    expect(invokeSetupMethod($setupStarterKit, 'createRepoViaApi', ['acme-corp', 'my-app', 'public', 'My app.', 'bad-token']))->toBeFalse();
 });
 
 test('api repository existence check', function (): void {
@@ -731,10 +729,10 @@ test('api repository existence check', function (): void {
         'https://api.github.com/repos/acme-corp/missing' => Http::response(['message' => 'Not Found'], 404),
     ]);
 
-    $command = makeSetupCommandWithOptions([]);
+    $setupStarterKit = makeSetupCommandWithOptions([]);
 
-    expect(invokeSetupMethod($command, 'apiRepoExists', ['acme-corp', 'my-app', 'test-token']))->toBeTrue()
-        ->and(invokeSetupMethod($command, 'apiRepoExists', ['acme-corp', 'missing', 'test-token']))->toBeFalse();
+    expect(invokeSetupMethod($setupStarterKit, 'apiRepoExists', ['acme-corp', 'my-app', 'test-token']))->toBeTrue()
+        ->and(invokeSetupMethod($setupStarterKit, 'apiRepoExists', ['acme-corp', 'missing', 'test-token']))->toBeFalse();
 });
 
 test('push is skipped without git metadata or with no-push flag', function (): void {

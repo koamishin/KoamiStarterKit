@@ -6,6 +6,7 @@ use App\Filament\Clusters\Settings\Pages\SocialLoginSettingsPage;
 use App\Models\User;
 use App\Settings\SocialLoginSettings;
 use Filament\Facades\Filament;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function (): void {

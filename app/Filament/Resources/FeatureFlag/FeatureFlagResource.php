@@ -27,16 +27,19 @@ class FeatureFlagResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
+    #[\Override]
     public static function canCreate(): bool
     {
         return false;
     }
 
+    #[\Override]
     public static function form(Schema $schema): Schema
     {
         return $schema;
     }
 
+    #[\Override]
     public static function table(Table $table): Table
     {
         return $table
@@ -171,6 +174,7 @@ class FeatureFlagResource extends Resource
             ]);
     }
 
+    #[\Override]
     public static function getPages(): array
     {
         return [
