@@ -123,7 +123,6 @@ php artisan setup:starter-kit \
   --docker \
   --registry=ghcr \
   --strategy=rolling \
-  --no-packagist \
   --install \
   --create-repo \
   --push \

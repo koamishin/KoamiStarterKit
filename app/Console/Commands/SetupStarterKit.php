@@ -37,8 +37,6 @@ class SetupStarterKit extends Command
         {--registry= : Docker registry to publish to (ghcr or dockerhub)}
         {--docker-username= : Docker Hub username or organization (dockerhub only)}
         {--strategy= : Docker release strategy (rolling or manual)}
-        {--packagist : Enable automated Packagist updates}
-        {--no-packagist : Disable automated Packagist updates}
         {--install : Run local install steps (key:generate, storage:link, migrate)}
         {--no-install : Skip local install steps}
         {--no-git : Skip Git initialization, remote setup, and commits}
@@ -68,12 +66,6 @@ class SetupStarterKit extends Command
     {
         if ($this->option('docker') && $this->option('no-docker')) {
             $this->components->error('The --docker and --no-docker options are mutually exclusive.');
-
-            return self::FAILURE;
-        }
-
-        if ($this->option('packagist') && $this->option('no-packagist')) {
-            $this->components->error('The --packagist and --no-packagist options are mutually exclusive.');
 
             return self::FAILURE;
         }
@@ -134,11 +126,10 @@ class SetupStarterKit extends Command
         }
 
         $docker = $this->resolveDockerSettings($identity['github'], $identity['slug']);
-        $usePackagist = $this->resolvePackagistSetting();
         $runInstall = $this->resolveInstallSetting();
         $createRepo = $this->resolveCreateRepoSetting($identity['github'], $identity['slug'], $visibility);
 
-        $this->displaySummary($identity, $docker, $usePackagist, $runInstall, $createRepo, $visibility);
+        $this->displaySummary($identity, $docker, $runInstall, $createRepo, $visibility);
 
         if (! $this->shouldApplyChanges()) {
             $this->components->warn('Setup cancelled — no changes were made.');
@@ -151,8 +142,8 @@ class SetupStarterKit extends Command
         $this->updateComposerJson($identity['github'], $identity['slug'], $identity['author'], $identity['email'], $identity['description']);
         $this->updatePackageJson($identity['slug']);
         $this->updateEnvAppName($identity['slug']);
-        $this->createStarterKitConfig($docker, $usePackagist);
-        $this->updateAllWorkflowFiles($docker, $usePackagist);
+        $this->createStarterKitConfig($docker);
+        $this->updateAllWorkflowFiles($docker);
         $this->displayRequiredSecrets($docker['enabled'], $docker['registry_type']);
 
         if ($runInstall) {
@@ -449,7 +440,8 @@ class SetupStarterKit extends Command
         }
 
         if ($enabled && $interactive && $this->option('strategy') === null) {
-            $this->line('Rolling builds an image on every push to main. Manual only builds when you trigger the release workflow.');
+            $this->line('Rolling builds an image on every push (tags: 1.2.3-beta.1, beta, latest, sha-abc1234).');
+            $this->line('Manual only builds on release trigger (tags: 1.2.3, 1.2, 1, latest, sha-abc1234).');
             $strategy = $this->choice(
                 'Docker image update strategy',
                 [
@@ -471,28 +463,6 @@ class SetupStarterKit extends Command
             'docker_hub_author' => $dockerHubAuthor,
             'strategy' => $strategy,
         ];
-    }
-
-    /**
-     * Resolve the Packagist setting from options, previous config, or a prompt.
-     */
-    protected function resolvePackagistSetting(): bool
-    {
-        if ($this->option('packagist')) {
-            return true;
-        }
-
-        if ($this->option('no-packagist')) {
-            return false;
-        }
-
-        if ($this->input->isInteractive()) {
-            $this->line('Packagist auto-updates only matter if you distribute this project as a reusable Composer package.');
-
-            return $this->confirm('Enable automated Packagist updates?', false);
-        }
-
-        return (bool) ($this->previousConfig['packagist_enabled'] ?? false);
     }
 
     /**
@@ -537,7 +507,7 @@ class SetupStarterKit extends Command
      * @param  array{github: string, slug: string, author: string, email: string, description: string}  $identity
      * @param  array{enabled: bool, registry: string, registry_type: string, image: string, docker_hub_author: string, strategy: string}  $docker
      */
-    protected function displaySummary(array $identity, array $docker, bool $usePackagist, bool $runInstall, bool $createRepo, string $visibility): void
+    protected function displaySummary(array $identity, array $docker, bool $runInstall, bool $createRepo, string $visibility): void
     {
         $rows = [
             ['Composer Package', $identity['github'].'/'.$identity['slug']],
@@ -553,7 +523,6 @@ class SetupStarterKit extends Command
             $rows[] = ['Docker', 'Not configured'];
         }
 
-        $rows[] = ['Packagist Updates', $usePackagist ? 'Enabled' : 'Disabled'];
         $rows[] = ['Local Install', $runInstall ? 'Yes (key, storage link, migrate)' : 'Skipped'];
         $rows[] = ['Create GitHub Repo', $createRepo ? "Yes ({$visibility})" : 'No'];
         $rows[] = ['Push to GitHub', $this->resolvePushIntent()];
@@ -1119,14 +1088,13 @@ class SetupStarterKit extends Command
      *
      * @param  array{enabled: bool, registry: string, registry_type: string, image: string, docker_hub_author: string, strategy: string}  $docker
      */
-    protected function createStarterKitConfig(array $docker, bool $packagistEnabled, ?string $basePath = null): void
+    protected function createStarterKitConfig(array $docker, ?string $basePath = null): void
     {
         $basePath ??= (string) base_path();
 
         $config = [
             'docker_enabled' => $docker['enabled'],
             'docker_update_strategy' => $docker['enabled'] ? $docker['strategy'] : null,
-            'packagist_enabled' => $packagistEnabled,
             'docker_registry' => $docker['registry'],
             'docker_registry_type' => $docker['registry_type'],
             'docker_image_name' => $docker['image'],
@@ -1144,9 +1112,12 @@ class SetupStarterKit extends Command
     /**
      * Update every GitHub workflow file with the Docker settings.
      *
+     * Also strips any leftover Packagist automation so re-running the wizard
+     * cleans up projects scaffolded from older kit versions.
+     *
      * @param  array{enabled: bool, registry: string, registry_type: string, image: string, docker_hub_author: string, strategy: string}  $docker
      */
-    protected function updateAllWorkflowFiles(array $docker, bool $packagistEnabled, ?string $basePath = null): void
+    protected function updateAllWorkflowFiles(array $docker, ?string $basePath = null): void
     {
         $basePath ??= (string) base_path();
         $workflowDir = $basePath.'/.github/workflows';
@@ -1163,7 +1134,6 @@ class SetupStarterKit extends Command
                 content: (string) File::get($filePath),
                 workflowFile: $workflowFile,
                 docker: $docker,
-                packagistEnabled: $packagistEnabled,
             ));
 
             $this->line("Updated .github/workflows/{$workflowFile}.");
@@ -1171,11 +1141,11 @@ class SetupStarterKit extends Command
     }
 
     /**
-     * Apply Docker and Packagist settings to a single workflow file's content.
+     * Apply Docker settings to a single workflow file's content.
      *
      * @param  array{enabled: bool, registry: string, registry_type: string, image: string, docker_hub_author: string, strategy: string}  $docker
      */
-    public function applyWorkflowReplacements(string $content, string $workflowFile, array $docker, bool $packagistEnabled): string
+    public function applyWorkflowReplacements(string $content, string $workflowFile, array $docker): string
     {
         $content = (string) preg_replace(
             '/^(\s*REGISTRY:\s*).+$/m',
@@ -1191,7 +1161,7 @@ class SetupStarterKit extends Command
 
         $content = $this->updateDockerEnabledVar($content, $docker['enabled'], $docker['strategy'], $workflowFile);
         $content = $this->updateDockerUpdateStrategyVar($content, $docker['enabled'] ? $docker['strategy'] : null);
-        $content = $this->updatePackagistEnabledVar($content, $packagistEnabled);
+        $content = $this->removePackagistLeftovers($content);
 
         return $content;
     }
@@ -1273,34 +1243,29 @@ class SetupStarterKit extends Command
     }
 
     /**
-     * Update or add the PACKAGIST_ENABLED environment variable.
+     * Strip Packagist automation leftovers from a workflow file.
+     *
+     * Removes PACKAGIST_* environment lines, the "Notify Packagist" step,
+     * and fixes the notify section comment. Idempotent: files without
+     * Packagist content are returned unchanged.
      */
-    public function updatePackagistEnabledVar(string $content, bool $enabled): string
+    public function removePackagistLeftovers(string $content): string
     {
-        if (! str_contains($content, 'Notify Packagist')) {
-            return $content;
-        }
+        $content = (string) preg_replace('/^\s*PACKAGIST_(ENABLED|USERNAME|TOKEN):.*\n?/m', '', $content);
 
-        $enabledStr = $enabled ? 'true' : 'false';
-
-        if (preg_match('/^(\s*PACKAGIST_ENABLED:\s*)(true|false)/m', $content)) {
-            return (string) preg_replace(
-                '/^(\s*PACKAGIST_ENABLED:\s*)(true|false)/m',
-                '${1}'.$enabledStr,
-                $content
-            );
-        }
-
-        if (! str_contains($content, 'REGISTRY:')) {
-            return $content;
-        }
-
-        return (string) preg_replace(
-            '/^(\s*REGISTRY:)/m',
-            "  PACKAGIST_ENABLED: {$enabledStr}  # Set to false if you don't want Packagist auto-updates (configured via setup:starter-kit)\n$1",
-            $content,
-            1
+        $content = (string) preg_replace(
+            '/^ {6}- name: Notify Packagist\n(?:^ {8,}.*\n?)+/m',
+            '',
+            $content
         );
+
+        $content = str_replace(
+            'log summary, ping Packagist, and send a Discord notification',
+            'log summary and send a Discord notification',
+            $content
+        );
+
+        return $content;
     }
 
     /**
@@ -1404,7 +1369,6 @@ class SetupStarterKit extends Command
             ['Optional Secret', 'Purpose'],
             [
                 ['DISCORD_WEBHOOK_URL', 'Discord webhook for release notifications'],
-                ['PACKAGIST_USERNAME / PACKAGIST_TOKEN', 'Automated Packagist package updates'],
             ]
         );
 

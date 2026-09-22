@@ -39,7 +39,6 @@ permissions:
 
 env:
   DOCKER_ENABLED: true
-  PACKAGIST_ENABLED: true
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -145,17 +144,18 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ needs.prepare.outputs.tag }}
+            type=semver,pattern={{version}},value=${{ needs.prepare.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.prepare.outputs.tag }}
+            type=semver,pattern={{major}},value=${{ needs.prepare.outputs.tag }}
             type=raw,value=latest,enable=${{ needs.prepare.outputs.publish_latest == 'true' }}
-            type=raw,value=stable-${{ github.sha }}
-            type=ref,event=branch
+            type=sha,prefix=sha-,format=short
           labels: |
             org.opencontainers.image.version=${{ needs.prepare.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
-            org.opencontainers.image.title=KoamiStarterKit
-            org.opencontainers.image.description=KoamiStarterKit - A modern Laravel 13 starter kit with Vue 3, Inertia.js, Tailwind CSS, Fortify authentication, and Wayfinder routing. Production-ready with Octane, comprehensive testing setup with Pest, and automated CI/CD workflows.
-            org.opencontainers.image.vendor=Koami
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.description=Production Docker image for this Laravel application
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
 
       - name: Build and push Docker image
         if: steps.check_docker.outputs.skip != 'true'
@@ -190,7 +190,7 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
           TAG: ${{ needs.prepare.outputs.tag }}
           EXTRA_NOTES: ${{ needs.prepare.outputs.extra_notes }}
-          REGISTRY: ghcr.io
+          REGISTRY: ${{ env.REGISTRY }}
           IMAGE_NAME: ${{ github.repository }}
         with:
           script: |
@@ -434,16 +434,16 @@ jobs:
             lines.push('');
             lines.push('### 🐳 Docker');
             lines.push('');
-            lines.push(`Pull the official release image from GitHub Container Registry:`);
+            lines.push(`Pull the official release image from the container registry:`);
             lines.push('');
             lines.push('```sh');
-            lines.push(`docker pull ${registry}/${imageName}:${tag}`);
+            lines.push(`docker pull ${registry}/${imageName}:${version}`);
             lines.push('```');
             lines.push('');
             lines.push(`Or run it directly:`);
             lines.push('');
             lines.push('```sh');
-            lines.push(`docker run -p 8000:8000 ${registry}/${imageName}:${tag}`);
+            lines.push(`docker run -p 8000:8000 ${registry}/${imageName}:${version}`);
             lines.push('```');
             lines.push('');
             lines.push('### 🔗 Links');
@@ -465,7 +465,7 @@ jobs:
             // Create version.json for release artifacts
             const versionJson = {
               version: version,
-              image: `${registry}/${imageName}:${tag}`,
+              image: `${registry}/${imageName}:${version}`,
               commit: context.sha,
               branch: context.ref.replace('refs/heads/', ''),
               timestamp: new Date().toISOString(),
@@ -568,22 +568,12 @@ jobs:
     if: always()
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-      PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
-      PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 50
-
-      - name: Notify Packagist
-        if: ${{ env.PACKAGIST_ENABLED == 'true' && env.PACKAGIST_TOKEN != '' && env.PACKAGIST_USERNAME != '' }}
-        run: |
-          curl -XPOST \
-            -H 'Content-Type: application/json' \
-            "https://packagist.org/api/github?username=${{ env.PACKAGIST_USERNAME }}&apiToken=${{ env.PACKAGIST_TOKEN }}" \
-            -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'
 
       - name: Send Discord notification
         if: ${{ env.DISCORD_WEBHOOK_URL != '' }}
@@ -643,7 +633,7 @@ jobs:
             --arg branch "${{ github.ref_name }}" \
             --arg actor "${{ github.actor }}" \
             --arg buildUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-            --arg docker "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.tag }}" \
+            --arg docker "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}" \
             --arg releaseUrl "$RELEASE_URL" \
             --arg changes "$RECENT_CHANGES" \
             --arg contributors "$CONTRIBUTORS" \

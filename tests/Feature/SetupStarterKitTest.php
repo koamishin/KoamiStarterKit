@@ -163,7 +163,7 @@ test('setup starter kit exposes scriptable options', function (): void {
     $command = new SetupStarterKit;
     $definition = $command->getDefinition();
 
-    foreach (['github', 'name', 'author', 'email', 'description', 'docker', 'no-docker', 'registry', 'docker-username', 'strategy', 'packagist', 'no-packagist', 'install', 'no-install', 'no-git', 'no-commit', 'force', 'create-repo', 'no-create-repo', 'visibility', 'github-token', 'push', 'no-push'] as $option) {
+    foreach (['github', 'name', 'author', 'email', 'description', 'docker', 'no-docker', 'registry', 'docker-username', 'strategy', 'install', 'no-install', 'no-git', 'no-commit', 'force', 'create-repo', 'no-create-repo', 'visibility', 'github-token', 'push', 'no-push'] as $option) {
         expect($definition->hasOption($option))->toBeTrue("missing --{$option} option");
     }
 });
@@ -338,7 +338,7 @@ test('env app name prefers .env over .env.example', function (): void {
     }
 });
 
-test('starter kit config records docker and packagist choices', function (): void {
+test('starter kit config records docker choices', function (): void {
     $dir = makeStarterKitSandbox();
 
     try {
@@ -352,16 +352,16 @@ test('starter kit config records docker and packagist choices', function (): voi
             'strategy' => 'rolling',
         ];
 
-        invokeSetupMethod($command, 'createStarterKitConfig', [$docker, true, $dir]);
+        invokeSetupMethod($command, 'createStarterKitConfig', [$docker, $dir]);
 
         $config = json_decode((string) File::get($dir.'/.starter-kit.json'), true);
 
         expect($config['docker_enabled'])->toBeTrue()
             ->and($config['docker_update_strategy'])->toBe('rolling')
-            ->and($config['packagist_enabled'])->toBeTrue()
             ->and($config['docker_registry'])->toBe('ghcr.io')
             ->and($config['docker_image_name'])->toBe('acme-corp/my-app')
-            ->and($config)->not->toHaveKey('docker_hub_author');
+            ->and($config)->not->toHaveKey('docker_hub_author')
+            ->and($config)->not->toHaveKey('packagist_enabled');
     } finally {
         removeStarterKitSandbox($dir);
     }
@@ -381,13 +381,13 @@ test('starter kit config clears strategy when docker disabled', function (): voi
             'strategy' => 'rolling',
         ];
 
-        invokeSetupMethod($command, 'createStarterKitConfig', [$docker, false, $dir]);
+        invokeSetupMethod($command, 'createStarterKitConfig', [$docker, $dir]);
 
         $config = json_decode((string) File::get($dir.'/.starter-kit.json'), true);
 
         expect($config['docker_enabled'])->toBeFalse()
             ->and($config['docker_update_strategy'])->toBeNull()
-            ->and($config['packagist_enabled'])->toBeFalse();
+            ->and($config)->not->toHaveKey('packagist_enabled');
     } finally {
         removeStarterKitSandbox($dir);
     }
@@ -406,13 +406,14 @@ test('workflow rewrite keeps ghcr image dynamic and preserves comments', functio
         'strategy' => 'rolling',
     ];
 
-    $result = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker, false);
+    $result = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker);
 
     expect($result)->toContain('REGISTRY: ghcr.io')
         ->and($result)->toContain('IMAGE_NAME: ${{ github.repository }}')
         ->and($result)->toContain('DOCKER_ENABLED: true # Set to false')
         ->and($result)->toContain('DOCKER_UPDATE_STRATEGY: rolling')
-        ->and($result)->toContain('PACKAGIST_ENABLED: false # Set to false')
+        ->and($result)->not->toContain('PACKAGIST')
+        ->and($result)->not->toContain('Notify Packagist')
         ->and($result)->toContain('username: ${{ github.actor }}')
         ->and($result)->toContain('password: ${{ secrets.GITHUB_TOKEN }}')
         ->and($result)->toContain('registry: ${{ env.REGISTRY }}');
@@ -429,7 +430,7 @@ test('workflow rewrite pins image name for docker hub', function (): void {
         'strategy' => 'rolling',
     ];
 
-    $result = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker, false);
+    $result = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker);
 
     expect($result)->toContain('REGISTRY: docker.io')
         ->and($result)->toContain('IMAGE_NAME: acme/my-app')
@@ -448,8 +449,8 @@ test('manual strategy disables docker in auto-release workflow only', function (
         'strategy' => 'manual',
     ];
 
-    $autoRelease = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker, false);
-    $manualRelease = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'manual-official-release.yml', $docker, false);
+    $autoRelease = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'auto-release.yml', $docker);
+    $manualRelease = $command->applyWorkflowReplacements(starterKitWorkflowFixture(), 'manual-official-release.yml', $docker);
 
     expect($autoRelease)->toContain('DOCKER_ENABLED: false')
         ->and($autoRelease)->toContain('DOCKER_UPDATE_STRATEGY: manual')
@@ -469,28 +470,54 @@ test('disabled docker removes update strategy line', function (): void {
 
     $content = starterKitWorkflowFixture()."\n  DOCKER_UPDATE_STRATEGY: rolling\n";
 
-    $result = $command->applyWorkflowReplacements($content, 'auto-release.yml', $docker, false);
+    $result = $command->applyWorkflowReplacements($content, 'auto-release.yml', $docker);
 
     expect($result)->toContain('DOCKER_ENABLED: false')
         ->and($result)->not->toContain('DOCKER_UPDATE_STRATEGY');
 });
 
-test('packagist flag untouched in files without packagist step', function (): void {
+test('packagist leftovers are stripped from legacy workflow content', function (): void {
     $command = makeSetupCommand();
-    $docker = [
-        'enabled' => true,
-        'registry' => 'ghcr.io',
-        'registry_type' => 'ghcr',
-        'image' => 'acme/my-app',
-        'docker_hub_author' => 'acme',
-        'strategy' => 'rolling',
-    ];
+
+    $content = <<<'YAML'
+        env:
+          DOCKER_ENABLED: true
+          PACKAGIST_ENABLED: true
+          REGISTRY: ghcr.io
+
+        jobs:
+          notify:
+            env:
+              DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+              PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
+              PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+            steps:
+              - name: Notify Packagist
+                if: ${{ env.PACKAGIST_ENABLED == 'true' }}
+                run: |
+                  curl -XPOST https://packagist.org/api/update-package
+
+              - name: Send Discord notification
+                run: echo "notify"
+        YAML;
+
+    $result = $command->removePackagistLeftovers($content);
+
+    expect($result)->not->toContain('PACKAGIST')
+        ->and($result)->not->toContain('Notify Packagist')
+        ->and($result)->not->toContain('packagist.org')
+        ->and($result)->toContain('DOCKER_ENABLED: true')
+        ->and($result)->toContain('REGISTRY: ghcr.io')
+        ->and($result)->toContain('DISCORD_WEBHOOK_URL')
+        ->and($result)->toContain('Send Discord notification');
+});
+
+test('packagist removal is idempotent on clean content', function (): void {
+    $command = makeSetupCommand();
 
     $content = "env:\n  DOCKER_ENABLED: true\n  REGISTRY: ghcr.io\n";
 
-    $result = $command->applyWorkflowReplacements($content, 'ci.yml', $docker, true);
-
-    expect($result)->not->toContain('PACKAGIST_ENABLED');
+    expect($command->removePackagistLeftovers($content))->toBe($content);
 });
 
 test('workflow files are updated on disk in sandbox', function (): void {
@@ -507,16 +534,48 @@ test('workflow files are updated on disk in sandbox', function (): void {
             'strategy' => 'rolling',
         ];
 
-        invokeSetupMethod($command, 'updateAllWorkflowFiles', [$docker, true, $dir]);
+        invokeSetupMethod($command, 'updateAllWorkflowFiles', [$docker, $dir]);
 
         $content = File::get($dir.'/.github/workflows/auto-release.yml');
 
         expect($content)->toContain('REGISTRY: docker.io')
             ->and($content)->toContain('IMAGE_NAME: acme/my-app')
-            ->and($content)->toContain('PACKAGIST_ENABLED: true');
+            ->and($content)->not->toContain('PACKAGIST')
+            ->and($content)->not->toContain('Notify Packagist');
     } finally {
         removeStarterKitSandbox($dir);
     }
+});
+
+// ─── Release workflow template standards ─────────────────────────────────
+
+test('rolling workflow uses semver docker tags and proper prerelease versions', function (): void {
+    $content = File::get(base_path('.github/workflows/auto-release.yml'));
+
+    expect($content)->toContain('type=semver,pattern={{version}}')
+        ->and($content)->toContain('type=raw,value=beta')
+        ->and($content)->toContain('type=raw,value=latest')
+        ->and($content)->toContain('type=raw,value=dev-latest')
+        ->and($content)->toContain('type=sha,prefix=sha-,format=short')
+        ->and($content)->not->toContain('type=ref,event=branch')
+        ->and($content)->not->toContain('release_type }}-')
+        ->and($content)->not->toContain('PACKAGIST')
+        ->and($content)->not->toContain('Notify Packagist')
+        ->and($content)->toContain('TAG="v${BASE_VERSION}-${PRERELEASE_PREFIX}.${DEV_NUMBER}"');
+});
+
+test('official release workflow uses the docker hub semver tag ladder', function (): void {
+    $content = File::get(base_path('.github/workflows/manual-official-release.yml'));
+
+    expect($content)->toContain('type=semver,pattern={{version}}')
+        ->and($content)->toContain('type=semver,pattern={{major}}.{{minor}}')
+        ->and($content)->toContain('type=semver,pattern={{major}}')
+        ->and($content)->toContain('type=raw,value=latest')
+        ->and($content)->toContain('type=sha,prefix=sha-,format=short')
+        ->and($content)->not->toContain('type=ref,event=branch')
+        ->and($content)->not->toContain('stable-${{ github.sha }}')
+        ->and($content)->not->toContain('PACKAGIST')
+        ->and($content)->not->toContain('Notify Packagist');
 });
 
 // ─── Git handling in sandbox ─────────────────────────────────────────────

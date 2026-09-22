@@ -10,7 +10,6 @@ permissions:
 
 env:
   DOCKER_ENABLED: true # Set to false if you don't want Docker CI/CD (configured via setup:starter-kit)
-  PACKAGIST_ENABLED: true # Set to false if you don't want Packagist auto-updates (configured via setup:starter-kit)
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -102,53 +101,36 @@ jobs:
 
           echo "Base version (stable): $BASE_VERSION"
 
-          # Dev releases use format: v{BASE}-dev.{MINOR}.{PATCH}
-          # - Feature/Major commits: increment MINOR, reset PATCH to 0
-          # - Patch/Fix/Chore commits: increment PATCH only
+          # Rolling prereleases use proper semantic versioning with a single
+          # incrementing counter per base version: v{BASE}-beta.{N} (e.g. v1.2.3-beta.1).
+          # Docker tags derived from it drop the leading "v" per Docker Hub convention.
           PRERELEASE_PREFIX="beta"
 
-          # Find the latest dev tag for this base version with format v{BASE}-dev.X.Y
-          LATEST_DEV_TAG=$(git tag -l "v${BASE_VERSION}-${PRERELEASE_PREFIX}.*.*" --sort=-v:refname | head -n1 || true)
+          # Find the highest existing prerelease counter for this base version
+          LATEST_DEV_TAG=$(git tag -l "v${BASE_VERSION}-${PRERELEASE_PREFIX}.*" --sort=-v:refname | head -n1 || true)
+
+          DEV_NUMBER=0
 
           if [ -n "${LATEST_DEV_TAG:-}" ]; then
-            # Extract the dev minor and patch from the tag (e.g., v1.2.3-dev.2.5 -> 2 and 5)
+            # Extract the counter (e.g., v1.2.3-beta.4 -> 4)
             DEV_SUFFIX="${LATEST_DEV_TAG#v${BASE_VERSION}-${PRERELEASE_PREFIX}.}"
-            DEV_MINOR=$(echo "$DEV_SUFFIX" | cut -d'.' -f1)
-            DEV_PATCH=$(echo "$DEV_SUFFIX" | cut -d'.' -f2)
-
-            # Validate we got numbers, default to 0 if not
-            [[ "$DEV_MINOR" =~ ^[0-9]+$ ]] || DEV_MINOR=0
-            [[ "$DEV_PATCH" =~ ^[0-9]+$ ]] || DEV_PATCH=0
-          else
-            # No existing dev tags, start at 0.0
-            DEV_MINOR=0
-            DEV_PATCH=0
+            [[ "$DEV_SUFFIX" =~ ^[0-9]+$ ]] || DEV_SUFFIX=0
+            DEV_NUMBER=$DEV_SUFFIX
           fi
 
-          echo "Current dev version: ${DEV_MINOR}.${DEV_PATCH}"
+          echo "Current prerelease counter: ${DEV_NUMBER}"
 
-          # Bump based on commit type
-          case "$BUMP" in
-            major|minor)
-              # Feature/Major: increment dev minor, reset patch
-              DEV_MINOR=$((DEV_MINOR + 1))
-              DEV_PATCH=0
-              ;;
-            patch|*)
-              # Patch/Fix/Chore: increment dev patch only
-              DEV_PATCH=$((DEV_PATCH + 1))
-              ;;
-          esac
+          DEV_NUMBER=$((DEV_NUMBER + 1))
 
-          TAG="v${BASE_VERSION}-${PRERELEASE_PREFIX}.${DEV_MINOR}.${DEV_PATCH}"
+          TAG="v${BASE_VERSION}-${PRERELEASE_PREFIX}.${DEV_NUMBER}"
 
           # Ensure tag doesn't already exist (safety check)
           while git rev-parse "$TAG" >/dev/null 2>&1; do
-            DEV_PATCH=$((DEV_PATCH + 1))
-            TAG="v${BASE_VERSION}-${PRERELEASE_PREFIX}.${DEV_MINOR}.${DEV_PATCH}"
+            DEV_NUMBER=$((DEV_NUMBER + 1))
+            TAG="v${BASE_VERSION}-${PRERELEASE_PREFIX}.${DEV_NUMBER}"
           done
 
-          VERSION="${BASE_VERSION}-${PRERELEASE_PREFIX}.${DEV_MINOR}.${DEV_PATCH}"
+          VERSION="${BASE_VERSION}-${PRERELEASE_PREFIX}.${DEV_NUMBER}"
 
           echo "Resolved prerelease tag: $TAG"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -201,17 +183,18 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ needs.analyze-commit.outputs.tag }}
+            type=semver,pattern={{version}},value=${{ needs.analyze-commit.outputs.tag }}
+            type=raw,value=beta
+            type=raw,value=latest
             type=raw,value=dev-latest
-            type=raw,value=${{ needs.analyze-commit.outputs.release_type }}-${{ github.sha }}
-            type=ref,event=branch
+            type=sha,prefix=sha-,format=short
           labels: |
             org.opencontainers.image.version=${{ needs.analyze-commit.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
-            org.opencontainers.image.title=KoamiStarterKit
-            org.opencontainers.image.description=Modern Laravel 13 starter kit with Vue 3, Inertia.js, and Tailwind CSS
-            org.opencontainers.image.vendor=Koamishin
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.description=Production Docker image for this Laravel application
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
 
       - name: Build and push Docker image
         if: steps.check_docker.outputs.skip != 'true'
@@ -270,7 +253,7 @@ jobs:
 
           🚀 **Release Type:** ${RELEASE_TYPE^}
           📦 **Version:** ${VERSION}
-          🐳 **Docker Image:** ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}
+          🐳 **Docker Image:** ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}
           🐳 **Docker Alias:** ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest
 
           ## 📋 Changes
@@ -288,7 +271,7 @@ jobs:
 
           ## 🐳 Docker Deployment
           \`\`\`bash
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}
 
           # Or pull the rolling alias
           docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest
@@ -303,7 +286,7 @@ jobs:
           cat > version.json << EOF
           {
             "version": "${VERSION}",
-            "image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}",
+            "image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}",
             "commit": "${{ github.sha }}",
             "branch": "${{ github.ref_name }}",
             "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
@@ -343,7 +326,7 @@ jobs:
           generate_release_notes: false
 
   # ----------------------------------------------------------------------------
-  # 5. Notify: log summary, ping Packagist, and send a Discord notification
+  # 5. Notify: log summary and send a Discord notification
   # ----------------------------------------------------------------------------
   notify:
     name: Notify
@@ -352,8 +335,6 @@ jobs:
     if: always() && needs.optimize_ci.outputs.skip == 'false'
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-      PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
-      PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -370,7 +351,7 @@ jobs:
           echo "📦 Version: ${{ needs.analyze-commit.outputs.version }}"
           echo "🏷️  Tag: ${{ needs.analyze-commit.outputs.tag }}"
           echo "🎯 Type: ${{ needs.analyze-commit.outputs.release_type }}"
-          echo "🐳 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.analyze-commit.outputs.tag }}"
+          echo "🐳 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.analyze-commit.outputs.version }}"
           echo "🐳 Alias: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest"
           echo "👤 Author: ${{ github.actor }}"
           echo "🌿 Branch: ${{ github.ref_name }}"
@@ -379,11 +360,6 @@ jobs:
           echo "📊 Build: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           echo "🎉 Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.analyze-commit.outputs.tag }}"
-
-      - name: Notify Packagist
-        if: ${{ env.PACKAGIST_ENABLED == 'true' && env.PACKAGIST_TOKEN != '' && env.PACKAGIST_USERNAME != '' }}
-        run: |
-          curl -XPOST -u "${{ env.PACKAGIST_USERNAME }}:${{ env.PACKAGIST_TOKEN }}" https://packagist.org/api/update-package?username=${{ env.PACKAGIST_USERNAME }} -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'
 
       - name: Send Discord notification
         if: ${{ env.DISCORD_WEBHOOK_URL != '' }}
@@ -442,7 +418,7 @@ jobs:
             --arg actor "${{ github.actor }}" \
             --arg commit "${{ needs.analyze-commit.outputs.commit_message }}" \
             --arg buildUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-            --arg docker "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.analyze-commit.outputs.tag }}" \
+            --arg docker "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.analyze-commit.outputs.version }}" \
             --arg dockerAlias "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest" \
             --arg releaseUrl "$RELEASE_URL" \
             --arg changes "$RECENT_CHANGES" \
