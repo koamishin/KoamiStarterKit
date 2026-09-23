@@ -37,7 +37,7 @@ class SetupStarterKit extends Command
         {--registry= : Docker registry to publish to (ghcr or dockerhub)}
         {--docker-username= : Docker Hub username or organization (dockerhub only)}
         {--strategy= : Docker release strategy (rolling or manual)}
-        {--install : Run local install steps (key:generate, storage:link, migrate)}
+        {--install : Run local install steps (key:generate, storage:link, migrate, db:seed)}
         {--no-install : Skip local install steps}
         {--no-git : Skip Git initialization, remote setup, and commits}
         {--no-commit : Skip creating the initial commit}
@@ -172,7 +172,7 @@ class SetupStarterKit extends Command
         $this->line('Next steps:');
         $this->line('  1. Review composer.json, .github/workflows/*.yml, and .starter-kit.json');
         $this->line('  2. Add GitHub Secrets (Settings → Secrets and variables → Actions) listed above');
-        $this->line('  3. Run: composer install && npm install && php artisan migrate');
+        $this->line('  3. Run: composer install && npm install && php artisan migrate && php artisan db:seed');
         $this->line('  4. Run: composer run dev to start the development server');
 
         if ($docker['enabled'] && $docker['strategy'] === 'manual') {
@@ -479,7 +479,7 @@ class SetupStarterKit extends Command
         }
 
         if ($this->input->isInteractive()) {
-            return $this->confirm('Run local install now? (app key, storage link, database migrate)', true);
+            return $this->confirm('Run local install now? (app key, storage link, database migrate, seed)', true);
         }
 
         return false;
@@ -523,7 +523,7 @@ class SetupStarterKit extends Command
             $rows[] = ['Docker', 'Not configured'];
         }
 
-        $rows[] = ['Local Install', $runInstall ? 'Yes (key, storage link, migrate)' : 'Skipped'];
+        $rows[] = ['Local Install', $runInstall ? 'Yes (key, storage link, migrate, seed)' : 'Skipped'];
         $rows[] = ['Create GitHub Repo', $createRepo ? "Yes ({$visibility})" : 'No'];
         $rows[] = ['Push to GitHub', $this->resolvePushIntent()];
 
@@ -1322,6 +1322,7 @@ class SetupStarterKit extends Command
         $this->callSilentlyOrWarn('key:generate', [], 'Could not generate the application key.');
         $this->callSilentlyOrWarn('storage:link', [], 'Could not create the storage symlink.');
         $this->callSilentlyOrWarn('migrate', ['--force' => true], 'Could not run database migrations. Check your DB_* settings and run: php artisan migrate');
+        $this->callSilentlyOrWarn('db:seed', ['--force' => true], 'Could not seed roles and permissions. Run: php artisan db:seed');
     }
 
     /**

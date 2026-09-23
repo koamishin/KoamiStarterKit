@@ -758,6 +758,53 @@ test('composer json keeps expected structure', function (): void {
     expect($composer)->toHaveKeys(['name', 'description', 'authors', 'homepage']);
 });
 
+test('composer install scripts seed roles after migrating', function (): void {
+    $composer = json_decode((string) File::get(base_path('composer.json')), true);
+
+    foreach (['setup', 'post-create-project-cmd'] as $script) {
+        $commands = $composer['scripts'][$script] ?? [];
+        $migrateIndex = null;
+        $seedIndex = null;
+
+        foreach ($commands as $index => $command) {
+            if (str_contains((string) $command, 'artisan migrate')) {
+                $migrateIndex = $index;
+            }
+
+            if (str_contains((string) $command, 'artisan db:seed')) {
+                $seedIndex = $index;
+            }
+        }
+
+        expect($migrateIndex, "{$script} must run migrate")->not->toBeNull()
+            ->and($seedIndex, "{$script} must run db:seed")->not->toBeNull()
+            ->and($seedIndex, "{$script} must seed after migrate")->toBeGreaterThan($migrateIndex);
+    }
+});
+
+test('local install seeds the database after migrating', function (): void {
+    $command = new class extends SetupStarterKit
+    {
+        public array $calls = [];
+
+        protected function callSilentlyOrWarn(string $command, array $arguments, string $warning): void
+        {
+            $this->calls[] = $command;
+        }
+    };
+    $command->setLaravel(app());
+
+    $output = new OutputStyle(new ArrayInput([]), new BufferedOutput);
+    $command->setOutput($output);
+
+    $components = new ReflectionProperty(SetupStarterKit::class, 'components');
+    $components->setValue($command, app(Factory::class, ['output' => $output]));
+
+    invokeSetupMethod($command, 'runLocalInstall');
+
+    expect($command->calls)->toBe(['key:generate', 'storage:link', 'migrate', 'db:seed']);
+});
+
 test('workflow file exists and can be read', function (): void {
     $workflowPath = base_path('.github/workflows/auto-release.yml');
 

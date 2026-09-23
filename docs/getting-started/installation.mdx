@@ -140,10 +140,11 @@ touch database/database.sqlite
 
 _If you prefer MySQL or PostgreSQL, update `DB_CONNECTION` in your `.env` file._
 
-Run migrations:
+Run migrations and seed roles/permissions:
 
 ```bash
 php artisan migrate
+php artisan db:seed
 ```
 
 ### 5. Install Node Dependencies

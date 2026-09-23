@@ -4,9 +4,11 @@ namespace App\Actions\Fortify;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Enums\RoleEnums;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Spatie\Permission\Models\Role;
 
 class CreateNewUser implements CreatesNewUsers
 {
@@ -30,8 +32,16 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $input['password'],
         ]);
 
-        $user->assignRole('user');
+        $user->assignRole($this->defaultRole());
 
         return $user;
+    }
+
+    protected function defaultRole(): Role
+    {
+        return Role::firstOrCreate([
+            'name' => RoleEnums::USER->value,
+            'guard_name' => 'web',
+        ]);
     }
 }

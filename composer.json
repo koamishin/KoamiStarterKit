@@ -95,6 +95,7 @@
       "@php artisan module:enable Blog --no-interaction",
       "@php artisan migrate --force",
       "@php artisan module:migrate --force --no-interaction",
+      "@php artisan db:seed --force",
       "npm install",
       "npm run build",
       "@php artisan shield:generate --panel=1 --all --no-interaction"
@@ -155,6 +156,7 @@
       "@php artisan module:enable Blog --ansi --no-interaction",
       "@php artisan migrate --graceful --ansi",
       "@php artisan module:migrate --force --ansi --no-interaction",
+      "@php artisan db:seed --force --ansi",
       "@php artisan storage:link --ansi",
       "@php artisan setup:starter-kit --ansi --no-interaction --no-install",
       "npm install --silent",

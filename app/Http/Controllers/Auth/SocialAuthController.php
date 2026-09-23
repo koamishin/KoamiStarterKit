@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\RoleEnums;
 use App\Enums\SocialLoginProvider;
 use App\Http\Controllers\Controller;
 use App\Models\SocialAccount;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\Provider as ProviderContract;
 use Laravel\Socialite\Facades\Socialite;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -152,11 +154,11 @@ class SocialAuthController extends Controller
             'email_verified_at' => now(),
         ]);
 
-        if (filled($defaultRole)) {
-            $user->assignRole($defaultRole);
-        } else {
-            $user->assignRole('user');
-        }
+        $roleName = filled($defaultRole) ? $defaultRole : RoleEnums::USER->value;
+        $user->assignRole(Role::firstOrCreate([
+            'name' => $roleName,
+            'guard_name' => 'web',
+        ]));
 
         return $user;
     }
