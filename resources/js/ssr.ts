@@ -5,9 +5,7 @@ import type { DefineComponent } from 'vue';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 
-import AppLayout from './layouts/AppLayout.vue';
-import AuthLayout from './layouts/AuthLayout.vue';
-import SettingsLayout from './layouts/settings/Layout.vue';
+import { resolveLayout } from './layouts/resolveLayout';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -33,18 +31,7 @@ createServer(
             render: renderToString,
             title: (title) => (title ? `${title} - ${appName}` : appName),
             resolve: resolvePage,
-            layout: (name: string) => {
-                switch (true) {
-                    case name === 'Welcome':
-                        return null;
-                    case name.startsWith('auth/'):
-                        return AuthLayout;
-                    case name.startsWith('settings/'):
-                        return [AppLayout, SettingsLayout];
-                    default:
-                        return AppLayout;
-                }
-            },
+            layout: resolveLayout,
             setup: ({ App, props, plugin }) =>
                 createSSRApp({ render: () => h(App, props) }).use(plugin),
         }),

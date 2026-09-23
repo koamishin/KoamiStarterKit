@@ -7,9 +7,7 @@ import { initializeColorTheme } from './composables/useColorTheme';
 import { initializeTheme } from './composables/useAppearance';
 import { initializeFlashToast } from './lib/flashToast';
 
-import AppLayout from './layouts/AppLayout.vue';
-import AuthLayout from './layouts/AuthLayout.vue';
-import SettingsLayout from './layouts/settings/Layout.vue';
+import { resolveLayout } from './layouts/resolveLayout';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -31,18 +29,7 @@ const resolvePage = (name: string) => {
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: resolvePage,
-    layout: (name: string) => {
-        switch (true) {
-            case name === 'Welcome':
-                return null;
-            case name.startsWith('auth/'):
-                return AuthLayout;
-            case name.startsWith('settings/'):
-                return [AppLayout, SettingsLayout];
-            default:
-                return AppLayout;
-        }
-    },
+    layout: resolveLayout,
     withApp: (app) => {
         app.directive('focus', {
             mounted: (el: HTMLElement, shouldFocus) => {
