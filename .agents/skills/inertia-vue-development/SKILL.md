@@ -1,16 +1,26 @@
 ---
 name: inertia-vue-development
-description: "Develops Inertia.js v2 Vue client-side applications. Activates when creating Vue pages, forms, or navigation; using <Link>, <Form>, useForm, or router; working with deferred props, prefetching, or polling; or when user mentions Vue with Inertia, Vue pages, Vue forms, or Vue navigation."
+description: 'Develops Inertia.js v3 Vue client-side applications. Activates when creating Vue pages, forms, or navigation; using <Link>, <Form>, useForm, useHttp, setLayoutProps, or router; working with deferred props, prefetching, optimistic updates, instant visits, or polling; or when user mentions Vue with Inertia, Vue pages, Vue forms, or Vue navigation.'
 license: MIT
 metadata:
-  author: laravel
+    author: laravel
 ---
 
 # Inertia Vue Development
 
+## When to Apply
+
+Activate this skill when:
+
+- Creating or modifying Vue page components for Inertia
+- Working with forms in Vue (using `<Form>`, `useForm`, or `useHttp`)
+- Implementing client-side navigation with `<Link>` or `router`
+- Using v3 features: deferred props, prefetching, optimistic updates, instant visits, layout props, HTTP requests, WhenVisible, InfiniteScroll, once props, flash data, or polling
+- Building Vue-specific features with the Inertia protocol
+
 ## Documentation
 
-Use `search-docs` for detailed Inertia v2 Vue patterns and documentation.
+Use `search-docs` for detailed Inertia v3 Vue patterns and documentation.
 
 ## Basic Usage
 
@@ -20,14 +30,13 @@ Vue page components should be placed in the `resources/js/pages` directory.
 
 ### Page Component Structure
 
-Important: Vue components must have a single root element.
-
 <!-- Basic Vue Page Component -->
+
 ```vue
 <script setup>
 defineProps({
-    users: Array
-})
+    users: Array,
+});
 </script>
 
 <template>
@@ -49,9 +58,10 @@ defineProps({
 Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
 
 <!-- Inertia Vue Navigation -->
+
 ```vue
 <script setup>
-import { Link } from '@inertiajs/vue3'
+import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
@@ -66,15 +76,14 @@ import { Link } from '@inertiajs/vue3'
 ### Link with Method
 
 <!-- Link with POST Method -->
+
 ```vue
 <script setup>
-import { Link } from '@inertiajs/vue3'
+import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Link href="/logout" method="post" as="button">
-        Logout
-    </Link>
+    <Link href="/logout" method="post" as="button"> Logout </Link>
 </template>
 ```
 
@@ -83,27 +92,27 @@ import { Link } from '@inertiajs/vue3'
 Prefetch pages to improve perceived performance:
 
 <!-- Prefetch on Hover -->
+
 ```vue
 <script setup>
-import { Link } from '@inertiajs/vue3'
+import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Link href="/users" prefetch>
-        Users
-    </Link>
+    <Link href="/users" prefetch> Users </Link>
 </template>
 ```
 
 ### Programmatic Navigation
 
 <!-- Router Visit -->
+
 ```vue
 <script setup>
-import { router } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3';
 
 function handleClick() {
-    router.visit('/users')
+    router.visit('/users');
 }
 
 // Or with options
@@ -112,7 +121,7 @@ function createUser() {
         method: 'post',
         data: { name: 'John' },
         onSuccess: () => console.log('Done'),
-    })
+    });
 }
 </script>
 
@@ -129,13 +138,18 @@ function createUser() {
 The recommended way to build forms is with the `<Form>` component:
 
 <!-- Form Component Example -->
+
 ```vue
 <script setup>
-import { Form } from '@inertiajs/vue3'
+import { Form } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Form action="/users" method="post" #default="{ errors, processing, wasSuccessful }">
+    <Form
+        action="/users"
+        method="post"
+        #default="{ errors, processing, wasSuccessful }"
+    >
         <input type="text" name="name" />
         <div v-if="errors.name">{{ errors.name }}</div>
 
@@ -154,9 +168,10 @@ import { Form } from '@inertiajs/vue3'
 ### Form Component With All Props
 
 <!-- Form Component Full Example -->
+
 ```vue
 <script setup>
-import { Form } from '@inertiajs/vue3'
+import { Form } from '@inertiajs/vue3';
 </script>
 
 <template>
@@ -176,7 +191,7 @@ import { Form } from '@inertiajs/vue3'
             defaults,
             isDirty,
             reset,
-            submit
+            submit,
         }"
     >
         <input type="text" name="name" :value="defaults.name" />
@@ -206,9 +221,10 @@ The `<Form>` component supports automatic resetting:
 Use the `search-docs` tool with a query of `form component resetting` for detailed guidance.
 
 <!-- Form with Reset Props -->
+
 ```vue
 <script setup>
-import { Form } from '@inertiajs/vue3'
+import { Form } from '@inertiajs/vue3';
 </script>
 
 <template>
@@ -222,9 +238,7 @@ import { Form } from '@inertiajs/vue3'
         <input type="text" name="name" />
         <div v-if="errors.name">{{ errors.name }}</div>
 
-        <button type="submit" :disabled="processing">
-            Submit
-        </button>
+        <button type="submit" :disabled="processing">Submit</button>
     </Form>
 </template>
 ```
@@ -236,20 +250,21 @@ Forms can also be built using the `useForm` composable for more programmatic con
 For more programmatic control or to follow existing conventions, use the `useForm` composable:
 
 <!-- useForm Composable Example -->
+
 ```vue
 <script setup>
-import { useForm } from '@inertiajs/vue3'
+import { useForm } from '@inertiajs/vue3';
 
 const form = useForm({
     name: '',
     email: '',
     password: '',
-})
+});
 
 function submit() {
     form.post('/users', {
         onSuccess: () => form.reset('password'),
-    })
+    });
 }
 </script>
 
@@ -264,25 +279,170 @@ function submit() {
         <input type="password" v-model="form.password" />
         <div v-if="form.errors.password">{{ form.errors.password }}</div>
 
-        <button type="submit" :disabled="form.processing">
-            Create User
-        </button>
+        <button type="submit" :disabled="form.processing">Create User</button>
     </form>
 </template>
 ```
 
-## Inertia v2 Features
+## Inertia v3 Features
+
+### HTTP Requests
+
+Use the `useHttp` hook for standalone HTTP requests that do not trigger Inertia page visits. It provides the same developer experience as `useForm`, but for plain JSON endpoints.
+
+<!-- useHttp Example -->
+
+```vue
+<script setup>
+import { useHttp } from '@inertiajs/vue3';
+
+const http = useHttp({
+    query: '',
+});
+
+function search() {
+    http.get('/api/search', {
+        onSuccess: (response) => {
+            console.log(response);
+        },
+    });
+}
+</script>
+
+<template>
+    <input v-model="http.query" @input="search" />
+    <div v-if="http.processing">Searching...</div>
+</template>
+```
+
+### Optimistic Updates
+
+Apply data changes instantly before the server responds, with automatic rollback on failure:
+
+<!-- Optimistic Update with Router -->
+
+```vue
+<script setup>
+import { router } from '@inertiajs/vue3';
+
+function like(post) {
+    router
+        .optimistic((props) => ({
+            post: {
+                ...props.post,
+                likes: props.post.likes + 1,
+            },
+        }))
+        .post(`/posts/${post.id}/like`);
+}
+</script>
+```
+
+Optimistic updates also work with `useForm` and the `<Form>` component:
+
+<!-- Optimistic Update with Form Component -->
+
+```vue
+<template>
+    <Form
+        action="/todos"
+        method="post"
+        :optimistic="
+            (props, data) => ({
+                todos: [
+                    ...props.todos,
+                    { id: Date.now(), name: data.name, done: false },
+                ],
+            })
+        "
+    >
+        <input type="text" name="name" />
+        <button type="submit">Add Todo</button>
+    </Form>
+</template>
+```
+
+### Instant Visits
+
+Navigate to a new page immediately without waiting for the server response. The target component renders right away with shared props, while page-specific props load in the background.
+
+<!-- Instant Visit with Link -->
+
+```vue
+<script setup>
+import { Link } from '@inertiajs/vue3';
+</script>
+
+<template>
+    <Link href="/dashboard" component="Dashboard">Dashboard</Link>
+
+    <Link
+        href="/posts/1"
+        component="Posts/Show"
+        :page-props="{ post: { id: 1, title: 'My Post' } }"
+    >
+        View Post
+    </Link>
+</template>
+```
+
+### Layout Props
+
+Share dynamic data between pages and persistent layouts:
+
+<!-- Layout Props in Layout -->
+
+```vue
+<script setup>
+withDefaults(
+    defineProps({
+        title: String,
+        showSidebar: Boolean,
+    }),
+    {
+        title: 'My App',
+        showSidebar: true,
+    },
+);
+</script>
+
+<template>
+    <header>{{ title }}</header>
+    <aside v-if="showSidebar">Sidebar</aside>
+    <main>
+        <slot />
+    </main>
+</template>
+```
+
+<!-- Setting Layout Props from Page -->
+
+```vue
+<script setup>
+import { setLayoutProps } from '@inertiajs/vue3';
+
+setLayoutProps({
+    title: 'Dashboard',
+    showSidebar: false,
+});
+</script>
+
+<template>
+    <h1>Dashboard</h1>
+</template>
+```
 
 ### Deferred Props
 
 Use deferred props to load data after initial page render:
 
 <!-- Deferred Props with Empty State -->
+
 ```vue
 <script setup>
 defineProps({
-    users: Array
-})
+    users: Array,
+});
 </script>
 
 <template>
@@ -306,15 +466,16 @@ defineProps({
 Use the `usePoll` composable to automatically refresh data at intervals. It handles cleanup on unmount and throttles polling when the tab is inactive.
 
 <!-- Basic Polling -->
+
 ```vue
 <script setup>
-import { usePoll } from '@inertiajs/vue3'
+import { usePoll } from '@inertiajs/vue3';
 
 defineProps({
-    stats: Object
-})
+    stats: Object,
+});
 
-usePoll(5000)
+usePoll(5000);
 </script>
 
 <template>
@@ -326,26 +487,31 @@ usePoll(5000)
 ```
 
 <!-- Polling With Request Options and Manual Control -->
+
 ```vue
 <script setup>
-import { usePoll } from '@inertiajs/vue3'
+import { usePoll } from '@inertiajs/vue3';
 
 defineProps({
-    stats: Object
-})
+    stats: Object,
+});
 
-const { start, stop } = usePoll(5000, {
-    only: ['stats'],
-    onStart() {
-        console.log('Polling request started')
+const { start, stop } = usePoll(
+    5000,
+    {
+        only: ['stats'],
+        onStart() {
+            console.log('Polling request started');
+        },
+        onFinish() {
+            console.log('Polling request finished');
+        },
     },
-    onFinish() {
-        console.log('Polling request finished')
+    {
+        autoStart: false,
+        keepAlive: true,
     },
-}, {
-    autoStart: false,
-    keepAlive: true,
-})
+);
 </script>
 
 <template>
@@ -358,41 +524,70 @@ const { start, stop } = usePoll(5000, {
 </template>
 ```
 
-- `autoStart` (default `true`) — set to `false` to start polling manually via the returned `start()` function
-- `keepAlive` (default `false`) — set to `true` to prevent throttling when the browser tab is inactive
+- `autoStart` (default `true`) - set to `false` to start polling manually via the returned `start()` function
+- `keepAlive` (default `false`) - set to `true` to prevent throttling when the browser tab is inactive
 
-### WhenVisible (Infinite Scroll)
+### WhenVisible
 
-Load more data when user scrolls to a specific element:
+Lazy-load a prop when an element scrolls into view. Useful for deferring expensive data that sits below the fold:
 
-<!-- Infinite Scroll with WhenVisible -->
+<!-- WhenVisible Example -->
+
 ```vue
 <script setup>
-import { WhenVisible } from '@inertiajs/vue3'
+import { WhenVisible } from '@inertiajs/vue3';
 
 defineProps({
-    users: Object
-})
+    stats: Object,
+});
 </script>
 
 <template>
     <div>
-        <div v-for="user in users.data" :key="user.id">
-            {{ user.name }}
-        </div>
+        <h1>Dashboard</h1>
 
-        <WhenVisible
-            v-if="users.next_page_url"
-            data="users"
-            :params="{ page: users.current_page + 1 }"
-        >
+        <WhenVisible data="stats" :buffer="200">
             <template #fallback>
-                <div>Loading more...</div>
+                <div class="animate-pulse">Loading stats...</div>
+            </template>
+
+            <template #default="{ fetching }">
+                <div>
+                    <p>Total Users: {{ stats.total_users }}</p>
+                    <p>Revenue: {{ stats.revenue }}</p>
+                    <span v-if="fetching">Refreshing...</span>
+                </div>
             </template>
         </WhenVisible>
     </div>
 </template>
 ```
+
+### InfiniteScroll
+
+Automatically load additional pages of paginated data as users scroll:
+
+<!-- InfiniteScroll Example -->
+
+```vue
+<script setup>
+import { InfiniteScroll } from '@inertiajs/vue3';
+
+defineProps({
+    users: Object,
+});
+</script>
+
+<template>
+    <InfiniteScroll data="users">
+        <div v-for="user in users.data" :key="user.id">
+            {{ user.name }}
+        </div>
+    </InfiniteScroll>
+</template>
+```
+
+The server must use `Inertia::scroll()` to configure the paginated data. Use the `search-docs` tool with a query of `infinite scroll` for detailed guidance on buffers, manual loading, reverse mode, and custom trigger elements.
 
 ## Server-Side Patterns
 
@@ -406,3 +601,5 @@ Server-side patterns (Inertia::render, props, middleware) are covered in inertia
 - Not handling the `undefined` state of deferred props before data loads
 - Using `<form>` without preventing default submission (use `<Form>` component or `@submit.prevent`)
 - Forgetting to check if `<Form>` component is available in your Inertia version
+- Using `router.cancel()` instead of `router.cancelAll()` (v3 breaking change)
+- Using `router.on('invalid', ...)` or `router.on('exception', ...)` instead of the renamed `httpException` and `networkError` events

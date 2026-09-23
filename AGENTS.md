@@ -10,6 +10,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 This application is a Laravel application running on PHP 8.5. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
 Before relying on a package's API, confirm its installed version:
+
 - PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
 - JS packages: check `package.json` for the installed versions.
 
@@ -85,7 +86,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
 - Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
-  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
+    - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
 
 === php rules ===
 
@@ -120,11 +121,19 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - ALWAYS use `search-docs` tool for version-specific Inertia documentation and updated code examples.
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
-# Inertia v2
+# Inertia v3
 
-- Use all Inertia features from v1 and v2. Check the documentation before making changes to ensure the correct approach.
-- New features: deferred props, infinite scroll, merging props, polling, prefetching, once props, flash data.
+- Use all Inertia features from v1, v2, and v3. Check the documentation before making changes to ensure the correct approach.
+- New v3 features: standalone HTTP requests (`useHttp` hook), optimistic updates with automatic rollback, layout props (`useLayoutProps` hook), instant visits, simplified SSR via `@inertiajs/vite` plugin, custom exception handling for error pages.
+- Carried over from v2: deferred props, infinite scroll, merging props, polling, prefetching, once props, flash data.
 - When using deferred props, add an empty state with a pulsing or animated skeleton.
+- Axios has been removed. Use the built-in XHR client with interceptors, or install Axios separately if needed.
+- `Inertia::lazy()` / `LazyProp` has been removed. Use `Inertia::optional()` instead.
+- Prop types (`Inertia::optional()`, `Inertia::defer()`, `Inertia::merge()`) work inside nested arrays with dot-notation paths.
+- SSR works automatically in Vite dev mode with `@inertiajs/vite` - no separate Node.js server needed during development.
+- Event renames: `invalid` is now `httpException`, `exception` is now `networkError`.
+- `router.cancel()` replaced by `router.cancelAll()`.
+- The `future` configuration namespace has been removed - all v2 future options are now always enabled.
 
 === laravel/core rules ===
 
@@ -195,6 +204,7 @@ Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `
 # Inertia + Vue
 
 Vue components must have a single root element.
+
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
 === filament/filament/core rules ===
@@ -221,13 +231,13 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
 
 Select::make('type')
-    ->options(CompanyType::class)
-    ->required()
-    ->live(),
+->options(CompanyType::class)
+->required()
+->live(),
 
 TextInput::make('company_name')
-    ->required()
-    ->visible(fn (Get $get): bool => $get('type') === 'business'),
+->required()
+->visible(fn (Get $get): bool => $get('type') === 'business'),
 
 </code-snippet>
 
@@ -238,15 +248,15 @@ use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\Str;
 
 TextInput::make('title')
-    ->required()
-    ->live(onBlur: true)
-    ->afterStateUpdated(fn (Set $set, ?string $state) => $set(
+->required()
+->live(onBlur: true)
+->afterStateUpdated(fn (Set $set, ?string $state) => $set(
         'slug',
         Str::slug($state ?? ''),
-    )),
+)),
 
 TextInput::make('slug')
-    ->required(),
+->required(),
 
 </code-snippet>
 
@@ -257,16 +267,16 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 
 Section::make('Details')
-    ->schema([
-        Grid::make(2)->schema([
-            TextInput::make('first_name')
-                ->columnSpan(1),
-            TextInput::make('last_name')
-                ->columnSpan(1),
-            TextInput::make('bio')
-                ->columnSpanFull(),
-        ]),
-    ]),
+->schema([
+Grid::make(2)->schema([
+TextInput::make('first_name')
+->columnSpan(1),
+TextInput::make('last_name')
+->columnSpan(1),
+TextInput::make('bio')
+->columnSpanFull(),
+]),
+]),
 
 </code-snippet>
 
@@ -276,14 +286,14 @@ Use `Repeater` for inline `HasMany` management. `->relationship()` with no args 
 use Filament\Forms\Components\Repeater;
 
 Repeater::make('qualifications')
-    ->relationship()
-    ->schema([
-        TextInput::make('institution')
-            ->required(),
-        TextInput::make('qualification')
-            ->required(),
-    ])
-    ->columns(2),
+->relationship()
+->schema([
+TextInput::make('institution')
+->required(),
+TextInput::make('qualification')
+->required(),
+])
+->columns(2),
 
 </code-snippet>
 
@@ -293,7 +303,7 @@ Use `state()` with a `Closure` to compute derived column values:
 use Filament\Tables\Columns\TextColumn;
 
 TextColumn::make('full_name')
-    ->state(fn (User $record): string => "{$record->first_name} {$record->last_name}"),
+->state(fn (User $record): string => "{$record->first_name} {$record->last_name}"),
 
 </code-snippet>
 
@@ -305,13 +315,13 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 
 SelectFilter::make('status')
-    ->options(UserStatus::class),
+->options(UserStatus::class),
 
 SelectFilter::make('author')
-    ->relationship('author', 'name'),
+->relationship('author', 'name'),
 
 Filter::make('verified')
-    ->query(fn (Builder $query) => $query->whereNotNull('email_verified_at')),
+->query(fn (Builder $query) => $query->whereNotNull('email_verified_at')),
 
 </code-snippet>
 
@@ -321,12 +331,12 @@ Actions are buttons that encapsulate optional modal forms and behavior:
 use Filament\Actions\Action;
 
 Action::make('updateEmail')
-    ->schema([
-        TextInput::make('email')
-            ->email()
-            ->required(),
-    ])
-    ->action(fn (array $data, User $record) => $record->update($data)),
+->schema([
+TextInput::make('email')
+->email()
+->required(),
+])
+->action(fn (array $data, User $record) => $record->update($data)),
 
 </code-snippet>
 
@@ -341,9 +351,9 @@ Testing setup (requires `pestphp/pest-plugin-livewire` in `composer.json`):
 use function Pest\Livewire\livewire;
 
 livewire(ListUsers::class)
-    ->assertCanSeeTableRecords($users)
+->assertCanSeeTableRecords($users)
     ->searchTable($users->first()->name)
-    ->assertCanSeeTableRecords($users->take(1))
+->assertCanSeeTableRecords($users->take(1))
     ->assertCanNotSeeTableRecords($users->skip(1));
 
 </code-snippet>
@@ -352,18 +362,18 @@ livewire(ListUsers::class)
 use function Pest\Laravel\assertDatabaseHas;
 
 livewire(CreateUser::class)
-    ->fillForm([
-        'name' => 'Test',
-        'email' => 'test@example.com',
-    ])
-    ->call('create')
-    ->assertNotified()
-    ->assertHasNoFormErrors()
-    ->assertRedirect();
+->fillForm([
+'name' => 'Test',
+'email' => 'test@example.com',
+])
+->call('create')
+->assertNotified()
+->assertHasNoFormErrors()
+->assertRedirect();
 
 assertDatabaseHas(User::class, [
-    'name' => 'Test',
-    'email' => 'test@example.com',
+'name' => 'Test',
+'email' => 'test@example.com',
 ]);
 
 </code-snippet>
@@ -376,8 +386,8 @@ livewire(EditUser::class, ['record' => $user->id])
     ->assertHasNoFormErrors();
 
 assertDatabaseHas(User::class, [
-    'id' => $user->id,
-    'name' => 'Updated',
+'id' => $user->id,
+'name' => 'Updated',
 ]);
 
 </code-snippet>
@@ -403,10 +413,10 @@ Use `->callAction(DeleteAction::class)` for page actions, or `->callAction(TestA
 use Filament\Actions\Testing\TestAction;
 
 livewire(ListUsers::class)
-    ->callAction(TestAction::make('promote')->table($user), [
-        'role' => 'admin',
-    ])
-    ->assertNotified();
+->callAction(TestAction::make('promote')->table($user), [
+'role' => 'admin',
+])
+->assertNotified();
 
 </code-snippet>
 
@@ -429,9 +439,9 @@ livewire(ListUsers::class)
 - **`Repeater` uses `->schema()`, not `->fields()`.**
 - **Never add `->dehydrated(false)` to fields that need to be saved.** It strips the value from form state before `->action()` or the save handler runs. Only use it for helper/UI-only fields.
 - **Use correct property types when overriding `Page`, `Resource`, and `Widget` properties.** These properties have union types or changed modifiers that must be preserved:
-  - `$navigationIcon`: `protected static string | BackedEnum | null` (not `?string`)
-  - `$navigationGroup`: `protected static string | UnitEnum | null` (not `?string`)
-  - `$view`: `protected string` (not `protected static string`) on `Page` and `Widget` classes
+    - `$navigationIcon`: `protected static string | BackedEnum | null` (not `?string`)
+    - `$navigationGroup`: `protected static string | UnitEnum | null` (not `?string`)
+    - `$view`: `protected string` (not `protected static string`) on `Page` and `Widget` classes
 
 === pestphp/pest-plugin-agent/core rules ===
 

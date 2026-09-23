@@ -1,15 +1,10 @@
 {
-    "agents": [
-        "opencode"
-    ],
+    "agents": ["opencode"],
     "cloud": false,
     "guidelines": true,
     "mcp": true,
     "nightwatch": false,
-    "packages": [
-        "filament/filament",
-        "pestphp/pest-plugin-agent"
-    ],
+    "packages": ["filament/filament", "pestphp/pest-plugin-agent"],
     "sail": false,
     "skills": [
         "infer-conventions",
