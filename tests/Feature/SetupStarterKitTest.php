@@ -776,9 +776,9 @@ test('composer install scripts seed roles after migrating', function (): void {
             }
         }
 
-        expect($migrateIndex, "{$script} must run migrate")->not->toBeNull()
-            ->and($seedIndex, "{$script} must run db:seed")->not->toBeNull()
-            ->and($seedIndex, "{$script} must seed after migrate")->toBeGreaterThan($migrateIndex);
+        expect($migrateIndex)->not->toBeNull()
+            ->and($seedIndex)->not->toBeNull()
+            ->and($seedIndex)->toBeGreaterThan($migrateIndex);
     }
 });
 

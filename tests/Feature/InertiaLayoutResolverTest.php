@@ -20,7 +20,7 @@ test('app and ssr entrypoints use the shared layout resolver', function (): void
     foreach (['resources/js/app.ts', 'resources/js/ssr.ts'] as $path) {
         $source = File::get(base_path($path));
 
-        expect($source, "{$path} must use resolveLayout")
+        expect($source)
             ->toContain('resolveLayout')
             ->not->toContain('settings/');
     }
