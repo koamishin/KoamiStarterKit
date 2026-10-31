@@ -6,8 +6,8 @@ use App\Services\Release\ReleaseService;
 use Illuminate\Support\Facades\Http;
 
 test('release service returns current version from version json', function (): void {
-    $service = app(ReleaseService::class);
-    $version = $service->currentVersion();
+    $releaseService = app(ReleaseService::class);
+    $version = $releaseService->currentVersion();
 
     expect($version)->not->toBeEmpty();
 });
@@ -23,8 +23,8 @@ test('release service correctly detects updates via github api', function (): vo
         ], 200),
     ]);
 
-    $service = app(ReleaseService::class);
-    $result = $service->check(force: true);
+    $releaseService = app(ReleaseService::class);
+    $result = $releaseService->check(force: true);
 
     expect($result['is_update_available'])->toBeTrue()
         ->and($result['latest_version'])->toBe('99.0.0')
@@ -45,8 +45,8 @@ test('release service reports up to date when current version is equal or newer'
         ], 200),
     ]);
 
-    $service = app(ReleaseService::class);
-    $result = $service->check(force: true);
+    $releaseService = app(ReleaseService::class);
+    $result = $releaseService->check(force: true);
 
     expect($result['is_update_available'])->toBeFalse()
         ->and($result['status'])->toBe('ok');
@@ -57,8 +57,8 @@ test('release service falls back gracefully when api fails', function (): void {
         'https://api.github.com/repos/*/releases/latest' => Http::response(null, 500),
     ]);
 
-    $service = app(ReleaseService::class);
-    $result = $service->check(force: true);
+    $releaseService = app(ReleaseService::class);
+    $result = $releaseService->check(force: true);
 
     expect($result['status'])->toBe('error')
         ->and($result['is_update_available'])->toBeFalse();

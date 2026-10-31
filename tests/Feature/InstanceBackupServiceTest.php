@@ -6,8 +6,8 @@ use App\Services\Backup\InstanceBackupService;
 use Illuminate\Support\Facades\File;
 
 test('backup service creates valid disaster recovery zip archive', function (): void {
-    $service = app(InstanceBackupService::class);
-    $zipPath = $service->create();
+    $instanceBackupService = app(InstanceBackupService::class);
+    $zipPath = $instanceBackupService->create();
 
     expect(File::exists($zipPath))->toBeTrue();
 

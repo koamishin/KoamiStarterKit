@@ -169,8 +169,8 @@ class Dashboard extends BaseDashboard
                 ->modalHeading('Create Disaster Recovery Archive?')
                 ->modalDescription('This generates a ZIP archive containing the active database and storage uploads.')
                 ->action(function (): BinaryFileResponse {
-                    $backupService = app(InstanceBackupService::class);
-                    $zipFile = $backupService->create();
+                    $instanceBackupService = app(InstanceBackupService::class);
+                    $zipFile = $instanceBackupService->create();
 
                     return response()->download($zipFile)->deleteFileAfterSend(true);
                 }),

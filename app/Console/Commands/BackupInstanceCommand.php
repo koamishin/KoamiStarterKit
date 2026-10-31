@@ -14,12 +14,12 @@ class BackupInstanceCommand extends Command
 
     protected $description = 'Create a disaster recovery ZIP archive of database and storage';
 
-    public function handle(InstanceBackupService $backupService): int
+    public function handle(InstanceBackupService $instanceBackupService): int
     {
         $this->components->info('Creating disaster recovery backup archive...');
 
         try {
-            $zipPath = $backupService->create();
+            $zipPath = $instanceBackupService->create();
             $this->components->info("Backup archive generated successfully: {$zipPath}");
 
             return self::SUCCESS;

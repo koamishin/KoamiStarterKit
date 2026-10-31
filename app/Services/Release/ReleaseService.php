@@ -94,11 +94,11 @@ class ReleaseService
                     $latestVersion = ltrim($tagName, 'v');
                     $cleanCurrent = ltrim($current, 'v');
 
-                    $isUpdateAvailable = ! empty($latestVersion) && version_compare($cleanCurrent, $latestVersion, '<');
+                    $isUpdateAvailable = $latestVersion !== '' && $latestVersion !== '0' && version_compare($cleanCurrent, $latestVersion, '<');
 
                     return [
                         'current_version' => $current,
-                        'latest_version' => ! empty($latestVersion) ? $latestVersion : $current,
+                        'latest_version' => $latestVersion === '' || $latestVersion === '0' ? $current : $latestVersion,
                         'is_update_available' => $isUpdateAvailable,
                         'release_title' => (string) ($json['name'] ?? $tagName),
                         'release_notes' => (string) ($json['body'] ?? 'No release notes provided.'),
