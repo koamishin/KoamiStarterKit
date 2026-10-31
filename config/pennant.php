@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('PENNANT_STORE', 'database'),
+    'default' => env('PENNANT_STORE', 'managed'),
 
     /*
     |--------------------------------------------------------------------------
@@ -29,6 +29,8 @@ return [
     */
 
     'stores' => [
+
+        'managed' => ['driver' => 'managed'],
 
         'array' => [
             'driver' => 'array',

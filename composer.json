@@ -35,10 +35,14 @@
     "bezhansalleh/filament-shield": "^4.1",
     "filament/filament": "^5.0",
     "inertiajs/inertia-laravel": "^3.0",
+    "ipatco/filament-profile": "^1.0",
+    "janczakb/filament-flex-fields": "^4.0",
     "lab404/laravel-impersonate": "^1.7",
+    "laravel/ai": "^0.10.3",
     "laravel/chisel": "^0.1.0",
     "laravel/fortify": "^1.37.2",
     "laravel/framework": "^13.17",
+    "laravel/mcp": "^0.9.7",
     "laravel/octane": "^2.13",
     "laravel/pennant": "^1.20",
     "laravel/socialite": "^5.27",
@@ -50,6 +54,7 @@
     "spatie/laravel-activitylog": "^4.10",
     "spatie/laravel-permission": "^6.24",
     "spatie/laravel-settings": "^3.7",
+    "spiggle/filawarden-core": "^1.1",
     "yukazakiri/shadcthemes-tools": "^0.1.6"
   },
   "require-dev": {
@@ -62,6 +67,7 @@
     "nunomaduro/collision": "^8.6",
     "pestphp/pest": "^5.0",
     "pestphp/pest-plugin-agent": "^5.0",
+    "pestphp/pest-plugin-browser": "^5.0",
     "pestphp/pest-plugin-evals": "^5.0",
     "pestphp/pest-plugin-laravel": "^5.0",
     "pestphp/pest-plugin-phpstan": "^5.0",
@@ -93,6 +99,7 @@
       "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
       "@php artisan key:generate",
       "@php artisan module:enable Blog --no-interaction",
+      "@php artisan install:features --ansi",
       "@php artisan migrate --force",
       "@php artisan module:migrate --force --no-interaction",
       "@php artisan db:seed --force",
@@ -144,7 +151,6 @@
       "@php artisan filament:upgrade"
     ],
     "post-update-cmd": [
-      "@php artisan install:features --ansi",
       "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
     ],
     "post-root-package-install": [

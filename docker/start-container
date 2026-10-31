@@ -5,32 +5,35 @@ container_mode=${CONTAINER_MODE:-"http"}
 octane_server=${OCTANE_SERVER}
 running_migrations_and_seeders=${RUNNING_MIGRATIONS_AND_SEEDERS:-"false"}
 
+ROOT="${ROOT:-/app}"
+export ROOT
+
 # Provide sane defaults for service env vars so health checks don't fail when
 # project .env hasn't been loaded into the container environment yet.
 REDIS_HOST="${REDIS_HOST:-redis}"
 REDIS_PORT="${REDIS_PORT:-6379}"
-DB_HOST="${DB_HOST:-pgsql}"
+DB_HOST="${DB_HOST:-db}"
 DB_PORT="${DB_PORT:-5432}"
 export REDIS_HOST REDIS_PORT DB_HOST DB_PORT
 
 initialStuff() {
     echo "Container mode: $container_mode"
 
-    if [ ! -d "/var/www/html/vendor/laravel/horizon" ]; then
+    if [ ! -d "${ROOT}/vendor/laravel/horizon" ]; then
         echo "Horizon not installed. Disabling Horizon supervisor config."
         if [ -f "/etc/supervisor/conf.d/supervisord.horizon.conf" ]; then
             echo "" > /etc/supervisor/conf.d/supervisord.horizon.conf
         fi
     fi
 
-    if [ ! -d "/var/www/html/vendor/laravel/pulse" ]; then
+    if [ ! -d "${ROOT}/vendor/laravel/pulse" ]; then
         echo "Pulse not installed. Disabling Pulse supervisor config."
         if [ -f "/etc/supervisor/conf.d/supervisord.pulse.conf" ]; then
             echo "" > /etc/supervisor/conf.d/supervisord.pulse.conf
         fi
     fi
 
-    if [ ! -d "/var/www/html/vendor/laravel/telescope" ]; then
+    if [ ! -d "${ROOT}/vendor/laravel/telescope" ]; then
         if [ -f "/etc/supervisor/conf.d/supervisord.telescope.conf" ]; then
             echo "Telescope not installed. Disabling Telescope supervisor config."
             echo "" > /etc/supervisor/conf.d/supervisord.telescope.conf
@@ -39,43 +42,77 @@ initialStuff() {
 
     check_connections
 
-    php artisan storage:link; \
-    php artisan optimize:clear; \
-    php artisan optimize;
+    php "${ROOT}/artisan" storage:link --no-interaction 2>/dev/null || true
+    php "${ROOT}/artisan" optimize:clear --no-interaction
+
+    if [ "${AUTORUN_MIGRATIONS:-true}" = "true" ] || [ "${running_migrations_and_seeders}" = "true" ]; then
+        echo "Running database migrations..."
+        php "${ROOT}/artisan" migrate --force --no-interaction
+        php "${ROOT}/artisan" module:migrate --force --no-interaction 2>/dev/null || true
+        php "${ROOT}/artisan" features:manifest sync --no-interaction 2>/dev/null || true
+        if [ "${SEED_ON_INSTALL:-false}" = "true" ] || [ "${running_migrations_and_seeders}" = "true" ]; then
+            echo "Running database seeders..."
+            php "${ROOT}/artisan" db:seed --force --no-interaction 2>/dev/null || true
+        fi
+    fi
+
+    if [ "${APP_ENV:-production}" = "production" ]; then
+        php "${ROOT}/artisan" optimize --no-interaction || true
+    fi
 }
 
 check_connections() {
     echo "Checking connections..."
 
-    # Check Redis
-    echo "Testing Redis connection to ${REDIS_HOST}:${REDIS_PORT}..."
-    php -r "
-        \$maxTries = 30;
-        for (\$i = 0; \$i < \$maxTries; \$i++) {
-            try {
-                \$redis = new Redis();
-                \$redis->connect(getenv('REDIS_HOST'), getenv('REDIS_PORT'));
-                if (\$redis->ping()) {
-                    echo 'Redis connection successful.' . PHP_EOL;
-                    exit(0);
-                }
-            } catch (Exception \$e) {}
-            sleep(1);
-        }
-        echo 'Failed to connect to Redis.' . PHP_EOL;
-        exit(1);
-    "
-
-    # Check Database
-    echo "Testing Database connection to ${DB_HOST}:${DB_PORT}..."
-    if [ -z "${DB_DATABASE}" ] || [ -z "${DB_USERNAME}" ]; then
-        echo "Skipping Database check (DB_DATABASE/DB_USERNAME not set in environment)."
-    else
+    # Check Redis only when needed
+    if [ "${CACHE_STORE}" = "redis" ] || [ "${QUEUE_CONNECTION}" = "redis" ] || [ "${SESSION_DRIVER}" = "redis" ]; then
+        echo "Testing Redis connection to ${REDIS_HOST}:${REDIS_PORT}..."
         php -r "
             \$maxTries = 30;
             for (\$i = 0; \$i < \$maxTries; \$i++) {
                 try {
-                    \$dsn = 'pgsql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_DATABASE');
+                    \$redis = new Redis();
+                    \$redis->connect(getenv('REDIS_HOST') ?: '127.0.0.1', (int)(getenv('REDIS_PORT') ?: 6379));
+                    if (getenv('REDIS_PASSWORD') && getenv('REDIS_PASSWORD') !== 'null') {
+                        \$redis->auth(getenv('REDIS_PASSWORD'));
+                    }
+                    if (\$redis->ping()) {
+                        echo 'Redis connection successful.' . PHP_EOL;
+                        exit(0);
+                    }
+                } catch (Exception \$e) {}
+                sleep(1);
+            }
+            echo 'Failed to connect to Redis.' . PHP_EOL;
+            exit(1);
+        "
+    else
+        echo "Redis not required for current cache/queue/session drivers."
+    fi
+
+    # Check Database
+    db_conn="${DB_CONNECTION:-sqlite}"
+    if [ "${db_conn}" = "sqlite" ]; then
+        echo "Database: SQLite"
+        db_file="${DB_DATABASE:-${ROOT}/database/database.sqlite}"
+        db_dir="$(dirname "${db_file}")"
+        mkdir -p "${db_dir}"
+        if [ ! -f "${db_file}" ]; then
+            touch "${db_file}"
+        fi
+        chown -R ${USER}:${USER} "${db_dir}" "${db_file}" 2>/dev/null || true
+    elif [ -n "${DB_DATABASE}" ] && [ -n "${DB_USERNAME}" ]; then
+        echo "Testing Database connection to ${DB_HOST}:${DB_PORT}..."
+        php -r "
+            \$maxTries = 30;
+            \$driver = getenv('DB_CONNECTION') ?: 'pgsql';
+            for (\$i = 0; \$i < \$maxTries; \$i++) {
+                try {
+                    if (\$driver === 'mysql' || \$driver === 'mariadb') {
+                        \$dsn = 'mysql:host=' . (getenv('DB_HOST') ?: '127.0.0.1') . ';port=' . (getenv('DB_PORT') ?: '3306') . ';dbname=' . getenv('DB_DATABASE');
+                    } else {
+                        \$dsn = 'pgsql:host=' . (getenv('DB_HOST') ?: '127.0.0.1') . ';port=' . (getenv('DB_PORT') ?: '5432') . ';dbname=' . getenv('DB_DATABASE');
+                    }
                     \$pdo = new PDO(\$dsn, getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
                     echo 'Database connection successful.' . PHP_EOL;
                     exit(0);
@@ -85,12 +122,14 @@ check_connections() {
             echo 'Failed to connect to Database.' . PHP_EOL;
             exit(1);
         "
+    else
+        echo "Skipping external database check."
     fi
 
     # Check Storage
     echo "Testing Storage permissions..."
     php -r "
-        \$path = '/var/www/html/storage/framework/testing/connection_test';
+        \$path = (getenv('ROOT') ?: '/app') . '/storage/framework/testing/connection_test';
         @mkdir(dirname(\$path), 0777, true);
         if (@file_put_contents(\$path, 'test') !== false && @unlink(\$path)) {
             echo 'Storage is writable and readable.' . PHP_EOL;

@@ -73,6 +73,7 @@ ARG GROUP_ID=1000
 ARG ROOT=/app
 ARG TZ=UTC
 
+ENV ROOT=${ROOT}
 ENV TERM=xterm-color
 ENV OCTANE_SERVER=frankenphp
 ENV TZ=${TZ}
@@ -110,6 +111,9 @@ RUN install-php-extensions \
     sockets \
     pdo_pgsql \
     pgsql \
+    pdo_mysql \
+    pdo_sqlite \
+    sqlite3 \
     opcache \
     exif \
     zip \

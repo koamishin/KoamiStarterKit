@@ -9,6 +9,7 @@ use Illuminate\Console\View\Components\Factory;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Laravel\Chisel\Chisel;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Process\Process;
@@ -782,6 +783,34 @@ test('composer install scripts seed roles after migrating', function (): void {
     }
 });
 
+test('install:features runs during setup instead of on composer update', function (): void {
+    $composer = json_decode((string) File::get(base_path('composer.json')), true);
+
+    $setup = $composer['scripts']['setup'] ?? [];
+    $postUpdate = $composer['scripts']['post-update-cmd'] ?? [];
+
+    $featuresIndex = null;
+    $migrateIndex = null;
+
+    foreach ($setup as $index => $command) {
+        if (str_contains((string) $command, 'artisan install:features')) {
+            $featuresIndex = $index;
+        }
+
+        if (str_contains((string) $command, 'artisan migrate')) {
+            $migrateIndex = $index;
+        }
+    }
+
+    expect($featuresIndex)->not->toBeNull()
+        ->and($migrateIndex)->not->toBeNull()
+        ->and($featuresIndex)->toBeLessThan($migrateIndex);
+
+    foreach ($postUpdate as $command) {
+        expect((string) $command)->not->toContain('install:features');
+    }
+});
+
 test('local install seeds the database after migrating', function (): void {
     $command = new class extends SetupStarterKit
     {
@@ -813,4 +842,47 @@ test('workflow file exists and can be read', function (): void {
     $content = File::get($workflowPath);
     expect($content)->toContain('REGISTRY')
         ->toContain('IMAGE_NAME');
+});
+
+test('chisel paths and section markers are valid and 2fa section can be removed from user model', function (): void {
+    $paths = require base_path('chisel-paths.php');
+
+    expect(File::exists(base_path($paths['login'])))->toBeTrue()
+        ->and(File::exists(base_path($paths['register'])))->toBeTrue()
+        ->and(File::exists(base_path($paths['welcome'])))->toBeTrue()
+        ->and(File::exists(base_path($paths['profile'])))->toBeTrue()
+        ->and(File::exists(base_path($paths['security'])))->toBeTrue()
+        ->and(File::exists(base_path($paths['verify_email'])))->toBeTrue()
+        ->and(File::exists(base_path($paths['two_factor_challenge'])))->toBeTrue()
+        ->and(File::exists(base_path($paths['confirm_password'])))->toBeTrue()
+        ->and(File::exists(base_path($paths['auth_types'])))->toBeTrue();
+
+    foreach ($paths['two_factor_files'] as $file) {
+        expect(File::exists(base_path($file)))->toBeTrue();
+    }
+
+    foreach ($paths['passkey_files'] as $file) {
+        expect(File::exists(base_path($file)))->toBeTrue();
+    }
+
+    $tmpDir = sys_get_temp_dir().'/chisel-2fa-test-'.Str::random(10);
+    File::ensureDirectoryExists($tmpDir);
+
+    try {
+        File::copy(base_path('app/Models/User.php'), $tmpDir.'/User.php');
+
+        $file = new Laravel\Chisel\Filesystem\File($tmpDir);
+        $file->removeSection('User.php', '2fa');
+
+        Chisel::in($tmpDir)->file('User.php')->removeLinesContaining('use Laravel\Fortify\TwoFactorAuthenticatable;');
+
+        $content = File::get($tmpDir.'/User.php');
+
+        expect($content)->not->toContain('TwoFactorAuthenticatable')
+            ->and($content)->not->toContain('two_factor_secret')
+            ->and($content)->not->toContain('two_factor_confirmed_at')
+            ->and($content)->not->toContain('@chisel-2fa');
+    } finally {
+        File::deleteDirectory($tmpDir);
+    }
 });

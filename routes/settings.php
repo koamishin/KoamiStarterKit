@@ -1,10 +1,13 @@
 <?php
 
 use App\Features\FeatureRegistry;
+use App\Http\Controllers\Settings\BetaAccessController;
+use App\Http\Controllers\Settings\FeatureFlagsController;
 use App\Http\Controllers\Settings\FilamentAppAuthenticationController;
 use App\Http\Controllers\Settings\FilamentEmailAuthenticationController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Models\User;
 /* @chisel-password-confirmation */
 use Illuminate\Auth\Middleware\RequirePassword;
 /* @end-chisel-password-confirmation */
@@ -18,6 +21,7 @@ Route::middleware(['auth'])->group(function (): void {
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('settings/beta-access', [BetaAccessController::class, 'update'])->name('profile.beta.update');
     Route::post('settings/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
     Route::delete('settings/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
 
@@ -53,6 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('settings/appearance', function () {
         FeatureRegistry::initialize();
         $user = Auth::user();
+        $user = $user instanceof User ? $user : null;
 
         return Inertia::render('settings/Appearance', [
             'availableFeatures' => [
@@ -60,6 +65,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
             ],
         ]);
     })->name('appearance.edit');
+
+    Route::get('settings/features', [FeatureFlagsController::class, 'edit'])->name('features.edit');
+    Route::patch('settings/features', [FeatureFlagsController::class, 'update'])->name('features.update');
 });
 
 /* @chisel-passkeys */

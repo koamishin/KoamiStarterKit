@@ -10,6 +10,7 @@ test('global layout resolver skips self-wrapped pages', function (): void {
     expect($source)
         ->toContain("case name === 'Welcome':")
         ->toContain("case name === 'Dashboard':")
+        ->toContain("case name === 'Setup':")
         ->toContain("case name.startsWith('auth/'):")
         ->toContain("case name.startsWith('settings/'):")
         ->toContain('return null;')

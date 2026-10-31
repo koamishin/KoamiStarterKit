@@ -155,7 +155,7 @@ class SocialAuthController extends Controller
         ]);
 
         $roleName = filled($defaultRole) ? $defaultRole : RoleEnums::USER->value;
-        $user->assignRole(Role::firstOrCreate([
+        $user->assignRole(Role::query()->firstOrCreate([
             'name' => $roleName,
             'guard_name' => 'web',
         ]));

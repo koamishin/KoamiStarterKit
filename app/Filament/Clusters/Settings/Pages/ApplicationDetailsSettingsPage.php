@@ -4,11 +4,13 @@ namespace App\Filament\Clusters\Settings\Pages;
 
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Settings\ApplicationDetailsSettings;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\FlexImageUpload;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\FlexTextareaField;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\FlexTextInput;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\PhoneField;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\SelectField;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\TimezoneField;
 use Filament\Actions\Action;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
@@ -65,14 +67,14 @@ class ApplicationDetailsSettingsPage extends Page
                         ->description('Tell people who you are. This is the name and short pitch visitors will see.')
                         ->icon('heroicon-o-identification')
                         ->schema([
-                            TextInput::make('site_name')
+                            FlexTextInput::make('site_name')
                                 ->label('Site Name')
                                 ->helperText('The public name of your application (e.g. "Acme Inc.").')
                                 ->required()
                                 ->maxLength(255)
                                 ->columnSpanFull(),
 
-                            Textarea::make('site_description')
+                            FlexTextareaField::make('site_description')
                                 ->label('Site Description')
                                 ->helperText('A short description used in meta tags and search results (max 500 characters).')
                                 ->required()
@@ -86,10 +88,9 @@ class ApplicationDetailsSettingsPage extends Page
                         ->description('Upload your logo and favicon. SVG, PNG, JPG and ICO formats are supported.')
                         ->icon('heroicon-o-photo')
                         ->schema([
-                            FileUpload::make('site_logo_path')
+                            FlexImageUpload::make('site_logo_path')
                                 ->label('Site Logo')
                                 ->helperText('Recommended size: 256x64px. Transparent background works best.')
-                                ->image()
                                 ->imageEditor()
                                 ->imageEditorAspectRatios([
                                     '16:5',
@@ -105,10 +106,9 @@ class ApplicationDetailsSettingsPage extends Page
                                 ->openable()
                                 ->columnSpan(1),
 
-                            FileUpload::make('site_favicon_path')
+                            FlexImageUpload::make('site_favicon_path')
                                 ->label('Favicon')
                                 ->helperText('Recommended size: 32x32px or 64x64px. ICO, PNG or SVG.')
-                                ->image()
                                 ->imageEditor()
                                 ->disk('public')
                                 ->directory('branding')
@@ -125,29 +125,25 @@ class ApplicationDetailsSettingsPage extends Page
                         ->description('Set your timezone and how dates and times are displayed across the app.')
                         ->icon('heroicon-o-globe-alt')
                         ->schema([
-                            Select::make('timezone')
+                            TimezoneField::make('timezone')
                                 ->label('Timezone')
                                 ->helperText('All times across the application will be displayed in this timezone.')
                                 ->required()
-                                ->searchable()
-                                ->options($this->getTimezoneOptions())
-                                ->native(false),
+                                ->searchable(),
 
-                            Select::make('date_format')
+                            SelectField::make('date_format')
                                 ->label('Date Format')
                                 ->helperText(fn (Get $get): ?string => $this->formatDatePreview($get('date_format')))
                                 ->required()
                                 ->options($this->getDateFormatOptions())
-                                ->searchable()
-                                ->native(false),
+                                ->searchable(),
 
-                            Select::make('time_format')
+                            SelectField::make('time_format')
                                 ->label('Time Format')
                                 ->helperText(fn (Get $get): ?string => $this->formatTimePreview($get('time_format')))
                                 ->required()
                                 ->options($this->getTimeFormatOptions())
-                                ->searchable()
-                                ->native(false),
+                                ->searchable(),
                         ])
                         ->columns(3),
 
@@ -155,21 +151,20 @@ class ApplicationDetailsSettingsPage extends Page
                         ->description('How can users reach you? These details appear in footers and support pages.')
                         ->icon('heroicon-o-lifebuoy')
                         ->schema([
-                            TextInput::make('contact_email')
+                            FlexTextInput::make('contact_email')
                                 ->label('Contact Email')
                                 ->helperText('The public email address shown to users for general inquiries.')
                                 ->email()
                                 ->maxLength(255)
                                 ->columnSpan(1),
 
-                            TextInput::make('support_phone')
+                            PhoneField::make('support_phone')
                                 ->label('Support Phone')
                                 ->helperText('Optional phone number for support (include country code).')
-                                ->tel()
-                                ->maxLength(30)
+                                ->dehydrateStateUsing(fn ($state) => is_array($state) ? ($state['e164'] ?: ($state['national'] ?: null)) : $state)
                                 ->columnSpan(1),
 
-                            TextInput::make('support_url')
+                            FlexTextInput::make('support_url')
                                 ->label('Support URL')
                                 ->helperText('Link to your help center, documentation, or contact form.')
                                 ->url()
@@ -184,14 +179,14 @@ class ApplicationDetailsSettingsPage extends Page
                         ->collapsible()
                         ->collapsed()
                         ->schema([
-                            TextInput::make('site_logo_url')
+                            FlexTextInput::make('site_logo_url')
                                 ->label('Logo URL (override)')
                                 ->helperText('Optional. If set, this URL overrides the uploaded logo (useful for CDNs).')
                                 ->url()
                                 ->maxLength(500)
                                 ->columnSpan(1),
 
-                            TextInput::make('site_favicon_url')
+                            FlexTextInput::make('site_favicon_url')
                                 ->label('Favicon URL (override)')
                                 ->helperText('Optional. If set, this URL overrides the uploaded favicon (useful for CDNs).')
                                 ->url()

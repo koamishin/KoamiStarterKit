@@ -7,6 +7,8 @@ namespace App\Providers;
 use App\Actions\Fortify\CreateNewUser;
 /* @end-chisel-registration */
 use App\Actions\Fortify\ResetUserPassword;
+use App\Enums\RoleEnums;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -54,13 +56,38 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn (Request $request) => Inertia::render('auth/Login', [
-            'canResetPassword' => Features::enabled(Features::resetPasswords()),
-            /* @chisel-registration */
-            'canRegister' => Features::enabled(Features::registration()),
-            /* @end-chisel-registration */
-            'status' => $request->session()->get('status'),
-        ]));
+        Fortify::loginView(function (Request $request) {
+            $developerUsers = [];
+
+            if (app()->environment('local')) {
+                $developerUsers = User::query()
+                    ->with('roles')
+                    ->get()
+                    ->sortBy('id')
+                    ->take(10)
+                    ->map(function (User $user): array {
+                        $roleName = $user->roles->first()?->name;
+
+                        return [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                            'role' => $roleName ? (RoleEnums::tryFrom($roleName)?->label() ?? ucfirst($roleName)) : 'User',
+                        ];
+                    })
+                    ->values()
+                    ->all();
+            }
+
+            return Inertia::render('auth/Login', [
+                'canResetPassword' => Features::enabled(Features::resetPasswords()),
+                /* @chisel-registration */
+                'canRegister' => Features::enabled(Features::registration()),
+                /* @end-chisel-registration */
+                'status' => $request->session()->get('status'),
+                'developerUsers' => $developerUsers,
+            ]);
+        });
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/ResetPassword', [
             'email' => $request->email,

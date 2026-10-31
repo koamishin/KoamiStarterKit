@@ -2,6 +2,8 @@
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, toRefs } from 'vue';
 import { toast } from 'vue-sonner';
+import BetaAccess from '@/components/BetaAccess.vue';
+import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -11,6 +13,14 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit, update } from '@/routes/profile';
 import { type SharedData } from '@/types';
+
+const props = defineProps<{
+    mustVerifyEmail: boolean;
+    status?: string;
+    betaOptedIn: boolean;
+}>();
+
+const { mustVerifyEmail, status } = toRefs(props);
 
 const page = usePage<SharedData>();
 const user = page.props.auth.user as any;
@@ -104,13 +114,6 @@ const deletePhoto = () => {
 };
 
 const breadcrumbs = [{ title: 'Profile settings', href: edit().url }];
-
-const props = defineProps<{
-    mustVerifyEmail: boolean;
-    status?: string;
-}>();
-
-const { mustVerifyEmail, status } = toRefs(props);
 </script>
 
 <template>
@@ -260,6 +263,9 @@ const { mustVerifyEmail, status } = toRefs(props);
                     </div>
                 </form>
             </div>
+
+            <BetaAccess :enabled="betaOptedIn" />
+            <DeleteUser />
         </SettingsLayout>
     </AppLayout>
 </template>

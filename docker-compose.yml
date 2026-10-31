@@ -1,0 +1,141 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile
+            args:
+                PHP_VERSION: 8.5
+                FRANKENPHP_VERSION: 1.9
+                APP_NAME: ${APP_NAME:-KoamiStarterKit}
+                APP_ENV: ${APP_ENV:-production}
+                APP_DEBUG: ${APP_DEBUG:-false}
+                APP_URL: ${APP_URL:-http://localhost:8000}
+        image: koamishin/koamistarterkit:latest
+        container_name: koamistarterkit-app
+        restart: unless-stopped
+        ports:
+            - '${PORT:-8000}:8000'
+        environment:
+            APP_NAME: '${APP_NAME:-KoamiStarterKit}'
+            APP_ENV: '${APP_ENV:-production}'
+            APP_KEY: '${APP_KEY:-}'
+            APP_DEBUG: '${APP_DEBUG:-false}'
+            APP_URL: '${APP_URL:-http://localhost:8000}'
+            APP_MAINTENANCE_DRIVER: '${APP_MAINTENANCE_DRIVER:-file}'
+
+            # Database Configuration (Default: SQLite zero-configuration)
+            DB_CONNECTION: '${DB_CONNECTION:-sqlite}'
+            DB_DATABASE: '${DB_DATABASE:-/app/database/database.sqlite}'
+            DB_HOST: '${DB_HOST:-db}'
+            DB_PORT: '${DB_PORT:-5432}'
+            DB_USERNAME: '${DB_USERNAME:-laravel}'
+            DB_PASSWORD: '${DB_PASSWORD:-secret}'
+
+            # Session, Cache, and Queue
+            SESSION_DRIVER: '${SESSION_DRIVER:-database}'
+            CACHE_STORE: '${CACHE_STORE:-database}'
+            QUEUE_CONNECTION: '${QUEUE_CONNECTION:-database}'
+
+            # Redis (optional if enabled)
+            REDIS_HOST: '${REDIS_HOST:-redis}'
+            REDIS_PORT: '${REDIS_PORT:-6379}'
+            REDIS_PASSWORD: '${REDIS_PASSWORD:-null}'
+
+            # Auto-run migrations on container boot
+            AUTORUN_MIGRATIONS: '${AUTORUN_MIGRATIONS:-true}'
+            SEED_ON_INSTALL: '${SEED_ON_INSTALL:-false}'
+
+            # FrankenPHP Octane runtime
+            OCTANE_SERVER: 'frankenphp'
+            CONTAINER_MODE: 'http'
+        volumes:
+            - app-database:/app/database
+            - app-storage:/app/storage/app
+            - app-logs:/app/storage/logs
+        healthcheck:
+            test: ['CMD', 'healthcheck']
+            interval: 15s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
+        networks:
+            - koami-network
+
+    # Optional PostgreSQL database (enable with: docker compose --profile postgres up -d)
+    db:
+        image: postgres:17-alpine
+        container_name: koamistarterkit-db
+        restart: unless-stopped
+        profiles: ['postgres', 'full']
+        environment:
+            POSTGRES_DB: '${DB_DATABASE:-laravel}'
+            POSTGRES_USER: '${DB_USERNAME:-laravel}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'pg_isready -U ${DB_USERNAME:-laravel} -d ${DB_DATABASE:-laravel}',
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        networks:
+            - koami-network
+
+    # Optional Redis service (enable with: docker compose --profile redis up -d)
+    redis:
+        image: redis:7-alpine
+        container_name: koamistarterkit-redis
+        restart: unless-stopped
+        profiles: ['redis', 'full']
+        command: ['redis-server', '--appendonly', 'yes']
+        volumes:
+            - redis-data:/data
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        networks:
+            - koami-network
+
+    # Optional dedicated background queue worker (enable with: docker compose --profile workers up -d)
+    worker:
+        image: koamishin/koamistarterkit:latest
+        container_name: koamistarterkit-worker
+        restart: unless-stopped
+        profiles: ['workers', 'full']
+        environment:
+            CONTAINER_MODE: 'worker'
+            WORKER_COMMAND: 'php /app/artisan queue:work --tries=3 --timeout=90'
+            DB_CONNECTION: '${DB_CONNECTION:-sqlite}'
+            DB_DATABASE: '${DB_DATABASE:-/app/database/database.sqlite}'
+            QUEUE_CONNECTION: '${QUEUE_CONNECTION:-database}'
+        volumes:
+            - app-database:/app/database
+            - app-storage:/app/storage/app
+        depends_on:
+            app:
+                condition: service_healthy
+        networks:
+            - koami-network
+
+volumes:
+    app-database:
+        name: koamistarterkit-database
+    app-storage:
+        name: koamistarterkit-storage
+    app-logs:
+        name: koamistarterkit-logs
+    postgres-data:
+        name: koamistarterkit-postgres
+    redis-data:
+        name: koamistarterkit-redis
+
+networks:
+    koami-network:
+        name: koamistarterkit-network
+        driver: bridge

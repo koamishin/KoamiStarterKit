@@ -2,12 +2,11 @@
 
 namespace App\Features;
 
+use App\Models\FeatureAssignment;
 use App\Models\RoleFeature;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Fluent;
 use Laravel\Pennant\Feature;
-use Laravel\Pennant\FeatureManager;
 use Spatie\Permission\Models\Role;
 
 class FeatureRegistry
@@ -51,27 +50,7 @@ class FeatureRegistry
 
     public static function isEnabledForUser(?User $user, string $feature): bool
     {
-        if (! $user instanceof User) {
-            return static::get($feature)?->default ?? false;
-        }
-
-        $pennantValue = app(FeatureManager::class)->value($feature);
-
-        if ($pennantValue !== null) {
-            return $pennantValue === true;
-        }
-
-        $userRoles = $user->roles()->pluck('roles.id');
-
-        $roleFeature = RoleFeature::whereIn('role_id', $userRoles)
-            ->where('feature', $feature)
-            ->first();
-
-        if ($roleFeature) {
-            return $roleFeature->active;
-        }
-
-        return static::get($feature)?->default ?? false;
+        return app(FeatureEvaluator::class)->evaluate($feature, $user)['active'];
     }
 
     public static function toggleForUser(User $user, string $feature, bool $active): void
@@ -113,26 +92,21 @@ class FeatureRegistry
 
     public static function rolloutForAllUsers(string $feature, bool $active): int
     {
-        $users = User::whereHas('roles')->get();
-        $count = 0;
+        FeatureManifest::ensure($feature)->update([
+            'enabled' => $active, 'default_value' => $active, 'rollout_percentage' => 100,
+        ]);
 
-        foreach ($users as $user) {
-            if ($active) {
-                Feature::for($user)->activate($feature);
-            } else {
-                Feature::for($user)->deactivate($feature);
-            }
-            $count++;
-        }
-
-        return $count;
+        return User::query()->count();
     }
 
     public static function clearUserOverrides(string $feature): int
     {
-        return DB::table('features')
-            ->where('name', $feature)
-            ->delete();
+        $overrides = FeatureAssignment::query()->where('kind', 'override')
+            ->whereHas('featureFlag', fn ($query) => $query->where('key', $feature))->get();
+        $overrides->each->delete();
+        Feature::flushCache();
+
+        return $overrides->count();
     }
 
     public static function initialize(): void
@@ -220,22 +194,8 @@ class FeatureRegistry
         );
     }
 
-    public static function isFeatureAvailableForUser($user, string $feature): bool
+    public static function isFeatureAvailableForUser(?User $user, string $feature): bool
     {
-        if (! $user) {
-            return false;
-        }
-
-        $userRoles = $user->roles()->pluck('roles.id');
-
-        $roleFeature = RoleFeature::whereIn('role_id', $userRoles)
-            ->where('feature', $feature)
-            ->first();
-
-        if ($roleFeature) {
-            return $roleFeature->active;
-        }
-
-        return static::get($feature)?->default ?? false;
+        return $user instanceof User && static::isEnabledForUser($user, $feature);
     }
 }

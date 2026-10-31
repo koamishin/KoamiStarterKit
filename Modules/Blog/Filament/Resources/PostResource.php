@@ -2,17 +2,16 @@
 
 namespace Modules\Blog\Filament\Resources;
 
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\FlexRichEditor;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\TitleSlugField;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Str;
 use Modules\Blog\Filament\Resources\PostResource\Pages;
 use Modules\Blog\Models\Post;
 
@@ -28,21 +27,10 @@ class PostResource extends Resource
     {
         return $schema
             ->components([
-                Forms\Components\TextInput::make('title')
+                TitleSlugField::make('title', 'slug'),
+                FlexRichEditor::make('body')
+                    ->json(false)
                     ->required()
-                    ->maxLength(255)
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(fn (Set $set, ?string $state): mixed => $set(
-                        'slug',
-                        Str::slug($state ?? ''),
-                    )),
-                Forms\Components\TextInput::make('slug')
-                    ->required()
-                    ->maxLength(255)
-                    ->unique(ignoreRecord: true),
-                Forms\Components\Textarea::make('body')
-                    ->required()
-                    ->rows(8)
                     ->columnSpanFull(),
             ]);
     }

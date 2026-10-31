@@ -7,8 +7,8 @@ namespace App\Filament\Clusters\Settings\Pages;
 use App\Enums\SocialLoginProvider;
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Settings\SocialLoginSettings;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\FlexTextInput;
 use Filament\Actions\Action;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -152,7 +152,7 @@ class SocialLoginSettingsPage extends Page
                     ->offColor('gray')
                     ->columnSpanFull(),
 
-                TextInput::make("{$slug}_client_id")
+                FlexTextInput::make("{$slug}_client_id")
                     ->label('Client ID')
                     ->placeholder('xxxxxxxxxxxxxxxxxxxx')
                     ->maxLength(255)
@@ -160,17 +160,16 @@ class SocialLoginSettingsPage extends Page
                     ->required(fn (Get $get): bool => (bool) $get("{$slug}_enabled") && ! $isUsingEnv)
                     ->columnSpanFull(),
 
-                TextInput::make("{$slug}_client_secret")
+                FlexTextInput::make("{$slug}_client_secret")
                     ->label('Client Secret')
                     ->placeholder('xxxxxxxxxxxxxxxxxxxx')
                     ->password()
-                    ->revealable()
                     ->maxLength(255)
                     ->visible(fn (Get $get): bool => (bool) $get("{$slug}_enabled"))
                     ->required(fn (Get $get): bool => (bool) $get("{$slug}_enabled") && ! $isUsingEnv)
                     ->columnSpanFull(),
 
-                TextInput::make("{$slug}_redirect_uri")
+                FlexTextInput::make("{$slug}_redirect_uri")
                     ->label('Redirect URI')
                     ->helperText("Leave blank to use the default: {$defaultRedirect}")
                     ->placeholder($defaultRedirect)

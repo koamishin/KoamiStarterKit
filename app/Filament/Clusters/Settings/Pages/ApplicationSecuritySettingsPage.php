@@ -4,8 +4,8 @@ namespace App\Filament\Clusters\Settings\Pages;
 
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Settings\ApplicationSecuritySettings;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\NumberStepper;
 use Filament\Actions\Action;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -58,12 +58,12 @@ class ApplicationSecuritySettingsPage extends Page
                     Section::make('Password Policy')
                         ->description('Configure password requirements for users.')
                         ->schema([
-                            TextInput::make('password_min_length')
+                            NumberStepper::make('password_min_length')
                                 ->label('Minimum Password Length')
                                 ->required()
-                                ->numeric()
                                 ->minValue(6)
-                                ->maxValue(128),
+                                ->maxValue(128)
+                                ->step(1),
                             Toggle::make('password_requires_uppercase')
                                 ->label('Require Uppercase Letter')
                                 ->default(true),
@@ -82,12 +82,12 @@ class ApplicationSecuritySettingsPage extends Page
                     Section::make('Session Settings')
                         ->description('Configure user session behavior.')
                         ->schema([
-                            TextInput::make('session_lifetime')
+                            NumberStepper::make('session_lifetime')
                                 ->label('Session Lifetime (minutes)')
                                 ->required()
-                                ->numeric()
                                 ->minValue(5)
-                                ->maxValue(1440),
+                                ->maxValue(1440)
+                                ->step(5),
                             Toggle::make('single_session')
                                 ->label('Single Session per User')
                                 ->default(false),
@@ -97,18 +97,18 @@ class ApplicationSecuritySettingsPage extends Page
                     Section::make('Login Protection')
                         ->description('Configure login rate limiting.')
                         ->schema([
-                            TextInput::make('login_rate_limit')
+                            NumberStepper::make('login_rate_limit')
                                 ->label('Max Login Attempts')
                                 ->required()
-                                ->numeric()
                                 ->minValue(1)
-                                ->maxValue(100),
-                            TextInput::make('login_rate_limit_decay')
+                                ->maxValue(100)
+                                ->step(1),
+                            NumberStepper::make('login_rate_limit_decay')
                                 ->label('Lockout Duration (seconds)')
                                 ->required()
-                                ->numeric()
                                 ->minValue(30)
-                                ->maxValue(3600),
+                                ->maxValue(3600)
+                                ->step(30),
                         ])
                         ->columns(2),
                 ])

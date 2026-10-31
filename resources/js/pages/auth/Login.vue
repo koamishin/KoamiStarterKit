@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { Form, Head, usePage } from '@inertiajs/vue3';
+import DeveloperLogins, {
+    type DeveloperUser,
+} from '@/components/DeveloperLogins.vue';
 import InputError from '@/components/InputError.vue';
 import SignInWithPasskeyButton from '@/components/SignInWithPasskeyButton.vue';
 import SocialLoginButtons from '@/components/SocialLoginButtons.vue';
@@ -19,6 +22,7 @@ defineProps<{
     status?: string;
     canResetPassword: boolean;
     canRegister: boolean;
+    developerUsers?: DeveloperUser[];
 }>();
 
 const page = usePage<SharedData>();
@@ -124,5 +128,7 @@ const passkeysEnabled = (page.props.settingsFeatures?.passkeys ??
         <SignInWithPasskeyButton v-if="passkeysEnabled" />
 
         <SocialLoginButtons />
+
+        <DeveloperLogins :users="developerUsers" />
     </AuthBase>
 </template>

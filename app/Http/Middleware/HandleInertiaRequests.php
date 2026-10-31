@@ -3,7 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Enums\SocialLoginProvider;
+use App\Features\FeatureEvaluator;
 use App\Features\FeatureRegistry;
+use App\Models\FeatureFlag;
 use App\Settings\ApplicationFeaturesSettings;
 use App\Settings\SocialLoginSettings;
 use Illuminate\Http\Request;
@@ -55,6 +57,12 @@ class HandleInertiaRequests extends Middleware
             ->values()
             ->all();
 
+        $featureKeys = array_unique([...FeatureRegistry::keys(), ...FeatureFlag::query()->pluck('key')->all()]);
+        $featureFlags = [];
+        foreach ($featureKeys as $featureKey) {
+            $featureFlags[$featureKey] = app(FeatureEvaluator::class)->evaluate($featureKey, $user)['active'];
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -66,6 +74,7 @@ class HandleInertiaRequests extends Middleware
             'authLayout' => app(ApplicationFeaturesSettings::class)->auth_layout,
             'settingsFeatures' => $settingsFeatures,
             'socialProviders' => $socialProviders,
+            'featureFlags' => $featureFlags,
         ];
     }
 }

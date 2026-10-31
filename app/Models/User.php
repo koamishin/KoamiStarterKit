@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Features\FeatureEvaluator;
+use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthentication;
 use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthenticationRecovery;
@@ -14,6 +16,7 @@ use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -22,11 +25,11 @@ use Illuminate\Support\Carbon;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
-/* @chisel-2fa */
 use Laravel\Fortify\TwoFactorAuthenticatable;
-/* @end-chisel-2fa */
+use Laravel\Pennant\Feature;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -39,9 +42,22 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property CarbonImmutable|null $beta_opted_in_at
+ * @property Collection<int, Role> $roles
  */
 class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication, MustVerifyEmail, PasskeyUser
 {
+    #[\Override]
+    protected static function booted(): void
+    {
+        static::saved(function (User $user): void {
+            if ($user->wasChanged('beta_opted_in_at')) {
+                app(FeatureEvaluator::class)->flush();
+                Feature::flushCache();
+            }
+        });
+    }
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Impersonate, Notifiable;
 
@@ -134,6 +150,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     {
         return [
             'email_verified_at' => 'datetime',
+            'beta_opted_in_at' => 'immutable_datetime',
             'has_email_authentication' => 'boolean',
             'password' => 'hashed',
             /* @chisel-2fa */

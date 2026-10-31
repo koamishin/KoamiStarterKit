@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\TextInput;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\FlexDateTimePicker;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\FlexTextInput;
 use Filament\Schemas\Schema;
 
 class UserForm
@@ -14,14 +14,14 @@ class UserForm
     {
         return $schema
             ->components([
-                TextInput::make('name')
+                FlexTextInput::make('name')
                     ->required(),
-                TextInput::make('email')
+                FlexTextInput::make('email')
                     ->label('Email address')
                     ->email()
                     ->required(),
-                DateTimePicker::make('email_verified_at'),
-                TextInput::make('password')
+                FlexDateTimePicker::make('email_verified_at'),
+                FlexTextInput::make('password')
                     ->password()
                     ->required(),
             ]);

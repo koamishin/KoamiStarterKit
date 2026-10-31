@@ -39,7 +39,7 @@ class CreateNewUser implements CreatesNewUsers
 
     protected function defaultRole(): Role
     {
-        return Role::firstOrCreate([
+        return Role::query()->firstOrCreate([
             'name' => RoleEnums::USER->value,
             'guard_name' => 'web',
         ]);

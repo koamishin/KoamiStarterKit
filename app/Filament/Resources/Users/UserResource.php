@@ -6,27 +6,33 @@ use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
+use App\Filament\Resources\Users\Widgets\UserOverviewWidget;
 use App\Models\User;
 use BackedEnum;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\FlexDateTimePicker;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\FlexTextInput;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\SelectField;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -45,26 +51,26 @@ class UserResource extends Resource
             ->components([
                 Section::make('User Details')
                     ->components([
-                        TextInput::make('name')
+                        FlexTextInput::make('name')
                             ->required()
                             ->maxLength(255),
-                        TextInput::make('email')
+                        FlexTextInput::make('email')
                             ->email()
                             ->required()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true),
-                        TextInput::make('password')
+                        FlexTextInput::make('password')
                             ->password()
                             ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                             ->dehydrated(fn ($state): bool => filled($state))
                             ->required(fn (string $context): bool => $context === 'create')
                             ->confirmed()
                             ->maxLength(255),
-                        TextInput::make('password_confirmation')
+                        FlexTextInput::make('password_confirmation')
                             ->password()
                             ->required(fn (string $context): bool => $context === 'create')
                             ->visible(fn (string $context): bool => $context === 'create' || $context === 'edit'),
-                        Select::make('roles')
+                        SelectField::make('roles')
                             ->relationship('roles', 'name')
                             ->multiple()
                             ->preload()
@@ -73,7 +79,7 @@ class UserResource extends Resource
 
                 Section::make('Security')
                     ->components([
-                        DateTimePicker::make('email_verified_at')
+                        FlexDateTimePicker::make('email_verified_at')
                             ->label('Email Verified At')
                             ->helperText('Leave empty to keep unverified.'),
                     ])->columns(2)
@@ -132,110 +138,185 @@ class UserResource extends Resource
     {
         return $table
             ->recordTitleAttribute('name')
+            ->defaultSort('created_at', 'desc')
             ->columns([
+                ImageColumn::make('profile_photo_url')
+                    ->label('')
+                    ->circular()
+                    ->defaultImageUrl(fn (User $user): string => 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&color=D97706&background=FEF3C7')
+                    ->grow(false),
+
                 TextColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('email')
-                    ->searchable()
+                    ->label('User')
+                    ->description(fn (User $user): string => $user->email)
+                    ->searchable(['name', 'email'])
+                    ->sortable()
+                    ->weight('semibold')
                     ->copyable()
-                    ->sortable(),
+                    ->copyableState(fn (User $user): string => $user->email)
+                    ->copyMessage('Email copied to clipboard'),
+
                 TextColumn::make('roles.name')
+                    ->label('Roles')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'admin' => 'danger',
+                        'super_admin' => 'danger',
+                        'admin' => 'warning',
                         'user' => 'success',
                         default => 'gray',
                     })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'super_admin' => 'Super Admin',
+                        'admin' => 'Admin',
+                        default => ucfirst($state),
+                    })
                     ->sortable(),
-                IconColumn::make('email_verified_at')
-                    ->label('Verified')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle')
-                    ->colors([
-                        'success' => fn ($state): bool => $state !== null,
-                        'danger' => fn ($state): bool => $state === null,
-                    ])
+
+                TextColumn::make('email_verified_at')
+                    ->label('Email Status')
+                    ->badge()
+                    ->state(fn (User $user): string => $user->email_verified_at ? 'Verified' : 'Unverified')
+                    ->color(fn (string $state): string => $state === 'Verified' ? 'success' : 'danger')
+                    ->icon(fn (string $state): string => $state === 'Verified' ? 'heroicon-m-check-circle' : 'heroicon-m-x-circle')
                     ->sortable(),
-                IconColumn::make('app_authentication_secret')
-                    ->label('App MFA')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-lock-closed')
-                    ->falseIcon('heroicon-o-lock-open')
-                    ->colors([
-                        'success' => filled(...),
-                        'warning' => blank(...),
-                    ])
-                    ->sortable(),
-                IconColumn::make('has_email_authentication')
-                    ->label('Email MFA')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-envelope')
-                    ->falseIcon('heroicon-o-envelope-open')
-                    ->colors([
-                        'success' => fn (bool $state): bool => $state,
-                        'warning' => fn (bool $state): bool => ! $state,
-                    ])
-                    ->sortable(),
+
+                TextColumn::make('mfa_status')
+                    ->label('Security')
+                    ->badge()
+                    ->state(function (User $user): string {
+                        if ($user->app_authentication_secret && $user->has_email_authentication) {
+                            return 'App & Email';
+                        }
+                        if ($user->app_authentication_secret) {
+                            return 'Authenticator';
+                        }
+                        if ($user->has_email_authentication) {
+                            return 'Email OTP';
+                        }
+                        if ($user->getAttribute('two_factor_secret')) {
+                            return 'Fortify 2FA';
+                        }
+                        if ($user->passkeys()->exists()) {
+                            return 'Passkey';
+                        }
+
+                        return 'None';
+                    })
+                    ->color(fn (string $state): string => $state === 'None' ? 'gray' : 'info')
+                    ->icon(fn (string $state): string => $state === 'None' ? 'heroicon-m-shield-exclamation' : 'heroicon-m-shield-check'),
+
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Joined')
+                    ->dateTime('M d, Y')
+                    ->description(fn (User $user): string => $user->created_at?->diffForHumans() ?? '')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
             ])
             ->filters([
+                SelectFilter::make('roles')
+                    ->relationship('roles', 'name')
+                    ->preload()
+                    ->searchable(),
+
                 TernaryFilter::make('email_verified_at')
                     ->label('Email Verified')
                     ->nullable(),
-                TernaryFilter::make('app_authentication_secret')
-                    ->label('App MFA Enabled')
-                    ->nullable(),
-                TernaryFilter::make('has_email_authentication')
-                    ->label('Email MFA Enabled')
-                    ->nullable(),
+
+                Filter::make('has_mfa')
+                    ->label('MFA Enabled')
+                    ->query(fn (Builder $builder) => $builder->where(function ($q): void {
+                        $q->whereNotNull('app_authentication_secret')
+                            ->orWhere('has_email_authentication', true)
+                            ->orWhereNotNull('two_factor_secret')
+                            ->orWhereHas('passkeys');
+                    })),
             ])
             ->recordActions([
-                Action::make('impersonate')
-                    ->label('Impersonate')
-                    ->icon('heroicon-o-user-plus')
-                    ->url(fn (User $user): string => route('impersonate', $user->id))
-                    ->openUrlInNewTab()
-                    ->visible(fn (User $record): bool => ($user = Auth::user()) instanceof User && $user->hasRole('admin') && $record->canBeImpersonated()),
-                ViewAction::make(),
-                EditAction::make(),
-                Action::make('verify_email')
-                    ->icon('heroicon-o-check')
-                    ->label('Verify')
-                    ->action(fn (User $user) => $user->forceFill(['email_verified_at' => now()])->save())
-                    ->visible(fn (User $user): bool => $user->email_verified_at === null)
-                    ->requiresConfirmation()
-                    ->color('success'),
-                Action::make('unverify_email')
-                    ->icon('heroicon-o-x-mark')
-                    ->label('Unverify')
-                    ->action(fn (User $user) => $user->forceFill(['email_verified_at' => null])->save())
-                    ->visible(fn (User $user): bool => $user->email_verified_at !== null)
-                    ->requiresConfirmation()
-                    ->color('danger'),
-                DeleteAction::make(),
+                ActionGroup::make([
+                    Action::make('impersonate')
+                        ->label('Impersonate')
+                        ->icon('heroicon-m-arrow-right-on-rectangle')
+                        ->color('warning')
+                        ->url(fn (User $user): string => route('impersonate', $user->id))
+                        ->openUrlInNewTab()
+                        ->visible(fn (User $record): bool => ($user = Auth::user()) instanceof User && $user->hasRole('admin') && $record->canBeImpersonated()),
+
+                    Action::make('verify_email')
+                        ->icon('heroicon-m-check-badge')
+                        ->label('Verify Email')
+                        ->action(function (User $user): void {
+                            $user->forceFill(['email_verified_at' => now()])->save();
+                            Notification::make()
+                                ->title('Email Verified')
+                                ->success()
+                                ->send();
+                        })
+                        ->visible(fn (User $user): bool => $user->email_verified_at === null)
+                        ->requiresConfirmation()
+                        ->color('success'),
+
+                    Action::make('unverify_email')
+                        ->icon('heroicon-m-no-symbol')
+                        ->label('Revoke Verification')
+                        ->action(function (User $user): void {
+                            $user->forceFill(['email_verified_at' => null])->save();
+                            Notification::make()
+                                ->title('Verification Revoked')
+                                ->warning()
+                                ->send();
+                        })
+                        ->visible(fn (User $user): bool => $user->email_verified_at !== null)
+                        ->requiresConfirmation()
+                        ->color('danger'),
+
+                    ViewAction::make(),
+                    EditAction::make(),
+                    DeleteAction::make()
+                        ->hidden(fn (User $user): bool => $user->id === Auth::id()),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
                     BulkAction::make('verify_selected')
                         ->label('Verify Selected')
-                        ->icon('heroicon-o-check')
-                        ->action(fn ($records) => $records->each->forceFill(['email_verified_at' => now()])->each->save())
+                        ->icon('heroicon-m-check-badge')
+                        ->action(function ($records): void {
+                            $records->each->forceFill(['email_verified_at' => now()])->each->save();
+                            Notification::make()
+                                ->title('Selected Users Verified')
+                                ->success()
+                                ->send();
+                        })
                         ->requiresConfirmation()
                         ->color('success'),
+
                     BulkAction::make('unverify_selected')
                         ->label('Unverify Selected')
-                        ->icon('heroicon-o-x-mark')
-                        ->action(fn ($records) => $records->each->forceFill(['email_verified_at' => null])->each->save())
+                        ->icon('heroicon-m-no-symbol')
+                        ->action(function ($records): void {
+                            $records->each->forceFill(['email_verified_at' => null])->each->save();
+                            Notification::make()
+                                ->title('Selected Users Unverified')
+                                ->warning()
+                                ->send();
+                        })
                         ->requiresConfirmation()
                         ->color('danger'),
+
+                    DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateIcon('heroicon-o-users')
+            ->emptyStateHeading('No users found')
+            ->emptyStateDescription('Create a new user or adjust your search filters.');
+    }
+
+    #[\Override]
+    public static function getWidgets(): array
+    {
+        return [
+            UserOverviewWidget::class,
+        ];
     }
 
     #[\Override]

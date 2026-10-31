@@ -2,13 +2,19 @@
 
 namespace App\Providers;
 
+use App\Ai\LaravelMcpServerConnector;
+use App\Ai\McpServerConnector;
+use App\Features\FeatureEvaluator;
 use App\Features\FeatureRegistry;
+use App\Features\ManagedFeatureDriver;
 use Carbon\CarbonImmutable;
 use Filament\Panel;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Pennant\Events\FeatureUpdated;
+use Laravel\Pennant\Feature;
 use Laravel\Pennant\FeatureManager;
 use Nwidart\Modules\Facades\Module;
 
@@ -20,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
     #[\Override]
     public function register(): void
     {
+        $this->app->bind(McpServerConnector::class, LaravelMcpServerConnector::class);
+        $this->app->scoped(FeatureEvaluator::class);
+
         $this->registerFilamentPlugins();
     }
 
@@ -56,6 +65,15 @@ class AppServiceProvider extends ServiceProvider
         FeatureRegistry::initialize();
 
         $featureManager = app(FeatureManager::class);
+
+        $featureManager->extend('managed', fn ($app): ManagedFeatureDriver => new ManagedFeatureDriver(
+            $app['db'], $app['events'], $app['config'], 'database', [],
+        ));
+
+        $this->app['events']->listen(FeatureUpdated::class, function (): void {
+            app(FeatureEvaluator::class)->flush();
+            Feature::flushCache();
+        });
 
         foreach (FeatureRegistry::all() as $feature) {
             $featureManager->define($feature->key, fn () => $feature->default);

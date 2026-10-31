@@ -1,62 +1,67 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Settings;
 
+use App\Features\FeatureEvaluator;
+use App\Features\FeatureManifest;
 use App\Features\FeatureRegistry;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\FeaturePreferenceRequest;
+use App\Models\FeatureAssignment;
+use App\Models\FeatureFlag;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Laravel\Pennant\Feature;
-use Laravel\Pennant\FeatureManager;
 
 class FeatureFlagsController extends Controller
 {
-    public function edit(Request $request): Response
+    public function edit(Request $request, FeatureEvaluator $featureEvaluator): Response
     {
-        $user = $request->user();
-        $featureManager = app(FeatureManager::class);
-
         FeatureRegistry::initialize();
-
+        $flags = FeatureFlag::query()->get()->keyBy('key');
+        $keys = array_unique([...FeatureRegistry::keys(), ...$flags->keys()->all()]);
         $features = [];
-
-        foreach (FeatureRegistry::all() as $feature) {
-            $isAvailable = FeatureRegistry::isFeatureAvailableForUser($user, $feature->key);
-
+        foreach ($keys as $key) {
+            $flag = $flags->get($key);
+            $controllable = $flag->user_controllable ?? in_array($key, ['email-notifications', 'marketing-emails', 'activity-tracking'], true);
+            if (! $controllable) {
+                continue;
+            }
+            $result = $featureEvaluator->evaluate($key, $request->user());
             $features[] = [
-                'key' => $feature->key,
-                'name' => $feature->name,
-                'description' => $feature->description,
-                'value' => $featureManager->value($feature->key) === true,
-                'available' => $isAvailable,
+                'key' => $key,
+                'name' => $flag->name ?? FeatureRegistry::get($key)?->get('name'),
+                'description' => $flag->description ?? FeatureRegistry::get($key)?->get('description'),
+                'value' => $result['active'],
+                'available' => $result['available'],
+                'stage' => $result['stage'],
+                'reason' => $result['reason'],
             ];
         }
 
         return Inertia::render('settings/Features', [
             'features' => $features,
+            'betaOptedIn' => $request->user()->beta_opted_in_at !== null,
         ]);
     }
 
-    public function update(Request $request)
+    public function update(FeaturePreferenceRequest $featurePreferenceRequest, FeatureEvaluator $featureEvaluator): RedirectResponse
     {
-        $validated = $request->validate([
-            'feature' => 'required|string',
-            'active' => 'required|boolean',
-        ]);
+        $data = $featurePreferenceRequest->validated();
+        $flag = FeatureFlag::query()->where('key', $data['feature'])->first();
+        $controllable = $flag->user_controllable ?? in_array($data['feature'], ['email-notifications', 'marketing-emails', 'activity-tracking'], true);
+        abort_unless($controllable && $featureEvaluator->evaluate($data['feature'], $featurePreferenceRequest->user(), false)['available'], 403);
+        $flag ??= FeatureManifest::ensure($data['feature']);
+        FeatureAssignment::query()->updateOrCreate([
+            'feature_flag_id' => $flag->id,
+            'user_id' => $featurePreferenceRequest->user()->id,
+            'kind' => 'preference',
+        ], ['active' => $data['active']]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Feature preference updated.']);
 
-        $user = $request->user();
-
-        if (! FeatureRegistry::isFeatureAvailableForUser($user, $validated['feature'])) {
-            return response()->json(['success' => false, 'message' => 'Feature not available for your role'], 403);
-        }
-
-        if ($validated['active']) {
-            Feature::for($user)->activate($validated['feature']);
-        } else {
-            Feature::for($user)->deactivate($validated['feature']);
-        }
-
-        return response()->json(['success' => true]);
+        return back();
     }
 }

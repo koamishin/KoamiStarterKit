@@ -5,8 +5,8 @@ namespace App\Filament\Clusters\Settings\Pages;
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Filament\Components\AuthLayoutRadio;
 use App\Settings\ApplicationFeaturesSettings;
+use Bjanczak\FilamentFlexFields\Filament\Forms\Components\SelectField;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -91,7 +91,7 @@ class ApplicationFeaturesSettingsPage extends Page
                             Toggle::make('user_impersonation_enabled')
                                 ->label('Enable User Impersonation')
                                 ->default(true),
-                            Select::make('default_user_role')
+                            SelectField::make('default_user_role')
                                 ->label('Default Role for New Users')
                                 ->options($this->getRoleOptions())
                                 ->nullable()

@@ -1,28 +1,32 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { toast } from 'vue-sonner';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
+import BetaAccess from '@/components/BetaAccess.vue';
 import Heading from '@/components/Heading.vue';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+
+type FeatureFlag = {
+    key: string;
+    name: string;
+    description: string;
+    value: boolean;
+    available: boolean;
+    stage: string;
+    reason: string;
+};
+
 const props = defineProps<{
-    features: Array<{
-        key: string;
-        name: string;
-        description: string;
-        value: boolean;
-        available: boolean;
-    }>;
+    features: FeatureFlag[];
+    betaOptedIn: boolean;
 }>();
 
 const featuresSettingsUrl = '/settings/features';
-
 const breadcrumbs = [{ title: 'Feature settings', href: featuresSettingsUrl }];
 
-const form = useForm(
-    Object.fromEntries(props.features.map((f) => [f.key, f.value])),
-);
+const pending = ref<string | null>(null);
 
 const toggleFeature = (key: string, active: boolean) => {
     const feature = props.features.find((f) => f.key === key);
@@ -32,7 +36,9 @@ const toggleFeature = (key: string, active: boolean) => {
         return;
     }
 
-    form.patch(
+    pending.value = key;
+
+    router.patch(
         featuresSettingsUrl,
         {
             feature: key,
@@ -44,13 +50,15 @@ const toggleFeature = (key: string, active: boolean) => {
                 toast.success(
                     `${props.features.find((f) => f.key === key)?.name || key} ${active ? 'enabled' : 'disabled'}`,
                 ),
-            onError: (errors) => {
-                if (errors.message) {
-                    toast.error(errors.message);
+            onError: (errors: any) => {
+                const message = errors?.message;
+                if (message) {
+                    toast.error(message);
                 } else {
                     toast.error('Failed to update feature setting');
                 }
             },
+            onFinish: () => (pending.value = null),
         },
     );
 };
@@ -66,9 +74,11 @@ const unavailableFeatures = () => props.features.filter((f) => !f.available);
         <SettingsLayout>
             <div class="space-y-6">
                 <Heading
-                    title="Feature Flags"
-                    description="Manage your feature preferences and experimental features"
+                    title="Your feature preferences"
+                    description="Choose your experience within the features released to your account."
                 />
+
+                <BetaAccess :enabled="betaOptedIn" />
 
                 <div
                     v-if="availableFeatures().length > 0"
@@ -88,6 +98,11 @@ const unavailableFeatures = () => props.features.filter((f) => !f.available);
                             <div class="space-y-1">
                                 <p class="leading-none font-medium">
                                     {{ feature.name }}
+                                    <span
+                                        class="font-mono text-xs uppercase text-muted-foreground ml-1"
+                                    >
+                                        {{ feature.stage }}
+                                    </span>
                                 </p>
                                 <p class="text-sm text-muted-foreground">
                                     {{ feature.description }}
@@ -118,8 +133,10 @@ const unavailableFeatures = () => props.features.filter((f) => !f.available);
                                 </div>
                             </div>
                             <Switch
-                                :modelValue="feature.value"
-                                @update:modelValue="
+                                :aria-label="`Enable ${feature.name}`"
+                                :checked="feature.value"
+                                :disabled="pending === feature.key"
+                                @update:checked="
                                     (active: boolean) =>
                                         toggleFeature(feature.key, active)
                                 "

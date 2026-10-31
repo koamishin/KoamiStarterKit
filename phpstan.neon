@@ -1,5 +1,6 @@
 includes:
     - ./vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    - ./vendor/pestphp/pest-plugin-phpstan/extension.neon
     - phpstan-baseline.neon
 
 parameters:
@@ -22,6 +23,7 @@ parameters:
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
         - '#Call to an undefined method Illuminate\\Database\\Query\\Builder#'
         - '#Call to method .+ of internal class Pest\\.+ from outside its root namespace Pest\.#'
+        - '#Property App\\Filament\\Widgets\\.+::\$columnSpan .+ does not accept default value of type array#'
     
     # Report unused declarations
     reportUnmatchedIgnoredErrors: false

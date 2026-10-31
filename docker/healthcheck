@@ -2,10 +2,15 @@
 
 set -e
 
+ROOT="${ROOT:-/app}"
 container_mode=${CONTAINER_MODE:-"http"}
 
 if [ "${container_mode}" = "http" ]; then
-    php "${ROOT}/artisan" octane:status
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsS http://127.0.0.1:8000/up >/dev/null 2>&1 || php "${ROOT}/artisan" octane:status
+    else
+        php "${ROOT}/artisan" octane:status
+    fi
 elif [ "${container_mode}" = "horizon" ]; then
     php "${ROOT}/artisan" horizon:status
 elif [ "${container_mode}" = "scheduler" ]; then

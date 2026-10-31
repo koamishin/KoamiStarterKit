@@ -9,7 +9,7 @@ parameters:
 		-
 			rawMessage: Access to an undefined property Illuminate\Support\Fluent::$default.
 			identifier: property.notFound
-			count: 4
+			count: 1
 			path: app/Features/FeatureRegistry.php
 
 		-
@@ -25,18 +25,6 @@ parameters:
 			path: app/Features/FeatureRegistry.php
 
 		-
-			rawMessage: 'Call to an undefined static method App\Models\RoleFeature::whereIn().'
-			identifier: staticMethod.notFound
-			count: 2
-			path: app/Features/FeatureRegistry.php
-
-		-
-			rawMessage: 'Call to an undefined static method App\Models\User::whereHas().'
-			identifier: staticMethod.notFound
-			count: 1
-			path: app/Features/FeatureRegistry.php
-
-		-
 			rawMessage: Using nullsafe property access "?->active" on left side of ?? is unnecessary. Use -> instead.
 			identifier: nullsafe.neverNull
 			count: 1
@@ -45,7 +33,7 @@ parameters:
 		-
 			rawMessage: Using nullsafe property access "?->default" on left side of ?? is unnecessary. Use -> instead.
 			identifier: nullsafe.neverNull
-			count: 4
+			count: 1
 			path: app/Features/FeatureRegistry.php
 
 		-
@@ -55,10 +43,10 @@ parameters:
 			path: app/Filament/Clusters/Settings/Pages/ApplicationFeaturesSettingsPage.php
 
 		-
-			rawMessage: Access to an undefined property Illuminate\Support\Fluent::$name.
-			identifier: property.notFound
-			count: 4
-			path: app/Filament/Resources/FeatureFlag/FeatureFlagResource.php
+			rawMessage: Using nullsafe property access "?->email" on left side of ?? is unnecessary. Use -> instead.
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Clusters/Settings/Pages/MailSettingsPage.php
 
 		-
 			rawMessage: Access to an undefined property App\Models\SocialAccount::$user.
@@ -133,171 +121,117 @@ parameters:
 			path: routes/console.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Auth/AuthenticationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::assertAuthenticated().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Auth/AuthenticationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::assertGuest().'
-			identifier: method.notFound
+			rawMessage: Access to an undefined property App\Ai\McpServerConnector::$servers.
+			identifier: property.notFound
 			count: 3
-			path: tests/Feature/Auth/AuthenticationTest.php
+			path: tests/Feature/Ai/AiConfigurationTest.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::get().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Auth/AuthenticationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::post().'
-			identifier: method.notFound
-			count: 4
-			path: tests/Feature/Auth/AuthenticationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 6
-			path: tests/Feature/Auth/EmailVerificationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Auth/PasswordConfirmationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::get().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Auth/PasswordConfirmationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::get().'
+			rawMessage: 'Call to an undefined method Illuminate\Testing\TestResponse::assertInertia().'
 			identifier: method.notFound
 			count: 2
-			path: tests/Feature/Auth/PasswordResetTest.php
+			path: tests/Feature/Auth/DeveloperLoginTest.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::post().'
+			rawMessage: 'Call to an undefined static method Spatie\Permission\Models\Role::firstOrCreate().'
+			identifier: staticMethod.notFound
+			count: 2
+			path: tests/Feature/Auth/DeveloperLoginTest.php
+
+		-
+			rawMessage: 'Call to an undefined method Illuminate\Testing\TestResponse::assertInertia().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/PasswordConfirmationTest.php
+
+		-
+			rawMessage: 'Call to an undefined static method Spatie\Permission\Models\Role::firstOrCreate().'
+			identifier: staticMethod.notFound
+			count: 1
+			path: tests/Feature/Auth/SocialLoginTest.php
+
+		-
+			rawMessage: Access to an undefined property Illuminate\Database\Eloquent\Model::$active.
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/FeatureBrowserTest.php
+
+		-
+			rawMessage: Access to an undefined property Illuminate\Database\Eloquent\Model::$id.
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/FeatureDistributionTest.php
+
+		-
+			rawMessage: 'Call to an undefined method Illuminate\Testing\TestResponse::assertInertia().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/FeatureDistributionTest.php
+
+		-
+			rawMessage: 'Call to an undefined method Livewire\Features\SupportTesting\Testable::callAction().'
 			identifier: method.notFound
 			count: 5
-			path: tests/Feature/Auth/PasswordResetTest.php
+			path: tests/Feature/FeatureDistributionTest.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::assertAuthenticated().'
+			rawMessage: 'Call to an undefined method Illuminate\Testing\TestResponse::assertInertia().'
 			identifier: method.notFound
 			count: 1
-			path: tests/Feature/Auth/RegistrationTest.php
+			path: tests/Feature/FeatureManagementTest.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::get().'
+			rawMessage: 'Call to an undefined method Livewire\Features\SupportTesting\Testable::callAction().'
 			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Auth/RegistrationTest.php
+			count: 4
+			path: tests/Feature/FeatureManagementTest.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::post().'
+			rawMessage: 'Call to an undefined static method App\Models\RoleFeature::create().'
+			identifier: staticMethod.notFound
+			count: 1
+			path: tests/Feature/FeatureManagementTest.php
+
+		-
+			rawMessage: 'Call to an undefined method Livewire\Features\SupportTesting\Testable::callAction().'
 			identifier: method.notFound
 			count: 1
-			path: tests/Feature/Auth/RegistrationTest.php
+			path: tests/Feature/Filament/AiSettingsPageTest.php
+
+		-
+			rawMessage: 'Call to an undefined method Livewire\Features\SupportTesting\Testable::fillForm().'
+			identifier: method.notFound
+			count: 3
+			path: tests/Feature/Filament/AiSettingsPageTest.php
+
+		-
+			rawMessage: 'Call to an undefined static method Spatie\Permission\Models\Role::firstOrCreate().'
+			identifier: staticMethod.notFound
+			count: 3
+			path: tests/Feature/Filament/AiSettingsPageTest.php
 
 		-
 			rawMessage: 'Call to an undefined static method Spatie\Permission\Models\Role::firstOrCreate().'
 			identifier: staticMethod.notFound
 			count: 1
-			path: tests/Feature/Auth/RegistrationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::artisan().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Auth/SocialLoginTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::assertAuthenticated().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Auth/SocialLoginTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::assertAuthenticatedAs().'
-			identifier: method.notFound
-			count: 2
-			path: tests/Feature/Auth/SocialLoginTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::assertGuest().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Auth/SocialLoginTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::get().'
-			identifier: method.notFound
-			count: 9
-			path: tests/Feature/Auth/SocialLoginTest.php
+			path: tests/Feature/Filament/FilaWardenPluginTest.php
 
 		-
 			rawMessage: 'Call to an undefined static method Spatie\Permission\Models\Role::firstOrCreate().'
 			identifier: staticMethod.notFound
 			count: 1
-			path: tests/Feature/Auth/SocialLoginTest.php
+			path: tests/Feature/Filament/FilamentDashboardTest.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 2
-			path: tests/Feature/Auth/VerificationNotificationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
+			rawMessage: 'Call to an undefined method Livewire\Features\SupportTesting\Testable::callAction().'
 			identifier: method.notFound
 			count: 1
-			path: tests/Feature/DashboardTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::get().'
-			identifier: method.notFound
-			count: 2
-			path: tests/Feature/DashboardTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::get().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/ExampleTest.php
+			path: tests/Feature/Filament/MailSettingsPageTest.php
 
 		-
 			rawMessage: 'Call to an undefined method Livewire\Features\SupportTesting\Testable::fillForm().'
 			identifier: method.notFound
 			count: 6
-			path: tests/Feature/Filament/SettingsClusterTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 9
-			path: tests/Feature/Filament/SettingsClusterTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::artisan().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Filament/SettingsClusterTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::get().'
-			identifier: method.notFound
-			count: 3
 			path: tests/Feature/Filament/SettingsClusterTest.php
 
 		-
@@ -313,58 +247,16 @@ parameters:
 			path: tests/Feature/Filament/SocialLoginSettingsPageTest.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 4
-			path: tests/Feature/Filament/SocialLoginSettingsPageTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::artisan().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Filament/SocialLoginSettingsPageTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::get().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Filament/SocialLoginSettingsPageTest.php
-
-		-
 			rawMessage: 'Call to an undefined static method Spatie\Permission\Models\Role::firstOrCreate().'
 			identifier: staticMethod.notFound
 			count: 3
 			path: tests/Feature/Filament/SocialLoginSettingsPageTest.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/FilamentProfilePageTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 3
-			path: tests/Feature/Settings/PasskeySettingsTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 3
-			path: tests/Feature/Settings/PasswordUpdateTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 5
-			path: tests/Feature/Settings/ProfileUpdateTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::assertGuest().'
-			identifier: method.notFound
-			count: 1
-			path: tests/Feature/Settings/ProfileUpdateTest.php
+			rawMessage: 'Call to an undefined static method Spatie\Permission\Models\Role::firstOrCreate().'
+			identifier: staticMethod.notFound
+			count: 2
+			path: tests/Feature/Filament/UserResourceTest.php
 
 		-
 			rawMessage: 'Call to an undefined static method App\Models\RoleFeature::create().'
@@ -379,31 +271,31 @@ parameters:
 			path: tests/Feature/Settings/ProfileUpdateTest.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::artisan().'
+			rawMessage: 'Call to an undefined method Illuminate\Testing\TestResponse::assertInertia().'
 			identifier: method.notFound
 			count: 1
-			path: tests/Feature/Settings/SocialLoginSettingsTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::actingAs().'
-			identifier: method.notFound
-			count: 4
 			path: tests/Feature/Settings/TwoFactorAuthenticationTest.php
 
 		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::deleteJson().'
-			identifier: method.notFound
-			count: 2
-			path: tests/Feature/Settings/TwoFactorAuthenticationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::postJson().'
-			identifier: method.notFound
-			count: 6
-			path: tests/Feature/Settings/TwoFactorAuthenticationTest.php
-
-		-
-			rawMessage: 'Call to an undefined method Pest\PendingCalls\TestCall::markTestSkipped().'
-			identifier: method.notFound
+			rawMessage: 'Calling toBeInstanceOf() on Expectation<App\Console\Commands\SetupStarterKit>; assertion is redundant.'
+			identifier: pest.expectation.redundant
 			count: 1
 			path: tests/Feature/SetupStarterKitTest.php
+
+		-
+			rawMessage: 'Calling toBeTrue() on Expectation<true>; assertion is redundant.'
+			identifier: pest.expectation.redundant
+			count: 1
+			path: tests/Feature/SetupStarterKitTest.php
+
+		-
+			rawMessage: 'Call to an undefined method Illuminate\Testing\TestResponse::assertInertia().'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/SetupWizardTest.php
+
+		-
+			rawMessage: 'Calling toBeTrue() on Expectation<true>; assertion is redundant.'
+			identifier: pest.expectation.redundant
+			count: 1
+			path: tests/Unit/ExampleTest.php

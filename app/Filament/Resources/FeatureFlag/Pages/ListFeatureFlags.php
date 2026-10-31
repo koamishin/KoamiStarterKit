@@ -10,4 +10,12 @@ use Filament\Resources\Pages\ListRecords;
 class ListFeatureFlags extends ListRecords
 {
     protected static string $resource = FeatureFlagResource::class;
+
+    protected static ?string $title = 'Feature Management';
+
+    #[\Override]
+    public function getSubheading(): ?string
+    {
+        return 'Control release stages, audiences, rollout, and beta access independently of deployment.';
+    }
 }
